@@ -1,27 +1,28 @@
 #include <stdio.h>
 
-int maxInArray(int[], int);
+int findMaximum(int[], int);
 
 int main(void) {
 	int arr[]  = {2,3,5,1,9,2,3,4};
 
-	int num = maxInArray(arr, 8);
+	int num = findMaximum(arr, 8);
 	printf("%d\n", num);
 	
 	return 0;
 }
 
-int maxInArray(int arr[], int size) {
-	int max = arr[0];
+int findMaximum(int numbers[], int length) {
+	int max = numbers [0];
 	int i;
 
-	for (i=1; i<size; i++) {
-		if (arr[i] > max) {
-			max = arr[i];
+	for (i = 1; i < length; i++) {
+		if (numbers [i] > max) {
+			max = numbers [i];
 		}
 	}
 
 	return max;
 }
+
 
 
