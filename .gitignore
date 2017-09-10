@@ -2,3 +2,4 @@ Bing.txt
 SpeechRecognition-8e50e15b5266.json
 /sphinx4-5prealpha-src
 *.pdf
+*.pyc
