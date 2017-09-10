@@ -1,4 +1,5 @@
 import speech_recognition as sr
+from os import path
 
 # import from user-defined class
 from credentials import APICredentials
@@ -31,20 +32,32 @@ def main():
                         return None
                 
                 input_user /= 10
-                
-        print "Adjusting for environment ambient noise ... \n"
-
-        # get audio from the microphone                                                                       
+                                                                      
         r = sr.Recognizer()
-        with sr.Microphone() as source: r.adjust_for_ambient_noise(source)
 
-        print("Minimum energy threshold to {}".format(r.energy_threshold))
+        # get audio from the microphone
+##        print "Adjusting for environment ambient noise ... \n"
+##        with sr.Microphone() as source: r.adjust_for_ambient_noise(source)
+##
+##        print("Minimum energy threshold to {}".format(r.energy_threshold))
+##
+##        with sr.Microphone() as source:                                                                       
+##                print("You can start speaking now:")                                                                                   
+##                audio = r.listen(source)
+##                print("Analyzing... ")
 
-        with sr.Microphone() as source:                                                                       
-                print("You can start speaking now:")                                                                                   
-                audio = r.listen(source)
-                print("Analyzing... ")
-         
+        # get audio from the audio file
+        input_filename = raw_input('Please enter the filename : \n')
+        
+        print "Reading from audio file..."
+        AUDIO_FILE = path.join(path.dirname(path.realpath(__file__)), "TestSamples\\" + input_filename + ".wav")
+
+        with sr.AudioFile(AUDIO_FILE) as source:
+            audio = r.record(source)  # read the entire audio file
+        print "Analyzing..."
+
+
+        # Recognize the speech         
         try:
                 if (enableGoogle):
                         # recognize speech using Google Speech Recognition
