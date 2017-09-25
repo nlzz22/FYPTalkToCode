@@ -1,21 +1,25 @@
 import os.path,subprocess
 from subprocess import STDOUT,PIPE
 
-def main():
+def parse_structural_command_to_code(structural_command):
     defaultProgramHeader = "#c_program SampleProgram\n"
     defaultProgramHeader += "#include #access stdio h #access_end;;"
 
+    defaultProgramEnd = " #program_end"
+
     # Get Hello World Program for testing
-    defaultProgramHeader += get_sample_hello_world_program_in_structured_command()
+    #defaultProgramHeader += get_sample_hello_world_program_in_structured_command()
+    
+    defaultProgramHeader += structural_command
+    defaultProgramHeader += defaultProgramEnd
 
     print "Compiling Java Program from Martin\n"
     compile_java('TalkToCode\\talk-to-code\\src\\ast\\*.java')
     print "Finished compiling. Running the Java Program... \n"
     output = execute_java('TalkToCode\\talk-to-code\\src', 'ast/ASTParser', defaultProgramHeader)
-    print "------------------------------------------------------\n"
+    print "Completed.\n"
 
-    # Print the output code
-    print output
+    return output
 
 
 def compile_java(java_file):
@@ -48,7 +52,3 @@ def get_sample_hello_world_program_in_structured_command():
     program_code += "#program_end\n"
 
     return program_code
-
-
-# Run the main function
-main()
