@@ -13,9 +13,10 @@ def parse_structural_command_to_code(structural_command):
     defaultProgramHeader += structural_command
     defaultProgramHeader += defaultProgramEnd
 
-    print "Compiling Java Program from Martin\n"
-    compile_java('TalkToCode\\talk-to-code\\src\\ast\\*.java')
-    print "Finished compiling. Running the Java Program... \n"
+    #print "Compiling Java Program from Martin\n"
+    #compile_java('TalkToCode\\talk-to-code\\src\\ast\\*.java')
+    #print "Finished compiling. Running the Java Program... \n"
+    
     output = execute_java('TalkToCode\\talk-to-code\\src', 'ast/ASTParser', defaultProgramHeader)
     print "Completed.\n"
 
