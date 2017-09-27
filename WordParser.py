@@ -16,7 +16,7 @@ class WordParser:
 
     def correct_words(self, words):
         wordCorrector = WordCorrector(words)
-        corrected = wordCorrector.run_correct_words_multiple(self.NUM_TIMES_TO_CORRECT)
+        corrected = wordCorrector.run_correct_words_multiple("")
         return corrected
         
 

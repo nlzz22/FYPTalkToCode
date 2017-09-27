@@ -1,4 +1,5 @@
 from num2words import num2words
+import hashlib
 
 class WordCorrector:
     def __init__(self, words):
@@ -7,13 +8,19 @@ class WordCorrector:
         self.space = ""
         self.var_types = ["integer", "short", "long", "float", "double", "boolean", "character", "string"]
 
-    def run_correct_words_multiple(self, times):
-        if (times > 0):
-            self.correct_words()
+    def run_correct_words_multiple(self, prev_hash = ""):
+        self.correct_words()
+
+        hashed_item = self.hash_string(self.corrected)
+
+        if hashed_item != prev_hash:
             self.reinit()
-            return self.run_correct_words_multiple(times - 1)
+            return self.run_correct_words_multiple(hashed_item)
         else:
-            return " ".join(self.words_list)
+            return self.corrected
+
+    def hash_string(self, string):
+        return hashlib.md5(str(string)).hexdigest()
 
     def reinit(self):
         self.words_list = self.corrected.split(" ")
@@ -177,6 +184,3 @@ class WordCorrector:
         if (self.corrected != ""):
             parts = self.corrected.split(" ")
             return parts[len(parts) - 1]
-
-#wordCorrector = WordCorrector("create function find Maximum Reef return type integer with parameter integer array numbers with parameter integer length became declare integer Max equal numbers array index 0 end declare declare integer I end declare for Loop condition I equal one condition I less than blank condition I plus plus begin with numbers array index II greater than Max then makes equal numbers array index and equal and if and for Loop return Max and function ")
-#print wordCorrector.run_correct_words_multiple(5)

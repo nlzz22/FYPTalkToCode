@@ -47,7 +47,7 @@ class TestParserMethods(unittest.TestCase):
         req_words = "for loop condition i equal one if numbers array index i"
 
         wordCorrector = WordCorrector(words)
-        corrected = wordCorrector.run_correct_words_multiple(3)
+        corrected = wordCorrector.run_correct_words_multiple()
 
         self.assertEqual(self.format_spaces(corrected), self.format_spaces(req_words))
 
