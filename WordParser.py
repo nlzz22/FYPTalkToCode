@@ -1,16 +1,24 @@
 from word2number import w2n # External library to parse words to numbers
+from WordCorrector import WordCorrector
 
 class WordParser:
     def __init__(self, words):
+        self.NUM_TIMES_TO_CORRECT = 5
+        
         self.structured_command = ""
-        self.words_to_parse = words.split(" ")
+        self.words_to_parse = self.correct_words(words).split(" ")
         self.variable_name_builder = ""
         self.number_list = w2n.american_number_system
         self.begin_stack = Stack() # wait for begin keyword
         self.end_stack = Stack() # wait for end keyword
         self.operators = ["plus", "minus", "times", "divide", "modulo"]
         self.comparison_ops = ["less", "greater", "not"]
-        self.remove_optional_words()
+
+    def correct_words(self, words):
+        wordCorrector = WordCorrector(words)
+        corrected = wordCorrector.run_correct_words_multiple(self.NUM_TIMES_TO_CORRECT)
+        return corrected
+        
 
     def map_word_to_structured_command(self):
         while (self.has_next_word()):
@@ -18,13 +26,7 @@ class WordParser:
 
         self.add_variable_name()
 
-        print "command parsed is : " + self.structured_command + "\n"
         return self.structured_command
-
-    def remove_optional_words(self):
-        for word in self.words_to_parse:
-            if word.lower() in ["with", "reef", "beef"]:
-                self.words_to_parse.remove(word)
 
     def process_mapping(self):
         word = self.get_next_word()
@@ -42,7 +44,7 @@ class WordParser:
                     pass # unknown word to parse
             else:
                 pass # unknown word to parse
-        elif (word == "with" or word == "beef" or word == "reef"):
+        elif (word == "with"):
             pass # with is an optional word.
         elif (word == "return"):
             if (self.has_next_word()):
