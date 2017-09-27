@@ -184,3 +184,12 @@ class WordCorrector:
         if (self.corrected != ""):
             parts = self.corrected.split(" ")
             return parts[len(parts) - 1]
+
+##word = "create function find maximum width return type integer with parameter integer array numbers \
+## with parameter integer length begin declare integer Max equal numbers array index 0 end declare \
+## declare integer I end declare \
+## for Loop condition is equal one condition I less than length condition I plus plus begin \
+## if numbers array index I greater than Max Den Max equal numbers array index I and equal and if and for Loop return Max \
+## and function"
+##wc = WordCorrector(word)
+##print wc.run_correct_words_multiple()
