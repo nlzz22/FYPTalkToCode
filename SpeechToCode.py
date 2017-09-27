@@ -12,7 +12,7 @@ def main():
         return
 
     print "Audio deciphered : " + read_words + "\n"
-
+ 
     # Convert words to structured command
     wordParser = WordParser(read_words)
     structured_command = wordParser.map_word_to_structured_command()

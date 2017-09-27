@@ -606,7 +606,7 @@ class WordParser:
             else:
                 break # stop reading as word is not a number.
 
-        return number_builder
+        return str(number_builder)
 
     def query_latest_added_word(self):
         if (self.structured_command != ""):
@@ -645,3 +645,4 @@ class Stack:
             return self.stack[len(self.stack) - 1]
         else:
             return None
+

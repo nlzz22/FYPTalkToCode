@@ -25,6 +25,22 @@ class WordCorrector:
             current_word = self.get_next_word()
             if (current_word == "reef" or current_word == "beef"):
                 self.add_word_to_corrected("with")
+            elif (current_word == "width"):
+                # with (size, return type, parameter)
+                next_word = self.query_next_word()
+                if next_word == "size" or next_word == "parameter":
+                    self.add_word_to_corrected("with")
+                elif next_word == "return":
+                    self.get_next_word()
+                    next_word = self.query_next_word()
+                    if next_word == "type":
+                        self.get_next_word()
+                        self.add_word_to_corrected("with return type")
+                    else:
+                        self.reinsert_word("return")
+                        self.add_word_to_corrected("width")
+                else:
+                    self.add_word_to_corrected("width")
             elif (current_word == "intex"):
                 self.add_word_to_corrected("index")
             elif (current_word == "in"):
@@ -39,16 +55,22 @@ class WordCorrector:
                         self.add_word_to_corrected("integer")
                     else:
                         self.add_word_to_corrected("integer")
-                elif (next_word == "detail"):
+                elif (next_word == "detail" or next_word == "danger"):
                     self.get_next_word()
                     self.add_word_to_corrected("integer")
                 else:
                     self.add_word_to_corrected("integer")
-            elif (current_word == "4" or current_word == "four"):
+            elif (current_word == "4" or current_word == "four" or current_word == "full" or current_word == "fall"):
                 next_word = self.query_next_word()
                 if next_word == "loop":
                     self.get_next_word()
-                    self.add_word_to_corrected("for loop")                    
+                    self.add_word_to_corrected("for loop")
+            elif (current_word == "than"):
+                prev_word = self.query_latest_added_word()
+                if (prev_word == "greater" or prev_word == "less"):
+                    self.add_word_to_corrected(current_word)
+                else:
+                    self.add_word_to_corrected("then")
             elif (current_word == "and"):
                 # correct and -> end only if needed
                 next_word = self.query_next_word()
@@ -64,11 +86,22 @@ class WordCorrector:
                     self.add_word_to_corrected("return type")
             elif (current_word == "wow" or current_word == "wild"):
                 self.add_word_to_corrected("while")
+            elif (current_word == "dan" or current_word == "den"):
+                self.add_word_to_corrected("then")
             elif (current_word == "condition"):
                 next_word = self.query_next_word()
                 if (next_word == "eye"):
                     self.get_next_word()
                     self.add_word_to_corrected("condition i")
+                elif (next_word == "is"):
+                    self.get_next_word()
+                    next_word = self.query_next_word()
+                    if (next_word == "equal"):
+                        # condition is equal -> condition i equal
+                        self.get_next_word()
+                        self.add_word_to_corrected("condition i equal")
+                    else:
+                        self.add_word_to_corrected("condition is")
                 else:
                     self.add_word_to_corrected("condition")
             elif (current_word == "away"):
@@ -85,6 +118,21 @@ class WordCorrector:
                         self.add_word_to_corrected("away")
             elif (current_word == "inf"):
                 self.add_word_to_corrected("i end if")
+            elif (current_word == "the"):
+                next_word = self.query_next_word()
+                if (next_word == "game"):
+                    self.get_next_word()
+                    self.add_word_to_corrected("begin")
+                else:
+                    self.add_word_to_corrected(current_word)
+            elif (current_word == "became" or current_word == "beginning"):
+                self.add_word_to_corrected("begin")
+            elif (current_word == "ii"):
+                self.add_word_to_corrected("i")
+            elif (current_word == "ecuador"):
+                prev_word = self.query_latest_added_word()
+                if (prev_word == "end"):
+                    self.add_word_to_corrected("equal")
             elif (self.is_number(current_word)):
                 # Convert numbers to words (e.g. 42 -> forty-two)
                 number_in_word_form = num2words(int(current_word))
@@ -129,3 +177,6 @@ class WordCorrector:
         if (self.corrected != ""):
             parts = self.corrected.split(" ")
             return parts[len(parts) - 1]
+
+#wordCorrector = WordCorrector("create function find Maximum Reef return type integer with parameter integer array numbers with parameter integer length became declare integer Max equal numbers array index 0 end declare declare integer I end declare for Loop condition I equal one condition I less than blank condition I plus plus begin with numbers array index II greater than Max then makes equal numbers array index and equal and if and for Loop return Max and function ")
+#print wordCorrector.run_correct_words_multiple(5)

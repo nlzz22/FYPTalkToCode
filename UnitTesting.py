@@ -70,7 +70,22 @@ class TestParserMethods(unittest.TestCase):
         req_code = "#include <stdio.h> int findMaximum(int [], int ); int findMaximum(int numbers[], int length){ int max = numbers[0]; int i; for (i = 1;i < length;i++){ if(numbers[i] > max) { max = numbers[i]; } } return max; }"
 
         self.assertEqual(self.format_spaces(code), self.format_spaces(req_code))
-        
+
+    def test_actual_from_word_to_code(self):
+        word = "create function find maximum width return type integer with parameter integer array numbers "
+        word += "with parameter integer length begin declare integer Max equal numbers array index 0 end declare "
+        word += "declare integer I end declare "
+        word += "for Loop condition is equal one condition I less than length condition I plus plus begin "
+        word += "if numbers array index I greater than Max Den Max equal numbers array index I and equal and if and for Loop return Max "
+        word += "and function"
+
+        wordParser = WordParser(word)
+        structCommand = wordParser.map_word_to_structured_command()
+
+        code = StructuralCommandParser.parse_structural_command_to_code(structCommand)
+        req_code = "#include <stdio.h> int findMaximum(int [], int ); int findMaximum(int numbers[], int length){ int max = numbers[0]; int i; for (i = 1;i < length;i++){ if(numbers[i] > max) { max = numbers[i]; } } return max; }"
+
+        self.assertEqual(self.format_spaces(code), self.format_spaces(req_code))
 
     def format_spaces(self, sentence):
         return ' '.join(sentence.split())

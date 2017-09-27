@@ -64,7 +64,7 @@ def get_voice_input():
                                              "string", "float", "double", "character", "size", "index", "create function", \
                                              "function", "return", "return type", "parameter", "call", "for", "plus", "plus plus", \
                                              "minus", "minus minus", "times", "divide", "while", "switch", "case", "dot", "end if", \
-                                             "end switch", "end declare", "for loop", "end equal"]
+                                             "end switch", "end declare", "for loop", "end equal", "for loop condition i"]
 
                         read_words_google = r.recognize_google_cloud(audio, google_cloud_json, "en-US", preferred_phrases, False)
                         print("Google Cloud finished deciphering ! \n")
