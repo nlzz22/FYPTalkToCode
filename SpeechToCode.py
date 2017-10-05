@@ -6,16 +6,29 @@ import StructuralCommandParser as scParser
 
 
 def main():
+    to_continue_reading = True
+    sentences = []
+    
     # Read from audio and process to words
-    read_words = SpeechReader.get_voice_input()
-    if (read_words is None):
-        print "Invalid input when reading from audio"
-        return
+    while to_continue_reading:
+        read_words = SpeechReader.get_voice_input()
+        if (read_words is None):
+            print "Invalid input when reading from audio"
+            return
 
-    print "Audio deciphered : " + read_words + "\n"
+        print "Audio deciphered : " + read_words + "\n"
+        sentences.append(read_words)
+
+        input_continue = raw_input("Continue recording ? (Type 'Y' to continue)\n")
+        if input_continue.lower() != "y":
+            to_continue_reading = False
+
+    # join all words together to a complete sentence
+    words = " ".join(sentences)
+    print words
 
     # Correct words
-    wordCorrector = WordCorrector(read_words)
+    wordCorrector = WordCorrector(words)
     corrected = wordCorrector.run_correct_words_multiple("")
  
     # Convert words to structured command
