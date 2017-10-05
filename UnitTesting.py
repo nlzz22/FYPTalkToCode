@@ -63,7 +63,10 @@ class TestParserMethods(unittest.TestCase):
         word += "return max "
         word += " end function "
 
-        wordParser = WordParser(word)
+        wordCorrector = WordCorrector(word)
+        corrected = wordCorrector.run_correct_words_multiple("")
+
+        wordParser = WordParser(corrected)
         structCommand = wordParser.map_word_to_structured_command()
 
         code = StructuralCommandParser.parse_structural_command_to_code(structCommand)
@@ -79,7 +82,10 @@ class TestParserMethods(unittest.TestCase):
         word += "if numbers array index I greater than Max Den Max equal numbers array index I and equal and if and for Loop return Max "
         word += "and function"
 
-        wordParser = WordParser(word)
+        wordCorrector = WordCorrector(word)
+        corrected = wordCorrector.run_correct_words_multiple("")
+    
+        wordParser = WordParser(corrected)
         structCommand = wordParser.map_word_to_structured_command()
 
         code = StructuralCommandParser.parse_structural_command_to_code(structCommand)
