@@ -1,0 +1,29 @@
+create function find maximum with return type integer 
+with parameter integer array numbers 
+with parameter integer length begin
+declare integer max equal numbers array index zero end declare 
+declare integer i end declare
+for loop condition i equal one condition i less than length condition i plus plus begin
+if numbers array index i greater than max then
+max equal numbers array index i end equal
+end if 
+end for loop 
+return max 
+end function 
+
+
+===========================================================================================
+
+
+#function_declare findMaximum int 
+#parameter_a #dimension 1 int #array numbers 
+#parameter int length #function_start 
+#create int #variable max #array numbers #indexes  #value 0 #index_end #dec_end;; 
+#create int #variable i #dec_end;; 
+for #condition #assign #variable i #with #value 1 #condition #variable i < #variable length #condition #post #variable i ++ #for_start 
+if #condition #array  numbers #indexes  #variable  i #index_end > #variable max #if_branch_start 
+#assign #variable max #with #array  numbers #indexes  #variable  i #index_end;; 
+#if_branch_end;; 
+#for_end;; 
+return #variable max;; 
+#function_end;;
