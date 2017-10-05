@@ -1,23 +1,15 @@
 from word2number import w2n # External library to parse words to numbers
-from WordCorrector import WordCorrector
 
 class WordParser:
-    def __init__(self, words):
-        self.NUM_TIMES_TO_CORRECT = 5
-        
+    def __init__(self, words):        
         self.structured_command = ""
-        self.words_to_parse = self.correct_words(words).split(" ")
+        self.words_to_parse = words.split(" ")
         self.variable_name_builder = ""
         self.number_list = w2n.american_number_system
         self.begin_stack = Stack() # wait for begin keyword
         self.end_stack = Stack() # wait for end keyword
         self.operators = ["plus", "minus", "times", "divide", "modulo"]
         self.comparison_ops = ["less", "greater", "not"]
-
-    def correct_words(self, words):
-        wordCorrector = WordCorrector(words)
-        corrected = wordCorrector.run_correct_words_multiple("")
-        return corrected
         
 
     def map_word_to_structured_command(self):

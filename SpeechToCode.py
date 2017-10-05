@@ -1,5 +1,6 @@
 import os
 import speechrecogniser as SpeechReader
+from WordCorrector import WordCorrector
 from WordParser import WordParser
 import StructuralCommandParser as scParser
 
@@ -12,9 +13,13 @@ def main():
         return
 
     print "Audio deciphered : " + read_words + "\n"
+
+    # Correct words
+    wordCorrector = WordCorrector(read_words)
+    corrected = wordCorrector.run_correct_words_multiple("")
  
     # Convert words to structured command
-    wordParser = WordParser(read_words)
+    wordParser = WordParser(corrected)
     structured_command = wordParser.map_word_to_structured_command()
 
     # Convert structured command to code
