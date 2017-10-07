@@ -129,8 +129,18 @@ class WordParser:
                 return "#else_branch_end"
             else: # unknown end if meet
                 return " unknown "
+        elif tokens.endforloop != "": # end for loop
+            return "#for_end"
         else:
             # Code should not reach here
+            return " unknown "
+
+    def update_increment_for_operator(self, tokens):
+        if tokens.pp != "": # plus plus operation
+            return "++"
+        elif tokens.mm != "": # minus minus operation
+            return "--"
+        else: # should not reach here
             return " unknown "
 
 
@@ -166,10 +176,18 @@ class WordParser:
         keyword_then = Suppress("then")
         keyword_else = Suppress("else")
         keyword_ns_end_if = Keyword("end if")
+        keyword_for = Suppress("for")
+        keyword_loop = Suppress("loop")
+        keyword_ns_end_for_loop = Keyword("end for") + Optional(keyword_loop)
+        keyword_condition = Suppress("condition")
+        keyword_begin = Suppress("begin")
+        keyword_ns_plus_plus = Keyword("plus plus")
+        keyword_ns_minus_minus = Keyword("minus minus")
 
         # The list of required keywords
         list_keywords = ["equal", "end equal", "array index", "if", "greater than", "greater than equal"]
-        list_keywords += ["less than", "less than equal", "not equal", "then", "else", "end if"]
+        list_keywords += ["less than", "less than equal", "not equal", "then", "else", "end if", "for", "loop"]
+        list_keywords += ["condition", "begin", "plus", "minus"]
 
         # The components of parser
         not_all_keywords = self.build_not_all_keywords(list_keywords)
@@ -179,14 +197,20 @@ class WordParser:
         literal_name = OneOrMore(self.literal)
         variable_or_literal = variable_name | literal_name
 
+        for_loop = keyword_for + Optional(keyword_loop)
+
         comparison_operator = keyword_ns_greater_than_equal("ge") | keyword_ns_greater_than("gt") | keyword_ns_less_than_equal("le") \
                               | keyword_ns_less_than("lt") | keyword_ns_not_equal("ne") | keyword_ns_equal("eq")
         # Additional processing for output
         comparison_operator.setParseAction(self.update_comparison_ops)
 
-        end_constructs = keyword_ns_end_if("endif") # todo
+        end_constructs = keyword_ns_end_if("endif") | keyword_ns_end_for_loop("endforloop") # todo
         # Additional processing for output
         end_constructs.setParseAction(self.update_end_constructs)
+
+        increment_for_operator = keyword_ns_plus_plus("pp") | keyword_ns_minus_minus("mm")
+        # Additional processing for output
+        increment_for_operator.setParseAction(self.update_increment_for_operator)
 
         variable_with_array_index = variable_name("varname") + keyword_array_index + variable_or_literal("index")
         # Additional processing for output
@@ -203,7 +227,10 @@ class WordParser:
         self.if_stmt = keyword_if + var_optional_array_index_or_literal + comparison_operator + var_optional_array_index_or_literal + keyword_then + restOfLine
         self.else_stmt = keyword_else + restOfLine
         self.end_stmt = end_constructs + restOfLine
-
+        self.for_loop_stmt = for_loop + keyword_condition + var_optional_array_index_or_literal + keyword_equal + \
+                             var_optional_array_index_or_literal + keyword_condition + var_optional_array_index_or_literal + \
+                             comparison_operator + var_optional_array_index_or_literal + keyword_condition + \
+                             variable_or_variable_with_array_index + increment_for_operator + keyword_begin + restOfLine
         
  
     def parse(self, sentence):
@@ -234,6 +261,13 @@ class WordParser:
         result  = self.parse_end_constructs(sentence)
         if result["has_match"]:
             return self.trim_all_spaces(result["struct_cmd"]) + " " + self.parse(result["additional_input"])
+
+        # Check for loop
+        result = self.parse_check_for_loop(sentence)
+        if result["has_match"]:
+            return self.trim_all_spaces(result["struct_cmd"]) + " " + self.parse(result["additional_input"])
+
+        #todo : work on operators :(
 
         # No more matches: (unknown data), we stop parsing
         self.set_additional_unparsed(sentence)
@@ -267,6 +301,26 @@ class WordParser:
                     " " + list_match_tokens[1] + self.process_var_or_arr_or_literal(list_match_tokens[2]) + \
                     " #if_branch_start "
             return_struct["additional_input"] = list_match_tokens[3]
+            
+        except ParseException:
+            return_struct["has_match"] = False
+
+        return return_struct
+
+
+    def parse_check_for_loop(self, sentence):
+        return_struct = {}
+
+        try:
+            list_match_tokens = self.for_loop_stmt.parseString(sentence)
+
+            return_struct["has_match"] = True
+            return_struct["struct_cmd"] = "for #condition #assign " + self.process_var_or_arr_or_literal(list_match_tokens[0]) + \
+                    " #with " + self.process_var_or_arr_or_literal(list_match_tokens[1]) + " #condition " + \
+                    self.process_var_or_arr_or_literal(list_match_tokens[2]) + " " + list_match_tokens[3] +  " " + \
+                    self.process_var_or_arr_or_literal(list_match_tokens[4]) + " #condition #post " + \
+                    self.process_var_or_arr_or_literal(list_match_tokens[5]) + " " + list_match_tokens[6] + " #for_start"
+            return_struct["additional_input"] = list_match_tokens[7]
             
         except ParseException:
             return_struct["has_match"] = False
@@ -309,7 +363,6 @@ class WordParser:
 # Stack class
 class Stack:
     FUNCTION_STACK = "Function_Stack"
-    FOR_STACK = "For_Stack"
     IF_STACK = "If_Stack"
     ELSE_STACK = "Else_Stack"
                 
@@ -397,4 +450,9 @@ if __name__ == "__main__":
     speech = "if numbers array index i greater than max then end if"
     struct = "if #condition #array  numbers #indexes  #variable  i #index_end > #variable max #if_branch_start #if_branch_end;; "
     print compare(speech, struct, wordParser)
+
+    speech = "for loop condition i equal one condition i less than length condition i plus plus begin end for loop"
+    struct = "for #condition #assign #variable i #with #value 1 #condition #variable i < #variable length #condition #post #variable i ++ #for_start #for_end;;"
+    print compare(speech, struct, wordParser)
+
 
