@@ -1,3 +1,4 @@
+import re
 from word2number import w2n # External library to parse words to numbers
 from pyparsing import * # External parser library
 
@@ -86,6 +87,19 @@ class WordParser:
 
 
     def process_var_or_arr_or_literal(self, word):
+        operator_regex = "\+|\-|\*|\/|\%"
+        parts = re.split(operator_regex, word)
+
+        # Recursively handles cases where there are operators within the variable / literal
+        if len(parts) != 1:
+            location_operator = re.search(operator_regex, word).start() # find first operator
+            front_part_expr = word[:location_operator]
+            operator_expr = word[location_operator]
+            back_part_expr = word[location_operator + 1:]
+
+            return self.process_var_or_arr_or_literal(front_part_expr) + " " + operator_expr + " " + \
+                   self.process_var_or_arr_or_literal(back_part_expr)
+        
         try:
             # Test if word is an array
             tokens = self.array_index_phrase.parseString(word)
@@ -120,6 +134,21 @@ class WordParser:
             return " unknown "
 
 
+    def update_operators(self, tokens):
+        if tokens.p != "": # plus
+            return " + "
+        elif tokens.min != "": # minus
+            return " - "
+        elif tokens.mod != "": # modulo
+            return " % "
+        elif tokens.t != "": # times
+            return " * "
+        elif tokens.d != "": # divide
+            return" / "
+        else:
+            # Code should not reach here
+            return " unknown "
+
     def update_end_constructs(self, tokens):
         if tokens.endif != "": # end if operation
             if_or_else = self.if_cond_stack.pop()
@@ -142,6 +171,9 @@ class WordParser:
             return "--"
         else: # should not reach here
             return " unknown "
+
+    def update_join_tokens(self, tokens):
+        return ' '.join(tokens)
 
 
     def retrieve_additional_unparsed(self):
@@ -183,6 +215,11 @@ class WordParser:
         keyword_begin = Suppress("begin")
         keyword_ns_plus_plus = Keyword("plus plus")
         keyword_ns_minus_minus = Keyword("minus minus")
+        keyword_ns_plus = Keyword("plus")
+        keyword_ns_minus = Keyword("minus")
+        keyword_ns_times = Keyword("times")
+        keyword_ns_divide = Keyword("divide")
+        keyword_ns_modulo = Keyword("modulo")
 
         # The list of required keywords
         list_keywords = ["equal", "end equal", "array index", "if", "greater than", "greater than equal"]
@@ -201,19 +238,19 @@ class WordParser:
 
         comparison_operator = keyword_ns_greater_than_equal("ge") | keyword_ns_greater_than("gt") | keyword_ns_less_than_equal("le") \
                               | keyword_ns_less_than("lt") | keyword_ns_not_equal("ne") | keyword_ns_equal("eq")
-        # Additional processing for output
-        comparison_operator.setParseAction(self.update_comparison_ops)
+        comparison_operator.setParseAction(self.update_comparison_ops) # Additional processing for output
 
         end_constructs = keyword_ns_end_if("endif") | keyword_ns_end_for_loop("endforloop") # todo
-        # Additional processing for output
         end_constructs.setParseAction(self.update_end_constructs)
 
         increment_for_operator = keyword_ns_plus_plus("pp") | keyword_ns_minus_minus("mm")
-        # Additional processing for output
         increment_for_operator.setParseAction(self.update_increment_for_operator)
 
+        operators = keyword_ns_plus("p") |  keyword_ns_minus("min") | keyword_ns_times("t") | \
+                    keyword_ns_divide("d") | keyword_ns_modulo("mod")
+        operators.setParseAction(self.update_operators)
+
         variable_with_array_index = variable_name("varname") + keyword_array_index + variable_or_literal("index")
-        # Additional processing for output
         variable_with_array_index.setParseAction(self.update_array_tags)
 
         self.array_index_phrase = Suppress("#array") + variable_name + Suppress("#index") + variable_or_literal
@@ -221,15 +258,20 @@ class WordParser:
         variable_or_variable_with_array_index = variable_with_array_index | variable_name
 
         var_optional_array_index_or_literal = variable_or_variable_with_array_index | literal_name
+        
+        var_optional_array_index_or_literal_recur = Forward() # allows for recursion
+        var_optional_array_index_or_literal_recur << var_optional_array_index_or_literal + ZeroOrMore(operators + var_optional_array_index_or_literal_recur)
+        var_optional_array_index_or_literal_recur.setParseAction(self.update_join_tokens)
+
 
         # Constructs parsable
-        self.assign_var_stmt = var_optional_array_index_or_literal + keyword_equal + var_optional_array_index_or_literal + keyword_end_equal + restOfLine
-        self.if_stmt = keyword_if + var_optional_array_index_or_literal + comparison_operator + var_optional_array_index_or_literal + keyword_then + restOfLine
+        self.assign_var_stmt = var_optional_array_index_or_literal + keyword_equal + var_optional_array_index_or_literal_recur + keyword_end_equal + restOfLine
+        self.if_stmt = keyword_if + var_optional_array_index_or_literal_recur + comparison_operator + var_optional_array_index_or_literal_recur + keyword_then + restOfLine
         self.else_stmt = keyword_else + restOfLine
         self.end_stmt = end_constructs + restOfLine
         self.for_loop_stmt = for_loop + keyword_condition + var_optional_array_index_or_literal + keyword_equal + \
-                             var_optional_array_index_or_literal + keyword_condition + var_optional_array_index_or_literal + \
-                             comparison_operator + var_optional_array_index_or_literal + keyword_condition + \
+                             var_optional_array_index_or_literal_recur + keyword_condition + var_optional_array_index_or_literal_recur + \
+                             comparison_operator + var_optional_array_index_or_literal_recur + keyword_condition + \
                              variable_or_variable_with_array_index + increment_for_operator + keyword_begin + restOfLine
         
  
@@ -240,6 +282,7 @@ class WordParser:
 
         # Check variable assignment
         result = self.parse_check_variable_assignment(sentence)
+
         if result["has_match"]:
             return self.trim_all_spaces(result["struct_cmd"]) + " " + self.parse(result["additional_input"])
 
@@ -266,8 +309,7 @@ class WordParser:
         result = self.parse_check_for_loop(sentence)
         if result["has_match"]:
             return self.trim_all_spaces(result["struct_cmd"]) + " " + self.parse(result["additional_input"])
-
-        #todo : work on operators :(
+        
 
         # No more matches: (unknown data), we stop parsing
         self.set_additional_unparsed(sentence)
@@ -454,5 +496,18 @@ if __name__ == "__main__":
     speech = "for loop condition i equal one condition i less than length condition i plus plus begin end for loop"
     struct = "for #condition #assign #variable i #with #value 1 #condition #variable i < #variable length #condition #post #variable i ++ #for_start #for_end;;"
     print compare(speech, struct, wordParser)
+    
+    speech = "max equal numbers array index i plus min plus twenty end equal"
+    struct = "#assign #variable max #with #array numbers #indexes #variable i #index_end + #variable min + #value 20;; "
+    print compare(speech, struct, wordParser)
 
+    speech = "for loop condition i equal one condition i plus two less than length condition i plus plus begin end for loop"
+    struct = "for #condition #assign #variable i #with #value 1 #condition #variable i + #value 2 < #variable length #condition #post #variable i ++ #for_start #for_end;;"
+    print compare(speech, struct, wordParser)
+
+    wordParser.reinit()
+    speech = "if i plus j plus k greater than max then end if"
+    struct = "if #condition #variable i + #variable j + #variable k > #variable max #if_branch_start #if_branch_end;; "
+    print compare(speech, struct, wordParser)
+    
 
