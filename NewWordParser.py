@@ -358,6 +358,8 @@ class WordParser:
         
  
     def parse(self, sentence):
+        sentence = str(sentence).lower()
+        
         if sentence == "":
             return ""
         # Run parsing through each construct
