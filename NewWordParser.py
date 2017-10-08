@@ -37,7 +37,10 @@ class WordParser:
 
 
     def is_literal(self, words):
-        words = self.trim_all_spaces(words)
+        if words.strip() == "":
+            return False
+        
+        words = self.trim_all_spaces(words)        
         literal_regex = self.trim_all_spaces(self.literal)
         
         literal_list = literal_regex.split(" | ")
@@ -77,6 +80,9 @@ class WordParser:
 
     
     def process_variable_or_literal(self, word, special_syntax_if_var = None):
+        if word.strip() == "":
+            return ""
+        
         if self.is_literal(word):
             return " #value " + str(w2n.word_to_num(word))
         else:
@@ -246,18 +252,19 @@ class WordParser:
         keyword_end_declare = Suppress("end declare")
         keyword_with = Suppress("with")
         keyword_size = Suppress("size")
+        keyword_return = Suppress("return")
 
         # The list of required keywords
         list_keywords = ["equal", "end equal", "array index", "if", "greater than", "greater than equal"]
         list_keywords += ["less than", "less than equal", "not equal", "then", "else", "end if", "for", "loop"]
         list_keywords += ["condition", "begin", "plus", "minus", "declare", "integer", "float", "double", "long"]
-        list_keywords += ["end for", "times", "divide", "modulo", "end declare", "array", "with", "size"]
+        list_keywords += ["end for", "times", "divide", "modulo", "end declare", "array", "with", "size", "return"]
 
         # The components of parser
         not_all_keywords = self.build_not_all_keywords(list_keywords)
         self.literal = self.get_all_literal()
         
-        variable_name = Combine(ZeroOrMore(not_all_keywords + Word(alphas) + " "))
+        variable_name = Combine(ZeroOrMore(not_all_keywords + Word(alphas) + Optional(" ")))
         literal_name = OneOrMore(self.literal)
         variable_or_literal = variable_name | literal_name
 
@@ -311,6 +318,7 @@ class WordParser:
                                 keyword_end_declare + restOfLine
         self.declare_array_stmt = keyword_declare + variable_type + keyword_array + variable_with_size_index + \
                                   keyword_end_declare + restOfLine
+        self.return_stmt = keyword_return + var_optional_array_index_or_literal_recur + restOfLine
         
  
     def parse(self, sentence):
@@ -355,6 +363,11 @@ class WordParser:
 
         # Check array declaration
         result = self.parse_check_array_declaration(sentence)
+        if result["has_match"]:
+            return self.trim_all_spaces(result["struct_cmd"]) + " " + self.parse(result["additional_input"])
+
+        # Check return statement
+        result = self.parse_check_return_stmt(sentence)
         if result["has_match"]:
             return self.trim_all_spaces(result["struct_cmd"]) + " " + self.parse(result["additional_input"])
         
@@ -476,7 +489,7 @@ class WordParser:
         return_struct = {}
 
         try:
-            list_match_tokens = self.declare_array_stmt.parseString(sentence) # todo
+            list_match_tokens = self.declare_array_stmt.parseString(sentence)
 
             return_struct["has_match"] = True
             return_struct["struct_cmd"] = "#create " + list_match_tokens[0] + " #array " + \
@@ -488,7 +501,23 @@ class WordParser:
         except ParseException:
             return_struct["has_match"] = False
 
-        return return_struct        
+        return return_struct
+
+
+    def parse_check_return_stmt(self, sentence):
+        return_struct = {}
+
+        try:
+            list_match_tokens = self.return_stmt.parseString(sentence)
+
+            return_struct["has_match"] = True
+            return_struct["struct_cmd"] = "return " + self.process_var_or_arr_or_literal(list_match_tokens[0]) + ";;"
+            return_struct["additional_input"] = list_match_tokens[len(list_match_tokens) - 1]
+            
+        except ParseException:
+            return_struct["has_match"] = False
+
+        return return_struct
 
 
 # Stack class
@@ -621,4 +650,16 @@ if __name__ == "__main__":
 
     speech = "declare integer array sequence size amount end declare"
     struct = "#create int #array #variable sequence #indexes #variable amount #index_end #dec_end;;"
+    print compare(speech, struct, wordParser)
+
+    speech = "return max"
+    struct = "return #variable max;;"
+    print compare(speech, struct, wordParser)
+
+    speech = "return zero"
+    struct = "return #value 0;;"
+    print compare(speech, struct, wordParser)
+
+    speech = "return i plus two"
+    struct = "return #variable i + #value 2;;"
     print compare(speech, struct, wordParser)
