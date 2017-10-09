@@ -289,7 +289,7 @@ class WordParser:
         not_all_keywords = self.build_not_all_keywords(list_keywords)
         self.literal = self.get_all_literal()
         
-        variable_name = Combine(ZeroOrMore(not_all_keywords + Word(alphas) + Optional(" ")))
+        variable_name = Combine(OneOrMore(not_all_keywords + Word(alphas) + Optional(" ")))
         literal_name = OneOrMore(self.literal)
         variable_or_literal = variable_name | literal_name
 
@@ -359,6 +359,7 @@ class WordParser:
  
     def parse(self, sentence):
         sentence = str(sentence).lower()
+        self.set_additional_unparsed("")
         
         if sentence == "":
             return ""
