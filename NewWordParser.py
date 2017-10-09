@@ -241,7 +241,7 @@ class WordParser:
         keyword_end_equal = Suppress("end equal")
         keyword_array = Suppress("array")
         keyword_array_index = Suppress("array index")
-        keyword_if = Suppress("if")
+        keyword_if = Suppress("begin if")
         keyword_ns_greater_than = Keyword("greater than")
         keyword_ns_greater_than_equal = Keyword("greater than equal")
         keyword_ns_less_than = Keyword("less than")
@@ -279,7 +279,7 @@ class WordParser:
         keyword_ns_end_function = Keyword("end function")
 
         # The list of required keywords
-        list_keywords = ["equal", "end equal", "array index", "if", "greater than", "greater than equal"]
+        list_keywords = ["equal", "end equal", "array index", "begin if", "greater than", "greater than equal"]
         list_keywords += ["less than", "less than equal", "not equal", "then", "else", "end if", "for", "loop"]
         list_keywords += ["condition", "begin", "plus", "minus", "declare", "integer", "float", "double", "long"]
         list_keywords += ["end for", "times", "divide", "modulo", "end declare", "array", "with", "size", "return"]
@@ -641,37 +641,37 @@ if __name__ == "__main__":
     struct = "#assign #array max #indexes #value 21 #index_end #with #variable min;;"
     print compare(speech, struct, wordParser)
 
-    speech = "if numbers array index i greater than max then"
+    speech = "begin if numbers array index i greater than max then"
     struct = "if #condition #array numbers #indexes #variable i #index_end > #variable max #if_branch_start"
     print compare(speech, struct, wordParser)
 
-    speech = "if numbers array index i less than max then"
+    speech = "begin if numbers array index i less than max then"
     struct = "if #condition #array numbers #indexes #variable i #index_end < #variable max #if_branch_start"
     print compare(speech, struct, wordParser)
 
-    speech = "if numbers array index i greater than equal max then"
+    speech = "begin if numbers array index i greater than equal max then"
     struct = "if #condition #array numbers #indexes #variable i #index_end >= #variable max #if_branch_start"
     print compare(speech, struct, wordParser)
 
-    speech = "if numbers array index i less than equal max then"
+    speech = "begin if numbers array index i less than equal max then"
     struct = "if #condition #array numbers #indexes #variable i #index_end <= #variable max #if_branch_start"
     print compare(speech, struct, wordParser)
 
-    speech = "if numbers array index i equal max then"
+    speech = "begin if numbers array index i equal max then"
     struct = "if #condition #array numbers #indexes #variable i #index_end == #variable max #if_branch_start"
     print compare(speech, struct, wordParser)
 
-    speech = "if numbers array index i not equal max then"
+    speech = "begin if numbers array index i not equal max then"
     struct = "if #condition #array numbers #indexes #variable i #index_end != #variable max #if_branch_start"
     print compare(speech, struct, wordParser)
           
     wordParser.reinit()
-    speech = "if max equal min then max equal one end equal else max equal two end equal end if"
+    speech = "begin if max equal min then max equal one end equal else max equal two end equal end if"
     struct = "if #condition #variable max == #variable min #if_branch_start #assign #variable max #with #value 1;; #if_branch_end #else_branch_start #assign #variable max #with #value 2;; #else_branch_end;; "
     print compare(speech, struct, wordParser)
 
     wordParser.reinit()
-    speech = "if numbers array index i greater than max then end if"
+    speech = "begin if numbers array index i greater than max then end if"
     struct = "if #condition #array  numbers #indexes  #variable  i #index_end > #variable max #if_branch_start #if_branch_end;; "
     print compare(speech, struct, wordParser)
 
@@ -688,7 +688,7 @@ if __name__ == "__main__":
     print compare(speech, struct, wordParser)
 
     wordParser.reinit()
-    speech = "if i plus j plus k greater than max then end if"
+    speech = "begin if i plus j plus k greater than max then end if"
     struct = "if #condition #variable i + #variable j + #variable k > #variable max #if_branch_start #if_branch_end;; "
     print compare(speech, struct, wordParser)
 
@@ -743,7 +743,7 @@ if __name__ == "__main__":
              "declare integer max equal numbers array index zero end declare " + \
              "declare integer i end declare " + \
              "for loop condition i equal one condition i less than length condition i plus plus begin " + \
-             "if numbers array index i greater than max then " + \
+             "begin if numbers array index i greater than max then " + \
              "max equal numbers array index i end equal " + \
              "end if end for loop return max end function "
     struct = "#function_declare findMaximum int #parameter_a #dimension 1 int #array numbers " + \
