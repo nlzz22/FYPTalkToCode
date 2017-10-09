@@ -66,7 +66,8 @@ def main():
             # Accept and continue
             to_continue_reading = True
             struct_cmd_builder.append(structured_command)
-            sentences.append(parsed_text)
+            if parsed_text != "":
+                sentences.append(parsed_text)
             unparsed_text = current_unparsed_text
         elif input_continue.lower() == "n":
             # Reject and continue
@@ -75,7 +76,8 @@ def main():
             # Accept and stop
             to_continue_reading = False
             struct_cmd_builder.append(structured_command)
-            sentences.append(parsed_text)
+            if parsed_text != "":
+                sentences.append(parsed_text)
             unparsed_text = current_unparsed_text
         elif input_continue.lower() == "t":
             # Reject and stop
