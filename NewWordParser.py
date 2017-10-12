@@ -86,12 +86,19 @@ class WordParser:
         if self.is_literal(word):
             return " #value " + str(w2n.word_to_num(word))
         else:
-            if special_syntax_if_var == None:
-                return " #variable " + self.build_var_name(word)
-            else:
-                return " " + special_syntax_if_var + " " + self.build_var_name(word)
+            try:
+                # if word is already in number form
+                float(word)
+
+                return " #value " + str(word)
+            except ValueError:
+                if special_syntax_if_var == None:
+                    return " #variable " + self.build_var_name(word)
+                else:
+                    return " " + special_syntax_if_var + " " + self.build_var_name(word)
 
 
+    # To deprecate
     ## Pass in a parameter to replace_array_keyword if output is to use something other than #array
     ## if processed word is an array
     def process_var_or_arr_or_literal(self, word, replace_array_keyword = "#array"):
@@ -114,6 +121,40 @@ class WordParser:
 
             # array
             return replace_array_keyword + " " + self.build_var_name(tokens[0]) + " #indexes " + \
+                   self.process_variable_or_literal(tokens[1]) + " #index_end"
+        except ParseException: # no match: not an array
+            return self.process_variable_or_literal(word)
+
+    def remove_hash_value_and_variables(self, string):
+        string = string.replace("#value", "")
+        string = string.replace("#variable", "")
+        string = string.strip()
+        return string
+
+
+    def process_mathematical_expression(self, toks):
+        toks = [self.remove_hash_value_and_variables(tok) for tok in toks]
+        word = self.update_join_tokens(toks)
+
+        operator_regex = "\+|\-|\*|\/|\%"
+        parts = re.split(operator_regex, word)
+
+        # Recursively handles cases where there are operators within the variable / literal
+        if len(parts) != 1:            
+            location_operator = re.search(operator_regex, word).start() # find first operator
+            front_part_expr = word[:location_operator]
+            operator_expr = word[location_operator]
+            back_part_expr = word[location_operator + 1:]
+
+            return self.process_mathematical_expression([front_part_expr]) + " " + operator_expr + " " + \
+                   self.process_mathematical_expression([back_part_expr])
+        
+        try:
+            # Test if word is an array
+            tokens = self.array_index_phrase.parseString(word)
+
+            # array
+            return "#array" + " " + self.build_var_name(tokens[0]) + " #indexes " + \
                    self.process_variable_or_literal(tokens[1]) + " #index_end"
         except ParseException: # no match: not an array
             return self.process_variable_or_literal(word)
@@ -218,6 +259,40 @@ class WordParser:
         return ' '.join(tokens)
 
 
+    def parse_assignment_statement(self, tokens):
+        return "#assign " + self.process_var_or_arr_or_literal(tokens[0]) + " #with " + tokens[1] + ";; "
+
+
+    def parse_if_statement(self, tokens):
+        # tokens consist of [ expression, comparison_operator, expression, statements (multiple) ]
+        parsed_stmt = "if #condition " + tokens[0] + " " + tokens[1] + " " + tokens[2] + " #if_branch_start "
+
+        for i in range(3, len(tokens)):
+            parsed_stmt += tokens[i] + " "
+
+        parsed_stmt += "#if_branch_end;;"
+            
+        return parsed_stmt
+
+
+    def parse_if_else_statement(self, tokens):
+        # tokens consist of [ expression, comparison_operator, expression, statements (multiple) ]
+        # statements are split into ifclause statements and elseclause statements
+        parsed_stmt = "if #condition " + tokens[0] + " " + tokens[1] + " " + tokens[2] + " #if_branch_start "
+
+        for i in range(0, len(tokens.ifclause)):
+            parsed_stmt += tokens.ifclause[i] + " "
+
+        parsed_stmt += "#if_branch_end #else_branch_start "
+
+        for j in range(0, len(tokens.elseclause)):
+            parsed_stmt += tokens.elseclause[j] + " "
+
+        parsed_stmt += "#else_branch_end;;"
+            
+        return parsed_stmt        
+
+
     def retrieve_additional_unparsed(self):
         return self.additional_unparsed_data
 
@@ -250,6 +325,7 @@ class WordParser:
         keyword_ns_equal = Keyword("equal")
         keyword_then = Suppress("then")
         keyword_else = Suppress("else")
+        keyword_end_if = Suppress("end if")
         keyword_ns_end_if = Keyword("end if")
         keyword_for = Suppress("for")
         keyword_loop = Suppress("loop")
@@ -339,10 +415,39 @@ class WordParser:
         parameter_stmt.setParseAction(self.update_parameter_arguments)
 
 
+        ### new below
+
+        statement = Forward()
+
+        mathematical_expression = Forward()
+        mathematical_expression << var_optional_array_index_or_literal + ZeroOrMore(operators + mathematical_expression)
+        mathematical_expression.setParseAction(self.process_mathematical_expression)        
+
+        assignment_operator = keyword_equal
+
+        expression = mathematical_expression
+
+        if_statement = keyword_if + expression + comparison_operator + expression + keyword_then + ZeroOrMore(statement) + \
+                           keyword_end_if
+        if_statement.setParseAction(self.parse_if_statement)
+
+        if_else_statement = keyword_if + expression + comparison_operator + expression + keyword_then + ZeroOrMore(statement.setResultsName("ifclause", True)) + \
+                             keyword_else + ZeroOrMore(statement.setResultsName("elseclause", True)) + keyword_end_if
+        if_else_statement.setParseAction(self.parse_if_else_statement)
+
+        
+
         # Constructs parsable
-        self.assign_var_stmt = var_optional_array_index_or_literal + right_side_assignment_stmt + keyword_end_equal + restOfLine
-        self.if_stmt = keyword_if + var_optional_array_index_or_literal_recur + comparison_operator + var_optional_array_index_or_literal_recur + keyword_then + restOfLine
-        self.else_stmt = keyword_else + restOfLine
+        self.assignment_statement = var_optional_array_index_or_literal + assignment_operator + expression + keyword_end_equal
+        self.assignment_statement.setParseAction(self.parse_assignment_statement)
+
+        self.selection_statement = if_statement | if_else_statement
+
+        statement << self.assignment_statement | self.selection_statement
+
+
+        ### old below
+
         self.end_stmt = end_constructs + restOfLine
         self.for_loop_stmt = for_loop + keyword_condition + var_optional_array_index_or_literal + keyword_equal + \
                              var_optional_array_index_or_literal_recur + keyword_condition + var_optional_array_index_or_literal_recur + \
@@ -367,23 +472,16 @@ class WordParser:
 
         # Check variable assignment
         result = self.parse_check_variable_assignment(sentence)
-
         if result["has_match"]:
-            return self.trim_all_spaces(result["struct_cmd"]) + " " + self.parse(result["additional_input"])
+            return self.trim_all_spaces(result["struct_cmd"])
 
-        # Check if condition
-        result = self.parse_check_if_condition(sentence)
+        # Check selection statements
+        result = self.parse_check_selection_statement(sentence)
         if result["has_match"]:
-            self.if_cond_stack.push(Stack.IF_STACK)
-            return self.trim_all_spaces(result["struct_cmd"]) + " " + self.parse(result["additional_input"])
+            return self.trim_all_spaces(result["struct_cmd"])
 
-        # Check else
-        result = self.parse_check_else(sentence)
-        if result["has_match"]:
-            self.if_cond_stack.pop() # remove "if" from stack
-            self.if_cond_stack.push(Stack.ELSE_STACK)
 
-            return self.trim_all_spaces(result["struct_cmd"]) + " " + self.parse(result["additional_input"])
+
 
         # Check end constructs
         result  = self.parse_end_constructs(sentence)
@@ -425,30 +523,24 @@ class WordParser:
         return_struct = {}
 
         try:
-            list_match_tokens = self.assign_var_stmt.parseString(sentence)
+            list_parsed = self.assignment_statement.parseString(sentence)
 
             return_struct["has_match"] = True
-            return_struct["struct_cmd"] = "#assign " + self.process_var_or_arr_or_literal(list_match_tokens[0]) + " #with " + \
-                    self.process_var_or_arr_or_literal(list_match_tokens[1]) + ";; "
-            return_struct["additional_input"] = list_match_tokens[2]
+            return_struct["struct_cmd"] = list_parsed[0]
         except ParseException:
             return_struct["has_match"] = False
 
         return return_struct
 
 
-    def parse_check_if_condition(self, sentence):
+    def parse_check_selection_statement(self, sentence):
         return_struct = {}
 
         try:
-            list_match_tokens = self.if_stmt.parseString(sentence)
+            list_parsed = self.selection_statement.parseString(sentence)
 
             return_struct["has_match"] = True
-            return_struct["struct_cmd"] = "if #condition " + self.process_var_or_arr_or_literal(list_match_tokens[0]) + \
-                    " " + list_match_tokens[1] + self.process_var_or_arr_or_literal(list_match_tokens[2]) + \
-                    " #if_branch_start "
-            return_struct["additional_input"] = list_match_tokens[3]
-            
+            return_struct["struct_cmd"] = list_parsed[0]
         except ParseException:
             return_struct["has_match"] = False
 
@@ -468,22 +560,6 @@ class WordParser:
                     self.process_var_or_arr_or_literal(list_match_tokens[4]) + " #condition #post " + \
                     self.process_var_or_arr_or_literal(list_match_tokens[5]) + " " + list_match_tokens[6] + " #for_start"
             return_struct["additional_input"] = list_match_tokens[7]
-            
-        except ParseException:
-            return_struct["has_match"] = False
-
-        return return_struct
-
-
-    def parse_check_else(self, sentence):
-        return_struct = {}
-
-        try:
-            list_match_tokens = self.else_stmt.parseString(sentence)
-
-            return_struct["has_match"] = True
-            return_struct["struct_cmd"] = " #if_branch_end #else_branch_start "
-            return_struct["additional_input"] = list_match_tokens[0]
             
         except ParseException:
             return_struct["has_match"] = False
@@ -611,7 +687,14 @@ class Stack:
 
 if __name__ == "__main__":
     def compare(word1, word2, wp):
-        return "." if (wp.trim_all_spaces(wp.parse(word1)) == wp.trim_all_spaces(word2)) else "WHY YOU WRONG :("
+        if (wp.trim_all_spaces(wp.parse(word1)) == wp.trim_all_spaces(word2)):
+            return "."
+        else:
+            print "Compare results wrong! "
+            print word1
+            print wp.trim_all_spaces(wp.parse(word1))
+            print wp.trim_all_spaces(word2)
+            return "WHY YOU WRONG :("
         
 
     wordParser = WordParser()
@@ -641,33 +724,45 @@ if __name__ == "__main__":
     struct = "#assign #array max #indexes #value 21 #index_end #with #variable min;;"
     print compare(speech, struct, wordParser)
 
-    speech = "begin if numbers array index i greater than max then"
-    struct = "if #condition #array numbers #indexes #variable i #index_end > #variable max #if_branch_start"
+    speech = "begin if a greater than b then a equal b end equal c equal d end equal end if"
+    struct = "if #condition #variable a > #variable b #if_branch_start #assign #variable a #with #variable b;; #assign #variable c #with #variable d;; #if_branch_end;;"
     print compare(speech, struct, wordParser)
 
-    speech = "begin if numbers array index i less than max then"
-    struct = "if #condition #array numbers #indexes #variable i #index_end < #variable max #if_branch_start"
+    speech = "begin if numbers array index i greater than max then end if"
+    struct = "if #condition #array numbers #indexes #variable i #index_end > #variable max #if_branch_start #if_branch_end;;"
     print compare(speech, struct, wordParser)
 
-    speech = "begin if numbers array index i greater than equal max then"
-    struct = "if #condition #array numbers #indexes #variable i #index_end >= #variable max #if_branch_start"
+    speech = "begin if numbers array index i less than max then end if"
+    struct = "if #condition #array numbers #indexes #variable i #index_end < #variable max #if_branch_start #if_branch_end;;"
     print compare(speech, struct, wordParser)
 
-    speech = "begin if numbers array index i less than equal max then"
-    struct = "if #condition #array numbers #indexes #variable i #index_end <= #variable max #if_branch_start"
+    speech = "begin if numbers array index i greater than equal max then end if"
+    struct = "if #condition #array numbers #indexes #variable i #index_end >= #variable max #if_branch_start #if_branch_end;;"
     print compare(speech, struct, wordParser)
 
-    speech = "begin if numbers array index i equal max then"
-    struct = "if #condition #array numbers #indexes #variable i #index_end == #variable max #if_branch_start"
+    speech = "begin if numbers array index i less than equal max then end if"
+    struct = "if #condition #array numbers #indexes #variable i #index_end <= #variable max #if_branch_start #if_branch_end;;"
     print compare(speech, struct, wordParser)
 
-    speech = "begin if numbers array index i not equal max then"
-    struct = "if #condition #array numbers #indexes #variable i #index_end != #variable max #if_branch_start"
+    speech = "begin if numbers array index i equal max then end if"
+    struct = "if #condition #array numbers #indexes #variable i #index_end == #variable max #if_branch_start #if_branch_end;;"
+    print compare(speech, struct, wordParser)
+
+    speech = "begin if numbers array index i not equal max then end if"
+    struct = "if #condition #array numbers #indexes #variable i #index_end != #variable max #if_branch_start #if_branch_end;;"
     print compare(speech, struct, wordParser)
           
     wordParser.reinit()
     speech = "begin if max equal min then max equal one end equal else max equal two end equal end if"
     struct = "if #condition #variable max == #variable min #if_branch_start #assign #variable max #with #value 1;; #if_branch_end #else_branch_start #assign #variable max #with #value 2;; #else_branch_end;; "
+    print compare(speech, struct, wordParser)
+
+    speech = "begin if max equal min then max equal one end equal  a equal b end equal else max equal two end equal end if"
+    struct = "if #condition #variable max == #variable min #if_branch_start #assign #variable max #with #value 1;; #assign #variable a #with #variable b;; #if_branch_end #else_branch_start #assign #variable max #with #value 2;; #else_branch_end;; "
+    print compare(speech, struct, wordParser)
+
+    speech = "begin if max equal min then max equal one end equal else a equal b end equal max equal two end equal end if"
+    struct = "if #condition #variable max == #variable min #if_branch_start #assign #variable max #with #value 1;; #if_branch_end #else_branch_start #assign #variable a #with #variable b;; #assign #variable max #with #value 2;; #else_branch_end;; "
     print compare(speech, struct, wordParser)
 
     wordParser.reinit()
