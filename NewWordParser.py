@@ -269,7 +269,17 @@ class WordParser:
 
         parsed_stmt += "#else_branch_end;;"
             
-        return parsed_stmt        
+        return parsed_stmt
+
+
+    def parse_declare_var_statement(self, tokens):
+        # tokens consist of [ variable_type, variable_name, optional (expression) ]
+        parsed_stmt = "#create " + tokens[0] + " " + tokens[1]
+        if len(tokens) == 3:
+            parsed_stmt += " " + tokens[2]
+        parsed_stmt += " #dec_end;;"
+
+        return parsed_stmt
 
 
     def retrieve_additional_unparsed(self):
@@ -342,7 +352,7 @@ class WordParser:
 
         # The components of parser
         not_all_keywords = self.build_not_all_keywords(list_keywords)
-        self.literal = self.get_all_literal()
+        self.literal = self.get_all_literal() 
         
         variable_name = Combine(OneOrMore(not_all_keywords + Word(alphas) + Optional(" ")))
         literal_name = OneOrMore(self.literal)
@@ -396,6 +406,10 @@ class WordParser:
 
         ### new below
 
+        # This function cannot use variable_name or it will ruin other functions due to the pre-formatting.
+        variable_name_processed = Combine(OneOrMore(not_all_keywords + Word(alphas) + Optional(" ")))
+        variable_name_processed.setParseAction(self.parse_var_arr_or_literal)
+        
         var_arr_or_literal = variable_or_variable_with_array_index | literal_name
         var_arr_or_literal.setParseAction(self.parse_var_arr_or_literal) # add in #array, #value or #variable      
 
@@ -417,6 +431,10 @@ class WordParser:
                              keyword_else + ZeroOrMore(statement.setResultsName("elseclause", True)) + keyword_end_if
         if_else_statement.setParseAction(self.parse_if_else_statement)
 
+        declare_variable_statement = keyword_declare + variable_type + variable_name_processed + Optional(assignment_operator + expression) + \
+                                keyword_end_declare
+        declare_variable_statement.setParseAction(self.parse_declare_var_statement)
+
         
 
         # Constructs parsable
@@ -425,7 +443,9 @@ class WordParser:
 
         self.selection_statement = if_statement | if_else_statement
 
-        statement << self.assignment_statement | self.selection_statement
+        self.declaration_statement = declare_variable_statement # or declare array stmt
+
+        statement << self.assignment_statement | self.selection_statement | self.declaration_statement
 
 
         ### old below
@@ -462,8 +482,13 @@ class WordParser:
         if result["has_match"]:
             return self.trim_all_spaces(result["struct_cmd"])
 
+        # Check declaration statements
+        result = self.parse_check_declaration_statement(sentence)
+        if result["has_match"]:
+            return self.trim_all_spaces(result["struct_cmd"])
 
 
+###### old below
 
         # Check end constructs
         result  = self.parse_end_constructs(sentence)
@@ -472,16 +497,6 @@ class WordParser:
 
         # Check for loop
         result = self.parse_check_for_loop(sentence)
-        if result["has_match"]:
-            return self.trim_all_spaces(result["struct_cmd"]) + " " + self.parse(result["additional_input"])
-
-        # Check variable declaration
-        result = self.parse_check_variable_declaration(sentence)
-        if result["has_match"]:
-            return self.trim_all_spaces(result["struct_cmd"]) + " " + self.parse(result["additional_input"])
-
-        # Check array declaration
-        result = self.parse_check_array_declaration(sentence)
         if result["has_match"]:
             return self.trim_all_spaces(result["struct_cmd"]) + " " + self.parse(result["additional_input"])
 
@@ -565,6 +580,21 @@ class WordParser:
         return return_struct
 
 
+    def parse_check_declaration_statement(self, sentence):
+        return_struct = {}
+
+        try:
+            list_parsed = self.declaration_statement.parseString(sentence)
+
+            return_struct["has_match"] = True
+            return_struct["struct_cmd"] = list_parsed[0]
+        except ParseException:
+            return_struct["has_match"] = False
+
+        return return_struct
+
+
+    # to deprecate 
     def parse_check_variable_declaration(self, sentence):
         return_struct = {}
 
@@ -587,6 +617,7 @@ class WordParser:
         return return_struct
 
 
+    # to deprecate 
     def parse_check_array_declaration(self, sentence):
         return_struct = {}
 
