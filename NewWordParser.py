@@ -125,36 +125,15 @@ class WordParser:
         except ParseException: # no match: not an array
             return self.process_variable_or_literal(word)
 
-    def remove_hash_value_and_variables(self, string):
-        string = string.replace("#value", "")
-        string = string.replace("#variable", "")
-        string = string.strip()
-        return string
+    def parse_var_arr_or_literal(self, toks):
+        word = toks[0]
 
-
-    def process_mathematical_expression(self, toks):
-        toks = [self.remove_hash_value_and_variables(tok) for tok in toks]
-        word = self.update_join_tokens(toks)
-
-        operator_regex = "\+|\-|\*|\/|\%"
-        parts = re.split(operator_regex, word)
-
-        # Recursively handles cases where there are operators within the variable / literal
-        if len(parts) != 1:            
-            location_operator = re.search(operator_regex, word).start() # find first operator
-            front_part_expr = word[:location_operator]
-            operator_expr = word[location_operator]
-            back_part_expr = word[location_operator + 1:]
-
-            return self.process_mathematical_expression([front_part_expr]) + " " + operator_expr + " " + \
-                   self.process_mathematical_expression([back_part_expr])
-        
         try:
             # Test if word is an array
             tokens = self.array_index_phrase.parseString(word)
 
             # array
-            return "#array" + " " + self.build_var_name(tokens[0]) + " #indexes " + \
+            return "#array " + " " + self.build_var_name(tokens[0]) + " #indexes " + \
                    self.process_variable_or_literal(tokens[1]) + " #index_end"
         except ParseException: # no match: not an array
             return self.process_variable_or_literal(word)
@@ -260,7 +239,7 @@ class WordParser:
 
 
     def parse_assignment_statement(self, tokens):
-        return "#assign " + self.process_var_or_arr_or_literal(tokens[0]) + " #with " + tokens[1] + ";; "
+        return "#assign " + tokens[0] + " #with " + tokens[1] + ";; "
 
 
     def parse_if_statement(self, tokens):
@@ -417,11 +396,14 @@ class WordParser:
 
         ### new below
 
+        var_arr_or_literal = variable_or_variable_with_array_index | literal_name
+        var_arr_or_literal.setParseAction(self.parse_var_arr_or_literal) # add in #array, #value or #variable      
+
         statement = Forward()
 
         mathematical_expression = Forward()
-        mathematical_expression << var_optional_array_index_or_literal + ZeroOrMore(operators + mathematical_expression)
-        mathematical_expression.setParseAction(self.process_mathematical_expression)        
+        mathematical_expression << var_arr_or_literal + ZeroOrMore(operators + mathematical_expression)
+        mathematical_expression.setParseAction(self.update_join_tokens) # join completed var/arr/literal with operators
 
         assignment_operator = keyword_equal
 
@@ -438,7 +420,7 @@ class WordParser:
         
 
         # Constructs parsable
-        self.assignment_statement = var_optional_array_index_or_literal + assignment_operator + expression + keyword_end_equal
+        self.assignment_statement = var_arr_or_literal + assignment_operator + expression + keyword_end_equal
         self.assignment_statement.setParseAction(self.parse_assignment_statement)
 
         self.selection_statement = if_statement | if_else_statement
