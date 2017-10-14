@@ -96,34 +96,7 @@ class WordParser:
                     return " #variable " + self.build_var_name(word)
                 else:
                     return " " + special_syntax_if_var + " " + self.build_var_name(word)
-
-
-    # To deprecate
-    ## Pass in a parameter to replace_array_keyword if output is to use something other than #array
-    ## if processed word is an array
-    def process_var_or_arr_or_literal(self, word, replace_array_keyword = "#array"):
-        operator_regex = "\+|\-|\*|\/|\%"
-        parts = re.split(operator_regex, word)
-
-        # Recursively handles cases where there are operators within the variable / literal
-        if len(parts) != 1:
-            location_operator = re.search(operator_regex, word).start() # find first operator
-            front_part_expr = word[:location_operator]
-            operator_expr = word[location_operator]
-            back_part_expr = word[location_operator + 1:]
-
-            return self.process_var_or_arr_or_literal(front_part_expr) + " " + operator_expr + " " + \
-                   self.process_var_or_arr_or_literal(back_part_expr)
-        
-        try:
-            # Test if word is an array
-            tokens = self.array_index_phrase.parseString(word)
-
-            # array
-            return replace_array_keyword + " " + self.build_var_name(tokens[0]) + " #indexes " + \
-                   self.process_variable_or_literal(tokens[1]) + " #index_end"
-        except ParseException: # no match: not an array
-            return self.process_variable_or_literal(word)
+                
 
     def parse_var_arr_or_literal(self, toks):
         word = toks[0]
@@ -218,24 +191,6 @@ class WordParser:
             # Code should not reach here
             return " unknown "
         
-
-    def update_end_constructs(self, tokens):
-        if tokens.endif != "": # end if operation
-            if_or_else = self.if_cond_stack.pop()
-            if if_or_else == Stack.IF_STACK:
-                return "#if_branch_end"
-            elif if_or_else == Stack.ELSE_STACK:
-                return "#else_branch_end"
-            else: # unknown end if meet
-                return " unknown "
-        elif tokens.endforloop != "": # end for loop
-            return "#for_end"
-        elif tokens.endfunction != "": # end function
-            return "#function_end"
-        else:
-            # Code should not reach here
-            return " unknown "
-
 
     def update_increment_for_operator(self, tokens):
         if tokens.pp != "": # plus plus operation
@@ -332,26 +287,9 @@ class WordParser:
     def parse_return_statement(self, tokens):
         # tokens consist of [ expression ]
         return "return " + tokens[0] + ";;"
-
-
-    def retrieve_additional_unparsed(self):
-        return self.additional_unparsed_data
-
-
-    def set_additional_unparsed(self, unparsed_data):
-        self.additional_unparsed_data = unparsed_data
-
-
-    def reinit(self):
-        self.additional_unparsed_data = ""
-        self.if_cond_stack = Stack()
         
         
-    def __init__(self):
-        # Some stored variables
-        self.additional_unparsed_data = ""
-        self.if_cond_stack = Stack()
-        
+    def __init__(self):        
         # Define all keywords here
         keyword_equal = Suppress("equal")
         keyword_end_equal = Suppress("end equal")
@@ -367,11 +305,9 @@ class WordParser:
         keyword_then = Suppress("then")
         keyword_else = Suppress("else")
         keyword_end_if = Suppress("end if")
-        keyword_ns_end_if = Keyword("end if")
         keyword_for = Suppress("for")
         keyword_loop = Suppress("loop")
         keyword_end_for_loop = Suppress("end for") + Optional(keyword_loop)
-        keyword_ns_end_for_loop = Keyword("end for") + Optional(keyword_loop)
         keyword_condition = Suppress("condition")
         keyword_begin = Suppress("begin")
         keyword_ns_plus_plus = Keyword("plus plus")
@@ -411,6 +347,10 @@ class WordParser:
         literal_name = OneOrMore(self.literal)
         variable_or_literal = variable_name | literal_name
 
+        # This function cannot use variable_name or it will ruin other functions due to the pre-formatting.
+        variable_name_processed = Combine(OneOrMore(not_all_keywords + Word(alphas) + Optional(" ")))
+        variable_name_processed.setParseAction(self.parse_var_arr_or_literal)
+
         for_loop = keyword_for + Optional(keyword_loop)
 
         comparison_operator = keyword_ns_greater_than_equal("ge") | keyword_ns_greater_than("gt") | keyword_ns_less_than_equal("le") \
@@ -428,6 +368,8 @@ class WordParser:
                     keyword_ns_divide("d") | keyword_ns_modulo("mod")
         operators.setParseAction(self.update_operators)
 
+        assignment_operator = keyword_equal
+
         variable_with_array_index = variable_name("varname") + keyword_array_index + variable_or_literal("index")
         variable_with_array_index.setParseAction(self.update_array_tags)
 
@@ -441,26 +383,11 @@ class WordParser:
 
         variable_or_variable_with_array_index = variable_with_array_index | variable_name
 
-        var_optional_array_index_or_literal = variable_or_variable_with_array_index | literal_name
-        
-        var_optional_array_index_or_literal_recur = Forward() # allows for recursion
-        var_optional_array_index_or_literal_recur << var_optional_array_index_or_literal + ZeroOrMore(operators + var_optional_array_index_or_literal_recur)
-        var_optional_array_index_or_literal_recur.setParseAction(self.update_join_tokens)
-
-        right_side_assignment_stmt = keyword_equal + var_optional_array_index_or_literal_recur
-
         variable_or_array = (Keyword("array") + variable_name) | variable_name
         variable_or_array.setParseAction(self.update_join_tokens)
         parameter_statement = Optional(keyword_with) + keyword_parameter + variable_type("vartype") + variable_or_array("varname")
         parameter_statement.setParseAction(self.update_parameter_arguments)
 
-
-        ### new below
-
-        # This function cannot use variable_name or it will ruin other functions due to the pre-formatting.
-        variable_name_processed = Combine(OneOrMore(not_all_keywords + Word(alphas) + Optional(" ")))
-        variable_name_processed.setParseAction(self.parse_var_arr_or_literal)
-        
         var_arr_or_literal = variable_or_variable_with_array_index | literal_name
         var_arr_or_literal.setParseAction(self.parse_var_arr_or_literal) # add in #array, #value or #variable      
 
@@ -469,8 +396,6 @@ class WordParser:
         mathematical_expression = Forward()
         mathematical_expression << var_arr_or_literal + ZeroOrMore(operators + mathematical_expression)
         mathematical_expression.setParseAction(self.update_join_tokens) # join completed var/arr/literal with operators
-
-        assignment_operator = keyword_equal
 
         expression = mathematical_expression
 
@@ -522,7 +447,6 @@ class WordParser:
  
     def parse(self, sentence):
         sentence = str(sentence).lower()
-        self.set_additional_unparsed("")
         
         if sentence == "":
             return ""
@@ -741,7 +665,6 @@ if __name__ == "__main__":
     struct = "if #condition #array numbers #indexes #variable i #index_end != #variable max #if_branch_start #if_branch_end;;"
     print compare(speech, struct, wordParser)
           
-    wordParser.reinit()
     speech = "begin if max equal min then max equal one end equal else max equal two end equal end if"
     struct = "if #condition #variable max == #variable min #if_branch_start #assign #variable max #with #value 1;; #if_branch_end #else_branch_start #assign #variable max #with #value 2;; #else_branch_end;; "
     print compare(speech, struct, wordParser)
@@ -754,7 +677,6 @@ if __name__ == "__main__":
     struct = "if #condition #variable max == #variable min #if_branch_start #assign #variable max #with #value 1;; #if_branch_end #else_branch_start #assign #variable a #with #variable b;; #assign #variable max #with #value 2;; #else_branch_end;; "
     print compare(speech, struct, wordParser)
 
-    wordParser.reinit()
     speech = "begin if numbers array index i greater than max then end if"
     struct = "if #condition #array  numbers #indexes  #variable  i #index_end > #variable max #if_branch_start #if_branch_end;; "
     print compare(speech, struct, wordParser)
@@ -771,7 +693,6 @@ if __name__ == "__main__":
     struct = "for #condition #assign #variable i #with #value 1 #condition #variable i + #value 2 < #variable length #condition #post #variable i ++ #for_start #for_end;;"
     print compare(speech, struct, wordParser)
 
-    wordParser.reinit()
     speech = "begin if i plus j plus k greater than max then end if"
     struct = "if #condition #variable i + #variable j + #variable k > #variable max #if_branch_start #if_branch_end;; "
     print compare(speech, struct, wordParser)
