@@ -450,41 +450,38 @@ class WordParser:
         
         if sentence == "":
             return ""
-        # Run parsing through each construct
 
-        # Check variable assignment
-        result = self.parse_check_variable_assignment(sentence)
-        if result["has_match"]:
-            return self.trim_all_spaces(result["struct_cmd"])
+        words = sentence.split()
+        if len(words) < 2:
+            return ""
+
+        first_word = words[0]
+        start_word = words[0] + " " + words[1]
 
         # Check selection statements
-        result = self.parse_check_selection_statement(sentence)
-        if result["has_match"]:
-            return self.trim_all_spaces(result["struct_cmd"])
-
+        if start_word == "begin if":
+            result = self.parse_check_selection_statement(sentence)
         # Check declaration statements
-        result = self.parse_check_declaration_statement(sentence)
-        if result["has_match"]:
-            return self.trim_all_spaces(result["struct_cmd"])
-
+        elif first_word == "declare":
+            result = self.parse_check_declaration_statement(sentence)
         # Check iteration statements
-        result = self.parse_check_iteration_statement(sentence)
-        if result["has_match"]:
-            return self.trim_all_spaces(result["struct_cmd"])
-
+        elif first_word == "for":
+            result = self.parse_check_iteration_statement(sentence)
         # Check jump statements
-        result = self.parse_check_jump_statement(sentence)
+        elif first_word == "return":
+            result = self.parse_check_jump_statement(sentence)
+        # Check function declaration
+        elif start_word == "create function":
+            result = self.parse_check_function_declaration(sentence)
+        # Else, assume variable assignment check
+        else:
+            result = self.parse_check_variable_assignment(sentence)
+
         if result["has_match"]:
             return self.trim_all_spaces(result["struct_cmd"])
-
-        # Check function declaration
-        result = self.parse_check_function_declaration(sentence)
-        if result["has_match"]:
-            return self.trim_all_spaces(result["struct_cmd"])        
-
-        # No more matches: (unknown data), we stop parsing
-        self.set_additional_unparsed(sentence)
-        return ""
+        else:
+            # no matches
+            return ""
         
 
     def parse_check_variable_assignment(self, sentence):
