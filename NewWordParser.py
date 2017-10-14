@@ -139,6 +139,17 @@ class WordParser:
             return self.process_variable_or_literal(word)
 
 
+    def parse_var_arr_or_literal_word(self, word):
+        return self.parse_var_arr_or_literal([word])
+    
+
+    def parse_arr_with_size(self, toks):
+        var_name = toks[0]
+        size = toks[1]
+
+        return "#variable " + var_name + " #indexes " + self.process_variable_or_literal(size) + " #index_end"
+
+
     ## This is for setting parse action to output array tags
     def update_array_tags(self, tokens):
         return " #array " + tokens.varname + " #index " + tokens.index
@@ -272,6 +283,39 @@ class WordParser:
         return parsed_stmt
 
 
+    def parse_for_loop_statement(self, tokens):
+        # tokens consist of [ var_arr_literal, expression, expression, comparison_operator, expression, var_arr, increment_for_op,
+        # statements (multiple)]
+        parsed_stmt = "for #condition #assign " + tokens[0] + " #with " + tokens[1] + " #condition " + tokens[2] + " " + \
+                      tokens[3] + " " + tokens[4] + " #condition #post " + self.parse_var_arr_or_literal_word(tokens[5]) + \
+                      " "  + tokens[6] + " #for_start "
+
+        for i in range(7, len(tokens)):
+            parsed_stmt += tokens[i] + " "
+
+        parsed_stmt += "#for_end;;"
+
+        return parsed_stmt
+
+
+    def parse_function_declaration(self, tokens):
+        # tokens consist of [ var_name, var_type, parameter_statements (multiple) + statement (multiple) ]
+        # statements are tokens.stmts and parameter_statements are token.params
+        parsed_stmt = "#function_declare " + self.build_var_name(tokens[0]) + " " + tokens[1]
+        
+        for i in range(0, len(tokens.params)):
+            parsed_stmt += tokens.params[i]
+            
+        parsed_stmt += " #function_start "
+
+        for j in range(0, len(tokens.stmts)):
+            parsed_stmt += tokens.stmts[j] + " "
+
+        parsed_stmt += "#function_end;;"
+
+        return parsed_stmt
+
+
     def parse_declare_var_statement(self, tokens):
         # tokens consist of [ variable_type, variable_name, optional (expression) ]
         parsed_stmt = "#create " + tokens[0] + " " + tokens[1]
@@ -280,6 +324,14 @@ class WordParser:
         parsed_stmt += " #dec_end;;"
 
         return parsed_stmt
+
+    def parse_declare_arr_statement(self, tokens):
+        # tokens consist of [ variable_type, variable_name_with_size ] 
+        return "#create " + tokens[0] + " #array " + tokens[1] + " #dec_end;;"
+
+    def parse_return_statement(self, tokens):
+        # tokens consist of [ expression ]
+        return "return " + tokens[0] + ";;"
 
 
     def retrieve_additional_unparsed(self):
@@ -318,6 +370,7 @@ class WordParser:
         keyword_ns_end_if = Keyword("end if")
         keyword_for = Suppress("for")
         keyword_loop = Suppress("loop")
+        keyword_end_for_loop = Suppress("end for") + Optional(keyword_loop)
         keyword_ns_end_for_loop = Keyword("end for") + Optional(keyword_loop)
         keyword_condition = Suppress("condition")
         keyword_begin = Suppress("begin")
@@ -341,7 +394,7 @@ class WordParser:
         keyword_create_function = Suppress("create function")
         keyword_return_type = Suppress("return type")
         keyword_parameter = Suppress("parameter")
-        keyword_ns_end_function = Keyword("end function")
+        keyword_end_function = Suppress("end function")
 
         # The list of required keywords
         list_keywords = ["equal", "end equal", "array index", "begin if", "greater than", "greater than equal"]
@@ -364,10 +417,6 @@ class WordParser:
                               | keyword_ns_less_than("lt") | keyword_ns_not_equal("ne") | keyword_ns_equal("eq")
         comparison_operator.setParseAction(self.update_comparison_ops) # Additional processing for output
 
-        end_constructs = keyword_ns_end_if("endif") | keyword_ns_end_for_loop("endforloop") | \
-                         keyword_ns_end_function("endfunction") # todo
-        end_constructs.setParseAction(self.update_end_constructs)
-
         variable_type = keyword_ns_integer("int") | keyword_ns_float("float") | keyword_ns_double("double") | keyword_ns_long("long") | \
                         keyword_ns_void("void") # todo
         variable_type.setParseAction(self.update_var_type)
@@ -384,6 +433,8 @@ class WordParser:
 
         variable_with_size_index = variable_name("varname") + Optional(keyword_with) + keyword_size + variable_or_literal("index")
         variable_with_size_index.setParseAction(self.update_array_tags)
+        variable_with_size = variable_with_size_index
+        variable_with_size.setParseAction(self.parse_arr_with_size)
 
         self.array_index_phrase = Suppress("#array") + variable_name + Suppress("#index") + variable_or_literal
         self.array_variable_phrase = keyword_array + variable_name
@@ -400,8 +451,8 @@ class WordParser:
 
         variable_or_array = (Keyword("array") + variable_name) | variable_name
         variable_or_array.setParseAction(self.update_join_tokens)
-        parameter_stmt = Optional(keyword_with) + keyword_parameter + variable_type("vartype") + variable_or_array("varname")
-        parameter_stmt.setParseAction(self.update_parameter_arguments)
+        parameter_statement = Optional(keyword_with) + keyword_parameter + variable_type("vartype") + variable_or_array("varname")
+        parameter_statement.setParseAction(self.update_parameter_arguments)
 
 
         ### new below
@@ -435,7 +486,18 @@ class WordParser:
                                 keyword_end_declare
         declare_variable_statement.setParseAction(self.parse_declare_var_statement)
 
-        
+        declare_array_statement = keyword_declare + variable_type + keyword_array + variable_with_size + \
+                                  keyword_end_declare
+        declare_array_statement.setParseAction(self.parse_declare_arr_statement)
+
+        for_loop_statement = for_loop + keyword_condition + var_arr_or_literal + keyword_equal + expression + \
+                             keyword_condition + expression + comparison_operator + expression + \
+                             keyword_condition + variable_or_variable_with_array_index + increment_for_operator + keyword_begin + \
+                             ZeroOrMore(statement) + keyword_end_for_loop
+        for_loop_statement.setParseAction(self.parse_for_loop_statement)
+
+        return_statement = keyword_return + expression
+        return_statement.setParseAction(self.parse_return_statement)
 
         # Constructs parsable
         self.assignment_statement = var_arr_or_literal + assignment_operator + expression + keyword_end_equal
@@ -443,25 +505,19 @@ class WordParser:
 
         self.selection_statement = if_statement | if_else_statement
 
-        self.declaration_statement = declare_variable_statement # or declare array stmt
+        self.declaration_statement = declare_variable_statement | declare_array_statement
 
-        statement << self.assignment_statement | self.selection_statement | self.declaration_statement
+        self.iteration_statement = for_loop_statement
 
+        self.jump_statement = return_statement
 
-        ### old below
+        statement << (self.assignment_statement | self.selection_statement | self.declaration_statement | \
+                  self.iteration_statement | self.jump_statement)
 
-        self.end_stmt = end_constructs + restOfLine
-        self.for_loop_stmt = for_loop + keyword_condition + var_optional_array_index_or_literal + keyword_equal + \
-                             var_optional_array_index_or_literal_recur + keyword_condition + var_optional_array_index_or_literal_recur + \
-                             comparison_operator + var_optional_array_index_or_literal_recur + keyword_condition + \
-                             variable_or_variable_with_array_index + increment_for_operator + keyword_begin + restOfLine
-        self.declare_var_stmt = keyword_declare + variable_type + variable_name + Optional(right_side_assignment_stmt) + \
-                                keyword_end_declare + restOfLine
-        self.declare_array_stmt = keyword_declare + variable_type + keyword_array + variable_with_size_index + \
-                                  keyword_end_declare + restOfLine
-        self.return_stmt = keyword_return + var_optional_array_index_or_literal_recur + restOfLine
-        self.declare_function_stmt = keyword_create_function + variable_name + Optional(keyword_with) + keyword_return_type + \
-                                     variable_type + ZeroOrMore(parameter_stmt) + keyword_begin + restOfLine
+        self.function_declaration = keyword_create_function + variable_name + Optional(keyword_with) + keyword_return_type + \
+                               variable_type + ZeroOrMore(parameter_statement.setResultsName("params", True)) + keyword_begin + \
+                               ZeroOrMore(statement.setResultsName("stmts", True)) + keyword_end_function
+        self.function_declaration.setParseAction(self.parse_function_declaration)
         
  
     def parse(self, sentence):
@@ -487,29 +543,20 @@ class WordParser:
         if result["has_match"]:
             return self.trim_all_spaces(result["struct_cmd"])
 
-
-###### old below
-
-        # Check end constructs
-        result  = self.parse_end_constructs(sentence)
+        # Check iteration statements
+        result = self.parse_check_iteration_statement(sentence)
         if result["has_match"]:
-            return self.trim_all_spaces(result["struct_cmd"]) + " " + self.parse(result["additional_input"])
+            return self.trim_all_spaces(result["struct_cmd"])
 
-        # Check for loop
-        result = self.parse_check_for_loop(sentence)
+        # Check jump statements
+        result = self.parse_check_jump_statement(sentence)
         if result["has_match"]:
-            return self.trim_all_spaces(result["struct_cmd"]) + " " + self.parse(result["additional_input"])
-
-        # Check return statement
-        result = self.parse_check_return_stmt(sentence)
-        if result["has_match"]:
-            return self.trim_all_spaces(result["struct_cmd"]) + " " + self.parse(result["additional_input"])
+            return self.trim_all_spaces(result["struct_cmd"])
 
         # Check function declaration
         result = self.parse_check_function_declaration(sentence)
         if result["has_match"]:
-            return self.trim_all_spaces(result["struct_cmd"]) + " " + self.parse(result["additional_input"])
-        
+            return self.trim_all_spaces(result["struct_cmd"])        
 
         # No more matches: (unknown data), we stop parsing
         self.set_additional_unparsed(sentence)
@@ -544,36 +591,14 @@ class WordParser:
         return return_struct
 
 
-    def parse_check_for_loop(self, sentence):
+    def parse_check_iteration_statement(self, sentence):
         return_struct = {}
 
         try:
-            list_match_tokens = self.for_loop_stmt.parseString(sentence)
+            list_parsed = self.iteration_statement.parseString(sentence)
 
             return_struct["has_match"] = True
-            return_struct["struct_cmd"] = "for #condition #assign " + self.process_var_or_arr_or_literal(list_match_tokens[0]) + \
-                    " #with " + self.process_var_or_arr_or_literal(list_match_tokens[1]) + " #condition " + \
-                    self.process_var_or_arr_or_literal(list_match_tokens[2]) + " " + list_match_tokens[3] +  " " + \
-                    self.process_var_or_arr_or_literal(list_match_tokens[4]) + " #condition #post " + \
-                    self.process_var_or_arr_or_literal(list_match_tokens[5]) + " " + list_match_tokens[6] + " #for_start"
-            return_struct["additional_input"] = list_match_tokens[7]
-            
-        except ParseException:
-            return_struct["has_match"] = False
-
-        return return_struct
-
-
-    def parse_end_constructs(self, sentence):
-        return_struct = {}
-
-        try:
-            list_match_tokens = self.end_stmt.parseString(sentence)
-
-            return_struct["has_match"] = True
-            return_struct["struct_cmd"] = list_match_tokens[0] + ";; "
-            return_struct["additional_input"] = list_match_tokens[1]
-            
+            return_struct["struct_cmd"] = list_parsed[0]
         except ParseException:
             return_struct["has_match"] = False
 
@@ -594,59 +619,14 @@ class WordParser:
         return return_struct
 
 
-    # to deprecate 
-    def parse_check_variable_declaration(self, sentence):
+    def parse_check_jump_statement(self, sentence):
         return_struct = {}
 
         try:
-            list_match_tokens = self.declare_var_stmt.parseString(sentence)
+            list_parsed = self.jump_statement.parseString(sentence)
 
             return_struct["has_match"] = True
-            
-            struct_cmd = "#create " + list_match_tokens[0] + self.process_var_or_arr_or_literal(list_match_tokens[1]) + " "
-            if len(list_match_tokens) == 4:
-                struct_cmd += self.process_var_or_arr_or_literal(list_match_tokens[2])
-            struct_cmd += " #dec_end;;"
-            return_struct["struct_cmd"] = struct_cmd
-            
-            return_struct["additional_input"] = list_match_tokens[len(list_match_tokens) - 1]
-            
-        except ParseException:
-            return_struct["has_match"] = False
-
-        return return_struct
-
-
-    # to deprecate 
-    def parse_check_array_declaration(self, sentence):
-        return_struct = {}
-
-        try:
-            list_match_tokens = self.declare_array_stmt.parseString(sentence)
-
-            return_struct["has_match"] = True
-            return_struct["struct_cmd"] = "#create " + list_match_tokens[0] + " #array " + \
-                                          self.process_var_or_arr_or_literal(list_match_tokens[1], "#variable") + \
-                                          " #dec_end;;"
-            
-            return_struct["additional_input"] = list_match_tokens[len(list_match_tokens) - 1]
-            
-        except ParseException:
-            return_struct["has_match"] = False
-
-        return return_struct
-
-
-    def parse_check_return_stmt(self, sentence):
-        return_struct = {}
-
-        try:
-            list_match_tokens = self.return_stmt.parseString(sentence)
-
-            return_struct["has_match"] = True
-            return_struct["struct_cmd"] = "return " + self.process_var_or_arr_or_literal(list_match_tokens[0]) + ";;"
-            return_struct["additional_input"] = list_match_tokens[len(list_match_tokens) - 1]
-            
+            return_struct["struct_cmd"] = list_parsed[0]
         except ParseException:
             return_struct["has_match"] = False
 
@@ -657,16 +637,10 @@ class WordParser:
         return_struct = {}
 
         try:
-            list_match_tokens = self.declare_function_stmt.parseString(sentence)
-
-            return_struct["has_match"] = True
-            struct_cmd = "#function_declare " + self.build_var_name(list_match_tokens[0]) + \
-                                          list_match_tokens[1]
-            for i in range(2, len(list_match_tokens) - 1):
-                struct_cmd += list_match_tokens[i]
-            return_struct["struct_cmd"] = struct_cmd + " #function_start"
-            return_struct["additional_input"] = list_match_tokens[len(list_match_tokens) - 1]
+            list_parsed = self.function_declaration.parseString(sentence)
             
+            return_struct["has_match"] = True
+            return_struct["struct_cmd"] = list_parsed[0]            
         except ParseException:
             return_struct["has_match"] = False
 
@@ -705,7 +679,9 @@ if __name__ == "__main__":
         else:
             print "Compare results wrong! "
             print word1
+            print "----"
             print wp.trim_all_spaces(wp.parse(word1))
+            print "----"
             print wp.trim_all_spaces(word2)
             return "WHY YOU WRONG :("
         
@@ -837,12 +813,21 @@ if __name__ == "__main__":
     print compare(speech, struct, wordParser)
 
     speech = "create function find maximum with return type integer with parameter integer array numbers " + \
-             "with parameter integer length begin"
-    struct = "#function_declare findMaximum int #parameter_a #dimension 1 int #array numbers #parameter int length #function_start"
+             "with parameter integer length begin end function"
+    struct = "#function_declare findMaximum int #parameter_a #dimension 1 int #array numbers #parameter int length #function_start #function_end;;"
     print compare(speech, struct, wordParser)
 
     speech = "create function main with return type void begin end function"
     struct = "#function_declare main void #function_start #function_end;;"
+    print compare(speech, struct, wordParser)
+
+    speech = "for loop condition i equal one condition i less than length condition i plus plus begin " + \
+             "begin if numbers array index i greater than max then " + \
+             "max equal numbers array index i end equal " + \
+             "end if end for loop "
+    struct = "for #condition #assign #variable i #with #value 1 #condition #variable i < #variable length #condition #post #variable i ++ " + \
+             "#for_start if #condition #array numbers #indexes #variable i #index_end > #variable max #if_branch_start " + \
+             "#assign #variable max #with #array numbers #indexes #variable i #index_end;; #if_branch_end;; #for_end;; "
     print compare(speech, struct, wordParser)
 
     # Test sample code
