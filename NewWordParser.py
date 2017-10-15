@@ -287,14 +287,36 @@ class WordParser:
     def parse_return_statement(self, tokens):
         # tokens consist of [ expression ]
         return "return " + tokens[0] + ";;"
+
+    def handle_fail_parse(self, string, loc, expr, err):
+        if self.error_message != "":
+            self.error_message += " or " + str(expr)
+        else:
+            self.error_message = str(expr)
+
+    def get_error_message(self):
+        parts = self.error_message.split(" or ")
+        parts = [part.strip() for part in parts]
+        
+        parts_without_duplicate = set()
+        for part in parts:
+            parts_without_duplicate.add(part)
+        
+        parts_without_duplicate = list(parts_without_duplicate)
+
+        error_message = " or ".join(parts_without_duplicate)
+        
+        return "Expected " + error_message
         
         
-    def __init__(self):        
+    def __init__(self):
+        self.error_message = ""
+        
         # Define all keywords here
-        keyword_equal = Suppress("equal")
-        keyword_end_equal = Suppress("end equal")
-        keyword_array = Suppress("array")
-        keyword_array_index = Suppress("array index")
+        keyword_equal = Suppress("equal").setName("\"equal\"").setFailAction(self.handle_fail_parse)
+        keyword_end_equal = Suppress("end equal").setName("\"end equal\"").setFailAction(self.handle_fail_parse)
+        keyword_array = Suppress("array").setName("\"array\"").setFailAction(self.handle_fail_parse)
+        keyword_array_index = Suppress("array index").setName("\"array index\"").setFailAction(self.handle_fail_parse)
         keyword_if = Suppress("begin if")
         keyword_ns_greater_than = Keyword("greater than")
         keyword_ns_greater_than_equal = Keyword("greater than equal")
@@ -302,14 +324,15 @@ class WordParser:
         keyword_ns_less_than_equal = Keyword("less than equal")
         keyword_ns_not_equal = Keyword("not equal")
         keyword_ns_equal = Keyword("equal")
-        keyword_then = Suppress("then")
-        keyword_else = Suppress("else")
-        keyword_end_if = Suppress("end if")
+        keyword_then = Suppress("then").setName("\"then\"").setFailAction(self.handle_fail_parse)
+        keyword_else = Suppress("else").setName("\"else\"").setFailAction(self.handle_fail_parse)
+        keyword_end_if = Suppress("end if").setName("\"end if\"").setFailAction(self.handle_fail_parse)
         keyword_for = Suppress("for")
         keyword_loop = Suppress("loop")
         keyword_end_for_loop = Suppress("end for") + Optional(keyword_loop)
-        keyword_condition = Suppress("condition")
-        keyword_begin = Suppress("begin")
+        keyword_end_for_loop.setName("\"end for loop\"").setFailAction(self.handle_fail_parse)
+        keyword_condition = Suppress("condition").setName("\"condition\"").setFailAction(self.handle_fail_parse)
+        keyword_begin = Suppress("begin").setName("\"begin\"").setFailAction(self.handle_fail_parse)
         keyword_ns_plus_plus = Keyword("plus plus")
         keyword_ns_minus_minus = Keyword("minus minus")
         keyword_ns_plus = Keyword("plus")
@@ -323,14 +346,14 @@ class WordParser:
         keyword_ns_double = Keyword("double")
         keyword_ns_long = Keyword("long")
         keyword_ns_void = Keyword("void")
-        keyword_end_declare = Suppress("end declare")
+        keyword_end_declare = Suppress("end declare").setName("\"end declare\"").setFailAction(self.handle_fail_parse)
         keyword_with = Suppress("with")
-        keyword_size = Suppress("size")
+        keyword_size = Suppress("size").setName("\"size\"").setFailAction(self.handle_fail_parse)
         keyword_return = Suppress("return")
         keyword_create_function = Suppress("create function")
-        keyword_return_type = Suppress("return type")
-        keyword_parameter = Suppress("parameter")
-        keyword_end_function = Suppress("end function")
+        keyword_return_type = Suppress("return type").setName("\"return type\"").setFailAction(self.handle_fail_parse)
+        keyword_parameter = Suppress("parameter").setName("\"parameter\"").setFailAction(self.handle_fail_parse)
+        keyword_end_function = Suppress("end function").setName("\"end function\"").setFailAction(self.handle_fail_parse)
 
         # The list of required keywords
         list_keywords = ["equal", "end equal", "array index", "begin if", "greater than", "greater than equal"]
@@ -344,28 +367,35 @@ class WordParser:
         self.literal = self.get_all_literal() 
         
         variable_name = Combine(OneOrMore(not_all_keywords + Word(alphas) + Optional(" ")))
+        variable_name.setName("a variable name").setFailAction(self.handle_fail_parse)
         literal_name = OneOrMore(self.literal)
+        literal_name.setName("a literal").setFailAction(self.handle_fail_parse)
         variable_or_literal = variable_name | literal_name
 
         # This function cannot use variable_name or it will ruin other functions due to the pre-formatting.
         variable_name_processed = Combine(OneOrMore(not_all_keywords + Word(alphas) + Optional(" ")))
+        variable_name_processed.setName("a variable name").setFailAction(self.handle_fail_parse)
         variable_name_processed.setParseAction(self.parse_var_arr_or_literal)
 
         for_loop = keyword_for + Optional(keyword_loop)
 
         comparison_operator = keyword_ns_greater_than_equal("ge") | keyword_ns_greater_than("gt") | keyword_ns_less_than_equal("le") \
                               | keyword_ns_less_than("lt") | keyword_ns_not_equal("ne") | keyword_ns_equal("eq")
+        comparison_operator.setName("a comparison operator").setFailAction(self.handle_fail_parse)
         comparison_operator.setParseAction(self.update_comparison_ops) # Additional processing for output
 
         variable_type = keyword_ns_integer("int") | keyword_ns_float("float") | keyword_ns_double("double") | keyword_ns_long("long") | \
                         keyword_ns_void("void") # todo
+        variable_type.setName("a variable type").setFailAction(self.handle_fail_parse)
         variable_type.setParseAction(self.update_var_type)
 
-        increment_for_operator = keyword_ns_plus_plus("pp") | keyword_ns_minus_minus("mm")
+        increment_for_operator = (keyword_ns_plus_plus("pp") | keyword_ns_minus_minus("mm"))
+        increment_for_operator.setName("++ or --").setFailAction(self.handle_fail_parse)
         increment_for_operator.setParseAction(self.update_increment_for_operator)
 
         operators = keyword_ns_plus("p") |  keyword_ns_minus("min") | keyword_ns_times("t") | \
                     keyword_ns_divide("d") | keyword_ns_modulo("mod")
+        operators.setName("an operator").setFailAction(self.handle_fail_parse)
         operators.setParseAction(self.update_operators)
 
         assignment_operator = keyword_equal
@@ -397,25 +427,34 @@ class WordParser:
         mathematical_expression << var_arr_or_literal + ZeroOrMore(operators + mathematical_expression)
         mathematical_expression.setParseAction(self.update_join_tokens) # join completed var/arr/literal with operators
 
-        expression = mathematical_expression
+        expression = mathematical_expression.setName("an expression").setFailAction(self.handle_fail_parse)
+
+        # Secondary parsable
+
+        variable_assignment_statement = var_arr_or_literal + assignment_operator + expression + keyword_end_equal
+        variable_assignment_statement.setParseAction(self.parse_assignment_statement)
 
         if_statement = keyword_if + expression + comparison_operator + expression + keyword_then + ZeroOrMore(statement) + \
                            keyword_end_if
         if_statement.setParseAction(self.parse_if_statement)
 
-        if_else_statement = keyword_if + expression + comparison_operator + expression + keyword_then + ZeroOrMore(statement.setResultsName("ifclause", True)) + \
-                             keyword_else + ZeroOrMore(statement.setResultsName("elseclause", True)) + keyword_end_if
+        if_else_statement = keyword_if + expression + comparison_operator + expression + \
+                            keyword_then + ZeroOrMore(statement.setResultsName("ifclause", True)) + \
+                             keyword_else + ZeroOrMore(statement.setResultsName("elseclause", True)) + \
+                             keyword_end_if
         if_else_statement.setParseAction(self.parse_if_else_statement)
 
-        declare_variable_statement = keyword_declare + variable_type + variable_name_processed + Optional(assignment_operator + expression) + \
-                                keyword_end_declare
+
+        declare_variable_statement = keyword_declare + variable_type + variable_name_processed + \
+                                     Optional(assignment_operator + expression) + keyword_end_declare
         declare_variable_statement.setParseAction(self.parse_declare_var_statement)
 
         declare_array_statement = keyword_declare + variable_type + keyword_array + variable_with_size + \
                                   keyword_end_declare
         declare_array_statement.setParseAction(self.parse_declare_arr_statement)
 
-        for_loop_statement = for_loop + keyword_condition + var_arr_or_literal + keyword_equal + expression + \
+        for_loop_statement = for_loop + \
+                             keyword_condition + var_arr_or_literal + keyword_equal + expression + \
                              keyword_condition + expression + comparison_operator + expression + \
                              keyword_condition + variable_or_variable_with_array_index + increment_for_operator + keyword_begin + \
                              ZeroOrMore(statement) + keyword_end_for_loop
@@ -424,9 +463,13 @@ class WordParser:
         return_statement = keyword_return + expression
         return_statement.setParseAction(self.parse_return_statement)
 
+        function_declaration_line = keyword_create_function + variable_name + Optional(keyword_with) + keyword_return_type + \
+                               variable_type + ZeroOrMore(parameter_statement.setResultsName("params", True)) + keyword_begin + \
+                               ZeroOrMore(statement.setResultsName("stmts", True)) + keyword_end_function
+        function_declaration_line.setParseAction(self.parse_function_declaration)
+
         # Constructs parsable
-        self.assignment_statement = var_arr_or_literal + assignment_operator + expression + keyword_end_equal
-        self.assignment_statement.setParseAction(self.parse_assignment_statement)
+        self.assignment_statement = variable_assignment_statement
 
         self.selection_statement = if_statement | if_else_statement
 
@@ -439,14 +482,12 @@ class WordParser:
         statement << (self.assignment_statement | self.selection_statement | self.declaration_statement | \
                   self.iteration_statement | self.jump_statement)
 
-        self.function_declaration = keyword_create_function + variable_name + Optional(keyword_with) + keyword_return_type + \
-                               variable_type + ZeroOrMore(parameter_statement.setResultsName("params", True)) + keyword_begin + \
-                               ZeroOrMore(statement.setResultsName("stmts", True)) + keyword_end_function
-        self.function_declaration.setParseAction(self.parse_function_declaration)
+        self.function_declaration = function_declaration_line
         
  
     def parse(self, sentence):
         sentence = str(sentence).lower()
+        self.error_message = ""
         
         if sentence == "":
             return ""
@@ -767,3 +808,13 @@ if __name__ == "__main__":
             "#if_branch_end;; #for_end;; return #variable max;; #function_end;;"
     print compare(speech, struct, wordParser)
     
+    wordParser.parse("declare integer abc")
+    print wordParser.get_error_message()
+    wordParser.parse("max equal two")
+    print wordParser.get_error_message()
+    wordParser.parse("max equal ")
+    print wordParser.get_error_message()
+    wordParser.parse("begin if x less than y then")
+    print wordParser.get_error_message()
+    wordParser.parse("for loop condition i equal one condition i")
+    print wordParser.get_error_message()
