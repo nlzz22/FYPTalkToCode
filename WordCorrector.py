@@ -50,6 +50,12 @@ class WordCorrector:
                     self.add_word_to_corrected("width")
             elif (current_word == "intex"):
                 self.add_word_to_corrected("index")
+            elif (current_word == "eye"):
+                prev_word = self.query_latest_added_word()
+                if (prev_word == "index"):
+                    self.add_word_to_corrected("i")
+                else:
+                    self.add_word_to_corrected(current_word)
             elif (current_word == "in"):
                 # integer 
                 next_word = self.query_next_word()
