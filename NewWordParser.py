@@ -329,8 +329,7 @@ class WordParser:
         keyword_end_if = Suppress("end if").setName("\"end if\"").setFailAction(self.handle_fail_parse)
         keyword_for = Suppress("for")
         keyword_loop = Suppress("loop")
-        keyword_end_for_loop = Suppress("end for") + Optional(keyword_loop)
-        keyword_end_for_loop.setName("\"end for loop\"").setFailAction(self.handle_fail_parse)
+        keyword_end_for_loop = Suppress("end for").setName("\"end for loop\"").setFailAction(self.handle_fail_parse) + Optional(keyword_loop)
         keyword_condition = Suppress("condition").setName("\"condition\"").setFailAction(self.handle_fail_parse)
         keyword_begin = Suppress("begin").setName("\"begin\"").setFailAction(self.handle_fail_parse)
         keyword_ns_plus_plus = Keyword("plus plus")
@@ -406,6 +405,7 @@ class WordParser:
         variable_with_size_index = variable_name("varname") + Optional(keyword_with) + keyword_size + variable_or_literal("index")
         variable_with_size_index.setParseAction(self.update_array_tags)
         variable_with_size = variable_with_size_index
+        variable_with_size.setName("a variable with size index").setFailAction(self.handle_fail_parse)
         variable_with_size.setParseAction(self.parse_arr_with_size)
 
         self.array_index_phrase = Suppress("#array") + variable_name + Suppress("#index") + variable_or_literal
@@ -483,6 +483,50 @@ class WordParser:
                   self.iteration_statement | self.jump_statement)
 
         self.function_declaration = function_declaration_line
+
+    # This function attempts to parse repeatedly with corrections applied wherever possible.
+    def parse_with_correction(self, sentence, is_initial_run = True, counter = 0, prev_exp = ""):
+        result_struct = {}
+
+        result_struct["parsed"] = ""
+
+        if counter > 5:
+            return result_struct
+
+        result = self.parse(sentence)
+        if result == "": # error message
+            if is_initial_run:
+                # record first expected message only
+                result_struct["expected"] = self.get_error_message()
+
+            error = self.get_error_message()
+            if error == "":
+                result_struct["parsed"] = "" # cannot finish parsing
+            else:
+                error = error.replace("Expected", "")
+
+                if error == prev_exp:
+                    # reject if no improvement
+                    result_struct["parsed"] = ""
+                    return result_struct
+                
+                parts = error.split(" or ")
+                new_list = []
+                for part in parts:
+                    if "\"" in part:
+                        new_list.append(part)
+
+                for attempt in new_list:
+                    word = attempt.replace("\"", "")
+
+                    attempt_res = self.parse_with_correction(sentence + " " + word, False, counter + 1, error)
+                    if attempt_res["parsed"] != "":
+                        result_struct["parsed"] = attempt_res["parsed"]
+                        break
+        else: # parsed properly
+            result_struct["parsed"] = result
+
+        return result_struct
         
  
     def parse(self, sentence):
@@ -643,6 +687,19 @@ if __name__ == "__main__":
             print word1
             print "----"
             print wp.trim_all_spaces(wp.parse(word1))
+            print "----"
+            print wp.trim_all_spaces(word2)
+            return "WHY YOU WRONG :("
+
+    def compare_correction(word1, word2, wp):
+        result_struct = wp.parse_with_correction(word1)
+        if wp.trim_all_spaces(result_struct["parsed"]) == wp.trim_all_spaces(word2):
+            return "."
+        else:
+            print "Compare correction results wrong! "
+            print word1
+            print "----"
+            print wp.trim_all_spaces(result_struct["parsed"])
             print "----"
             print wp.trim_all_spaces(word2)
             return "WHY YOU WRONG :("
@@ -807,14 +864,25 @@ if __name__ == "__main__":
             "#assign #variable max #with #array  numbers #indexes  #variable  i #index_end;; " + \
             "#if_branch_end;; #for_end;; return #variable max;; #function_end;;"
     print compare(speech, struct, wordParser)
-    
-    wordParser.parse("declare integer abc")
-    print wordParser.get_error_message()
-    wordParser.parse("max equal two")
-    print wordParser.get_error_message()
-    wordParser.parse("max equal ")
-    print wordParser.get_error_message()
-    wordParser.parse("begin if x less than y then")
-    print wordParser.get_error_message()
-    wordParser.parse("for loop condition i equal one condition i")
-    print wordParser.get_error_message()
+
+    # Test partial code
+    speech = "declare integer abc "
+    struct = "#create int #variable abc #dec_end;; "
+    print compare_correction(speech, struct, wordParser)
+
+    speech = "max equal two"
+    struct = "#assign #variable max #with #value 2;;"
+    print compare_correction(speech, struct, wordParser)
+
+    speech = "begin if x less than y then"
+    struct = "if #condition #variable x < #variable y #if_branch_start #if_branch_end;;"
+    print compare_correction(speech, struct, wordParser)
+
+    speech = "for loop condition i equal one condition i less than two condition i plus plus begin"
+    struct = "for #condition #assign #variable i #with #value 1 #condition #variable i < #value 2 #condition #post #variable i ++ #for_start #for_end;;"
+    print compare_correction(speech, struct, wordParser)
+
+    speech = "begin if x less than y then max equal two"
+    struct = "if #condition #variable x < #variable y #if_branch_start #assign #variable max #with #value 2;; #if_branch_end;;"
+    print compare_correction(speech, struct, wordParser)
+
