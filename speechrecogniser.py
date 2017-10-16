@@ -121,7 +121,6 @@ class RecognizerGA( Recognizer ):
                 Returns the most likely transcription if ``show_all`` is False (the default). Otherwise, returns the raw API response as a JSON dictionary.
                 Raises a ``speech_recognition.UnknownValueError`` exception if the speech is unintelligible. Raises a ``speech_recognition.RequestError`` exception if the speech recognition operation failed, if the credentials aren't valid, or if there is no Internet connection.
                 """
-                print "yay"
                 
                 assert isinstance(audio_data, AudioData), "``audio_data`` must be audio data"
                 if credentials_json is not None:
