@@ -522,6 +522,7 @@ class WordParser:
                     attempt_res = self.parse_with_correction(sentence + " " + word, False, counter + 1, error)
                     if attempt_res["parsed"] != "":
                         result_struct["parsed"] = attempt_res["parsed"]
+                        result_struct["potential_missing"] = word
                         break
         else: # parsed properly
             result_struct["parsed"] = result
