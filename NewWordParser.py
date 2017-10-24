@@ -871,6 +871,26 @@ if __name__ == "__main__":
             "#if_branch_end;; #for_end;; return #variable max;; #function_end;;"
     print compare(speech, struct, wordParser)
 
+    speech = "while value less than equal three begin end while"
+    struct = "while #condition #variable value <= #value 3 #while_start #while_end;;"
+    print compare(speech, struct, wordParser)
+
+    speech = "while value less than equal three begin max equal one end equal end while"
+    struct = "while #condition #variable value <= #value 3 #while_start #assign #variable max #with #value 1;; #while_end;;"
+    print compare(speech, struct, wordParser)
+
+    speech = "while value plus two less than equal three begin end while"
+    struct = "while #condition #variable value + #value 2 <= #value 3 #while_start #while_end;;"
+    print compare(speech, struct, wordParser)
+
+    speech = "while value plus two less than equal three plus max begin end while"
+    struct = "while #condition #variable value + #value 2 <= #value 3 + #variable max #while_start #while_end;;"
+    print compare(speech, struct, wordParser)
+
+    speech = "while is done begin end while"
+    struct = "while #condition #variable isDone #while_start #while_end;;"
+    print compare(speech, struct, wordParser)
+
     # Test partial code
     speech = "declare integer abc "
     struct = "#create int #variable abc #dec_end;; "
