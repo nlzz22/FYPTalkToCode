@@ -291,6 +291,31 @@ class WordParser:
         return parsed_stmt
 
 
+    def parse_function_call_statement(self, tokens):
+        # tokens consist of [ var_name, parameter_statements (multiple)]
+        parsed_stmt = "#function " + self.build_var_name(tokens[0]) + "("
+        separator = ""
+
+        for i in range(1, len(tokens)):
+            parsed_stmt += separator + "#parameter " + tokens[i]
+            separator = " "
+
+        parsed_stmt += ");;"
+
+        return parsed_stmt
+
+
+    # Ensures that expression does not have terminating ;; symbol.
+    def parse_expression(self, tokens):
+        new_tokens = []
+        for token in tokens:
+            if len(token) > 1 and token[-2:] == ";;":
+                new_tokens.append(token[:-2]) # get string w/o last 2 characters
+            else:
+                new_tokens.append(token)
+        return new_tokens
+        
+
     def parse_declare_var_statement(self, tokens):
         # tokens consist of [ variable_type, variable_name, optional (expression) ]
         parsed_stmt = "#create " + tokens[0] + " " + tokens[1]
@@ -382,6 +407,7 @@ class WordParser:
         keyword_size = Suppress("size")
         keyword_return = Suppress("return")
         keyword_create_function = Suppress("create function")
+        keyword_call_function = Suppress("call function")
         keyword_return_type = Suppress("return type")
         keyword_parameter = Suppress("parameter")
         keyword_end_function = Suppress("end function").setName("\"end function\"").setFailAction(self.handle_fail_parse)
@@ -392,6 +418,7 @@ class WordParser:
         list_keywords += ["condition", "begin", "plus", "minus", "declare", "integer", "float", "double", "long"]
         list_keywords += ["end for", "times", "divide", "modulo", "end declare", "array", "with", "size", "return"]
         list_keywords += ["void", "create function", "return type", "parameter", "end function", "while", "end while"]
+        list_keywords += ["call function"]
 
         # The components of parser
         not_all_keywords = self.build_not_all_keywords(list_keywords)
@@ -446,12 +473,16 @@ class WordParser:
         var_arr_or_literal.setParseAction(self.parse_var_arr_or_literal) # add in #array, #value or #variable      
 
         statement = Forward()
+        function_call_statement = Forward()
 
         mathematical_expression = Forward()
         mathematical_expression << var_arr_or_literal + ZeroOrMore(operators + mathematical_expression)
         mathematical_expression.setParseAction(self.update_join_tokens) # join completed var/arr/literal with operators
 
-        expression = mathematical_expression
+        expression = (mathematical_expression | function_call_statement)
+        expression.setParseAction(self.parse_expression)
+
+        parameter_without_type_stmt = Optional(keyword_with) + keyword_parameter + expression
 
         # Secondary parsable
 
@@ -497,6 +528,10 @@ class WordParser:
                                ZeroOrMore(statement.setResultsName("stmts", True)) + keyword_end_function
         function_declaration_line.setParseAction(self.parse_function_declaration)
 
+        function_call_statement << keyword_call_function + variable_name + ZeroOrMore(parameter_without_type_stmt) + \
+                                keyword_end_function
+        function_call_statement.setParseAction(self.parse_function_call_statement)
+
         # Constructs parsable
         self.assignment_statement = variable_assignment_statement
 
@@ -508,8 +543,10 @@ class WordParser:
 
         self.jump_statement = return_statement
 
+        self.call_function_statement = function_call_statement
+
         statement << (self.assignment_statement | self.selection_statement | self.declaration_statement | \
-                  self.iteration_statement | self.jump_statement)
+                  self.iteration_statement | self.jump_statement | self.call_function_statement)
 
         self.function_declaration = function_declaration_line
 
@@ -589,6 +626,9 @@ class WordParser:
         # Check function declaration
         elif start_word == "create function":
             result = self.parse_check_function_declaration(sentence)
+        # Check call function statements
+        elif start_word == "call function":
+            result = self.parse_check_call_function_statement(sentence)
         # Else, assume variable assignment check
         else:
             result = self.parse_check_variable_assignment(sentence)
@@ -675,6 +715,20 @@ class WordParser:
 
         try:
             list_parsed = self.function_declaration.parseString(sentence)
+            
+            return_struct["has_match"] = True
+            return_struct["struct_cmd"] = list_parsed[0]            
+        except ParseException:
+            return_struct["has_match"] = False
+
+        return return_struct
+
+
+    def parse_check_call_function_statement(self, sentence):
+        return_struct = {}
+
+        try:
+            list_parsed = self.call_function_statement.parseString(sentence)
             
             return_struct["has_match"] = True
             return_struct["struct_cmd"] = list_parsed[0]            
@@ -914,6 +968,38 @@ if __name__ == "__main__":
 
     speech = "while is done begin end while"
     struct = "while #condition #variable isDone #while_start #while_end;;"
+    print compare(speech, struct, wordParser)
+
+    speech = "call function abc with parameter arr with parameter test end function"
+    struct = "#function abc(#parameter #variable arr #parameter #variable test);;"
+    print compare(speech, struct, wordParser)
+
+    speech = "call function quick sort parameter x with parameter j plus one parameter last end function"
+    struct = "#function quickSort(#parameter #variable x #parameter #variable j + #value 1 #parameter #variable last);;"
+    print compare(speech, struct, wordParser)
+
+    speech = "call function def with parameter x parameter x array index i end function"
+    struct = "#function def(#parameter #variable x #parameter #array x #indexes #variable i #index_end);;"
+    print compare(speech, struct, wordParser)
+
+    speech = "max equal call function def with parameter two end function end equal"
+    struct = "#assign #variable max #with #function def(#parameter #value 2);;"
+    print compare(speech, struct, wordParser)
+    
+    speech = "begin if max less than call function def with parameter two end function then end if"
+    struct = "if #condition #variable max < #function def(#parameter #value 2) #if_branch_start #if_branch_end;;"
+    print compare(speech, struct, wordParser)
+    
+    speech = "while call function def with parameter two end function begin end while"
+    struct = "while #condition #function def(#parameter #value 2) #while_start #while_end;;"
+    print compare(speech, struct, wordParser)
+
+    speech = "call function do something end function"
+    struct = "#function doSomething();;"
+    print compare(speech, struct, wordParser)
+
+    speech = "while i less than j begin call function do something end function end while"
+    struct = "while #condition #variable i < #variable j #while_start #function doSomething();; #while_end;;"
     print compare(speech, struct, wordParser)
 
     # Test partial code
