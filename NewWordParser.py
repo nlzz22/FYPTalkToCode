@@ -313,10 +313,10 @@ class WordParser:
         self.error_message = ""
         
         # Define all keywords here
-        keyword_equal = Suppress("equal").setName("\"equal\"").setFailAction(self.handle_fail_parse)
+        keyword_equal = Suppress("equal")
         keyword_end_equal = Suppress("end equal").setName("\"end equal\"").setFailAction(self.handle_fail_parse)
-        keyword_array = Suppress("array").setName("\"array\"").setFailAction(self.handle_fail_parse)
-        keyword_array_index = Suppress("array index").setName("\"array index\"").setFailAction(self.handle_fail_parse)
+        keyword_array = Suppress("array")
+        keyword_array_index = Suppress("array index")
         keyword_if = Suppress("begin if")
         keyword_ns_greater_than = Keyword("greater than")
         keyword_ns_greater_than_equal = Keyword("greater than equal")
@@ -324,14 +324,14 @@ class WordParser:
         keyword_ns_less_than_equal = Keyword("less than equal")
         keyword_ns_not_equal = Keyword("not equal")
         keyword_ns_equal = Keyword("equal")
-        keyword_then = Suppress("then").setName("\"then\"").setFailAction(self.handle_fail_parse)
-        keyword_else = Suppress("else").setName("\"else\"").setFailAction(self.handle_fail_parse)
+        keyword_then = Suppress("then")
+        keyword_else = Suppress("else")
         keyword_end_if = Suppress("end if").setName("\"end if\"").setFailAction(self.handle_fail_parse)
         keyword_for = Suppress("for")
         keyword_loop = Suppress("loop")
         keyword_end_for_loop = Suppress("end for").setName("\"end for loop\"").setFailAction(self.handle_fail_parse) + Optional(keyword_loop)
-        keyword_condition = Suppress("condition").setName("\"condition\"").setFailAction(self.handle_fail_parse)
-        keyword_begin = Suppress("begin").setName("\"begin\"").setFailAction(self.handle_fail_parse)
+        keyword_condition = Suppress("condition")
+        keyword_begin = Suppress("begin")
         keyword_ns_plus_plus = Keyword("plus plus")
         keyword_ns_minus_minus = Keyword("minus minus")
         keyword_ns_plus = Keyword("plus")
@@ -347,11 +347,11 @@ class WordParser:
         keyword_ns_void = Keyword("void")
         keyword_end_declare = Suppress("end declare").setName("\"end declare\"").setFailAction(self.handle_fail_parse)
         keyword_with = Suppress("with")
-        keyword_size = Suppress("size").setName("\"size\"").setFailAction(self.handle_fail_parse)
+        keyword_size = Suppress("size")
         keyword_return = Suppress("return")
         keyword_create_function = Suppress("create function")
-        keyword_return_type = Suppress("return type").setName("\"return type\"").setFailAction(self.handle_fail_parse)
-        keyword_parameter = Suppress("parameter").setName("\"parameter\"").setFailAction(self.handle_fail_parse)
+        keyword_return_type = Suppress("return type")
+        keyword_parameter = Suppress("parameter")
         keyword_end_function = Suppress("end function").setName("\"end function\"").setFailAction(self.handle_fail_parse)
 
         # The list of required keywords
@@ -366,35 +366,28 @@ class WordParser:
         self.literal = self.get_all_literal() 
         
         variable_name = Combine(OneOrMore(not_all_keywords + Word(alphas) + Optional(" ")))
-        variable_name.setName("a variable name").setFailAction(self.handle_fail_parse)
         literal_name = OneOrMore(self.literal)
-        literal_name.setName("a literal").setFailAction(self.handle_fail_parse)
         variable_or_literal = variable_name | literal_name
 
         # This function cannot use variable_name or it will ruin other functions due to the pre-formatting.
         variable_name_processed = Combine(OneOrMore(not_all_keywords + Word(alphas) + Optional(" ")))
-        variable_name_processed.setName("a variable name").setFailAction(self.handle_fail_parse)
         variable_name_processed.setParseAction(self.parse_var_arr_or_literal)
 
         for_loop = keyword_for + Optional(keyword_loop)
 
         comparison_operator = keyword_ns_greater_than_equal("ge") | keyword_ns_greater_than("gt") | keyword_ns_less_than_equal("le") \
                               | keyword_ns_less_than("lt") | keyword_ns_not_equal("ne") | keyword_ns_equal("eq")
-        comparison_operator.setName("a comparison operator").setFailAction(self.handle_fail_parse)
         comparison_operator.setParseAction(self.update_comparison_ops) # Additional processing for output
 
         variable_type = keyword_ns_integer("int") | keyword_ns_float("float") | keyword_ns_double("double") | keyword_ns_long("long") | \
                         keyword_ns_void("void") # todo
-        variable_type.setName("a variable type").setFailAction(self.handle_fail_parse)
         variable_type.setParseAction(self.update_var_type)
 
         increment_for_operator = (keyword_ns_plus_plus("pp") | keyword_ns_minus_minus("mm"))
-        increment_for_operator.setName("++ or --").setFailAction(self.handle_fail_parse)
         increment_for_operator.setParseAction(self.update_increment_for_operator)
 
         operators = keyword_ns_plus("p") |  keyword_ns_minus("min") | keyword_ns_times("t") | \
                     keyword_ns_divide("d") | keyword_ns_modulo("mod")
-        operators.setName("an operator").setFailAction(self.handle_fail_parse)
         operators.setParseAction(self.update_operators)
 
         assignment_operator = keyword_equal
@@ -405,7 +398,6 @@ class WordParser:
         variable_with_size_index = variable_name("varname") + Optional(keyword_with) + keyword_size + variable_or_literal("index")
         variable_with_size_index.setParseAction(self.update_array_tags)
         variable_with_size = variable_with_size_index
-        variable_with_size.setName("a variable with size index").setFailAction(self.handle_fail_parse)
         variable_with_size.setParseAction(self.parse_arr_with_size)
 
         self.array_index_phrase = Suppress("#array") + variable_name + Suppress("#index") + variable_or_literal
@@ -427,7 +419,7 @@ class WordParser:
         mathematical_expression << var_arr_or_literal + ZeroOrMore(operators + mathematical_expression)
         mathematical_expression.setParseAction(self.update_join_tokens) # join completed var/arr/literal with operators
 
-        expression = mathematical_expression.setName("an expression").setFailAction(self.handle_fail_parse)
+        expression = mathematical_expression
 
         # Secondary parsable
 
@@ -513,8 +505,7 @@ class WordParser:
                 parts = error.split(" or ")
                 new_list = []
                 for part in parts:
-                    if "\"" in part:
-                        new_list.append(part)
+                    new_list.append(part)
 
                 for attempt in new_list:
                     word = attempt.replace("\"", "")

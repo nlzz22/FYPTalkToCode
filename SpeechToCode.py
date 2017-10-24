@@ -58,12 +58,14 @@ def main():
             print sample_code
             print "\n"
             if potential_missing != "":
-                print "Predicted next word(s)  : " + potential_missing
-                print "\n"
-            print "Error message "
-            print "==============="
-            print error_message
+                print "Expected  : " + potential_missing
+            else:
+                if error_message.strip() == "Expected":
+                    print "Incomplete statement."
+                else:
+                    print "Error     : " + error_message
             print "\n"
+
         print "=========================================="
         print "Audio read : " + read_words
         print "Corrected text : " + corrected
