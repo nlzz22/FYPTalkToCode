@@ -4,16 +4,25 @@ from WordCorrector import WordCorrector
 from NewWordParser import WordParser as newWordParser
 import StructuralCommandParser as scParser
 
+def get_struct_command_from_text_list(wordParser, text_list):
+    struct_command_list = []
+    
+    for text in text_list:
+        structured_command = wordParser.parse(text)
+        struct_command_list.append(structured_command)
+    return " ".join(struct_command_list)
+
 def main():
     to_continue_reading = True
     previous_text = ""
     variables_list = []
+    accepted_text = []
     wordParser = newWordParser()
     
     while to_continue_reading:
         # Speech to text
-        read_words = SpeechReader.get_voice_input(variables_list)
-        #read_words = raw_input("Type in speech : ")
+        #read_words = SpeechReader.get_voice_input(variables_list)
+        read_words = raw_input("Type in speech : ")
         if (read_words is None):
             print "Invalid input when reading from audio"
             continue
@@ -23,7 +32,7 @@ def main():
         corrected = wordCorrector.run_correct_words_multiple("")
 
         # processed_text to structured_command / code and display to user.
-        text_to_parse = str(previous_text) + "\n" + str(corrected)
+        text_to_parse = str(previous_text) + " " + str(corrected)
 
         error_message = ""
         potential_missing = ""
@@ -42,12 +51,17 @@ def main():
         else: # can parse
             parsed = structured_command
 
+        accepted_struct_commands = get_struct_command_from_text_list(wordParser, accepted_text)
+        parsed = accepted_struct_commands + " " + parsed
+        
         sample_code = scParser.parse_structural_command_to_code(parsed)
 
         print "=========================================="
         print "\n"
         print "Sentences to date : "
         print "===================="
+        for text in accepted_text:
+            print text
         print text_to_parse
         if error_message == "":
             print "\n"
@@ -79,14 +93,24 @@ def main():
         if input_continue.lower() == "y":
             # Accept and continue
             to_continue_reading = True
-            previous_text = text_to_parse
+            
+            if error_message == "":
+                accepted_text.append(text_to_parse)
+                previous_text = ""
+            else: # incomplete
+                previous_text = text_to_parse
         elif input_continue.lower() == "n":
             # Reject and continue
             to_continue_reading = True
         elif input_continue.lower() == "d":
             # Accept and stop
             to_continue_reading = False
-            previous_text = text_to_parse
+
+            if error_message == "":
+                accepted_text.append(text_to_parse)
+                previous_text = ""
+            else: # incomplete
+                previous_text = text_to_parse
         elif input_continue.lower() == "t":
             # Reject and stop
             to_continue_reading = False
@@ -94,10 +118,10 @@ def main():
             to_continue_reading = False # else reject and stop
 
     # convert word to structured command
-    structured_command = wordParser.parse(previous_text)
+    accepted_struct_commands = get_struct_command_from_text_list(wordParser, accepted_text)
 
     # Convert structured command to code
-    code = scParser.parse_structural_command_to_code(structured_command)
+    code = scParser.parse_structural_command_to_code(accepted_struct_commands)
 
     # Output final code
     print code
