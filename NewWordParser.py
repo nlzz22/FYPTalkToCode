@@ -255,6 +255,24 @@ class WordParser:
         return parsed_stmt
 
 
+    def parse_while_loop_statement(self, tokens):
+        # tokens consist of [ expression, optional(comparison_operator), optional(expression), statements (multiple) ]
+        parsed_stmt = "while #condition " + tokens[0]
+        statement_index = 1
+        if tokens.comp != "" and tokens.expr != "":
+            parsed_stmt += " " + tokens.comp + " " + tokens.expr
+            statement_index += 2
+
+        parsed_stmt += " #while_start "
+
+        for i in range(statement_index, len(tokens)):
+            parsed_stmt += tokens[i] + " "
+
+        parsed_stmt += " #while_end;;"
+
+        return parsed_stmt
+
+
     def parse_function_declaration(self, tokens):
         # tokens consist of [ var_name, var_type, parameter_statements (multiple) + statement (multiple) ]
         # statements are tokens.stmts and parameter_statements are token.params
@@ -341,7 +359,9 @@ class WordParser:
         keyword_end_if = Suppress("end if").setName("\"end if\"").setFailAction(self.handle_fail_parse)
         keyword_for = Suppress("for")
         keyword_loop = Suppress("loop")
+        keyword_while = Suppress("while")
         keyword_end_for_loop = Suppress("end for").setName("\"end for loop\"").setFailAction(self.handle_fail_parse) + Optional(keyword_loop)
+        keyword_end_while = Suppress("end while").setName("\"end while\"").setFailAction(self.handle_fail_parse)
         keyword_condition = Suppress("condition")
         keyword_begin = Suppress("begin")
         keyword_ns_plus_plus = Keyword("plus plus")
@@ -371,7 +391,7 @@ class WordParser:
         list_keywords += ["less than", "less than equal", "not equal", "then", "else", "end if", "for", "loop"]
         list_keywords += ["condition", "begin", "plus", "minus", "declare", "integer", "float", "double", "long"]
         list_keywords += ["end for", "times", "divide", "modulo", "end declare", "array", "with", "size", "return"]
-        list_keywords += ["void", "create function", "return type", "parameter", "end function"]
+        list_keywords += ["void", "create function", "return type", "parameter", "end function", "while", "end while"]
 
         # The components of parser
         not_all_keywords = self.build_not_all_keywords(list_keywords)
@@ -464,6 +484,11 @@ class WordParser:
                              ZeroOrMore(statement) + keyword_end_for_loop
         for_loop_statement.setParseAction(self.parse_for_loop_statement)
 
+        while_loop_statement = keyword_while + expression + \
+                               Optional(comparison_operator.setResultsName("comp") + expression.setResultsName("expr")) + \
+                               keyword_begin + ZeroOrMore(statement) + keyword_end_while
+        while_loop_statement.setParseAction(self.parse_while_loop_statement)
+
         return_statement = keyword_return + expression
         return_statement.setParseAction(self.parse_return_statement)
 
@@ -479,7 +504,7 @@ class WordParser:
 
         self.declaration_statement = declare_variable_statement | declare_array_statement
 
-        self.iteration_statement = for_loop_statement
+        self.iteration_statement = for_loop_statement | while_loop_statement
 
         self.jump_statement = return_statement
 
@@ -556,7 +581,7 @@ class WordParser:
         elif first_word == "declare":
             result = self.parse_check_declaration_statement(sentence)
         # Check iteration statements
-        elif first_word == "for":
+        elif first_word == "for" or first_word == "while":
             result = self.parse_check_iteration_statement(sentence)
         # Check jump statements
         elif first_word == "return":
