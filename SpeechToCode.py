@@ -7,11 +7,12 @@ import StructuralCommandParser as scParser
 def main():
     to_continue_reading = True
     previous_text = ""
+    variables_list = []
     wordParser = newWordParser()
     
     while to_continue_reading:
         # Speech to text
-        read_words = SpeechReader.get_voice_input()
+        read_words = SpeechReader.get_voice_input(variables_list)
         #read_words = raw_input("Type in speech : ")
         if (read_words is None):
             print "Invalid input when reading from audio"
@@ -34,6 +35,8 @@ def main():
                 error_message = result_struct["expected"]
             if "potential_missing" in result_struct.keys():
                 potential_missing = result_struct["potential_missing"]
+            if "variables" in result_struct.keys() and len(result_struct["variables"]) != 0:
+                variables_list = result_struct["variables"]
 
             parsed = result_struct["parsed"]
         else: # can parse

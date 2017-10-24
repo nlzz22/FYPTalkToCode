@@ -5,7 +5,7 @@ from os import path
 # import from user-defined class
 from credentials import APICredentials
 
-def get_voice_input():
+def get_voice_input(variables_list):
         enableGoogle = False
         enableGoogleCloud = False # free 60 mins, $0.006 per 15 seconds thereafter
         enableMicrosoftBing = False # free 5000 transactions, $4 per 1000 transactions thereafter
@@ -66,7 +66,8 @@ def get_voice_input():
                                              "function", "return", "return type", "parameter", "call", "for", "plus", "plus plus", \
                                              "minus", "minus minus", "times", "divide", "while", "switch", "case", "dot", "end if", \
                                              "end switch", "end declare", "for loop", "end equal", "for loop condition i"]
-
+                        preferred_phrases += variables_list
+                        
                         read_words_google = RecognizerGA().recognize_google_cloud(audio, google_cloud_json, "en-US", preferred_phrases, False)
                         print("Google Cloud finished deciphering ! \n")
                         return read_words_google

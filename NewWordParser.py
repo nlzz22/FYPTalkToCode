@@ -64,11 +64,13 @@ class WordParser:
         word_list = processed_words.split()
 
         final_var_name = word_list[0]
+        self.variables.append(word_list[0])
         
         if (len(word_list) > 1):
             rest_words = word_list[1:]
             # build lower camel case
             for word in rest_words:
+                self.variables.append(word)
                 first_letter = word[0]
                 rest_letters = ""
                 if len(word) > 1:
@@ -307,6 +309,16 @@ class WordParser:
         error_message = " or ".join(parts_without_duplicate)
         
         return "Expected " + error_message
+
+
+    def get_variables(self):
+        var_list = set()
+        for variable in self.variables:
+            var_list.add(variable)
+        var_list = list(var_list)
+
+        return var_list
+            
         
         
     def __init__(self):
@@ -490,6 +502,7 @@ class WordParser:
             if is_initial_run:
                 # record first expected message only
                 result_struct["expected"] = self.get_error_message()
+                result_struct["variables"] = self.get_variables()
 
             error = self.get_error_message()
             if error == "":
@@ -524,6 +537,7 @@ class WordParser:
     def parse(self, sentence):
         sentence = str(sentence).lower()
         self.error_message = ""
+        self.variables = []
         
         if sentence == "":
             return ""
