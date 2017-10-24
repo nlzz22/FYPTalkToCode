@@ -66,7 +66,7 @@ def get_voice_input(variables_list, input_user, input_method):
                                              "string", "float", "double", "character", "size", "index", "create function", \
                                              "function", "return", "return type", "parameter", "call", "for", "plus", "plus plus", \
                                              "minus", "minus minus", "times", "divide", "while", "switch", "case", "dot", "end if", \
-                                             "end switch", "end declare", "for loop", "end equal", "for loop condition i"]
+                                             "end switch", "end declare", "for loop", "end equal", "for loop condition i", "end while"]
                         preferred_phrases += variables_list
                         
                         read_words_google = RecognizerGA().recognize_google_cloud(audio, google_cloud_json, "en-US", preferred_phrases, False)
