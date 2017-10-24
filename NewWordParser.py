@@ -188,7 +188,7 @@ class WordParser:
         elif tokens.long != "": # long
             return " long "
         elif tokens.void != "": # void
-            return " void "
+            return " "
         else:
             # Code should not reach here
             return " unknown "
@@ -919,7 +919,7 @@ if __name__ == "__main__":
     print compare(speech, struct, wordParser)
 
     speech = "create function main with return type void begin end function"
-    struct = "#function_declare main void #function_start #function_end;;"
+    struct = "#function_declare main #function_start #function_end;;"
     print compare(speech, struct, wordParser)
 
     speech = "for loop condition i equal one condition i less than length condition i plus plus begin " + \
