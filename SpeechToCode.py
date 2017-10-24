@@ -3,6 +3,31 @@ import speechrecogniser as SpeechReader
 from WordCorrector import WordCorrector
 from NewWordParser import WordParser as newWordParser
 import StructuralCommandParser as scParser
+from TextFileReader import TextFileReader
+
+##########################################
+###### DO NOT TOUCH THESE CONSTANTS ######
+# read from constants
+READ_FROM_SPEECH = 1
+READ_FROM_AUDIO_FILE = 2
+READ_FROM_TYPING = 3
+READ_FROM_TEXT_FILE = 4
+
+# api used constants
+GOOGLE = 1
+GOOGLE_CLOUD = 2
+
+# constants in-built
+VOICE = 1
+AUDIO_FILE = 2
+##########################################
+##########################################
+
+# EDIT THIS ONLY.
+# User defined: Method of reading here.
+read_from = READ_FROM_TYPING
+api_used = GOOGLE
+text_filename = "FindMaximum.txt" # default is "FindMaximum.txt"
 
 def get_struct_command_from_text_list(wordParser, text_list):
     struct_command_list = []
@@ -18,13 +43,27 @@ def main():
     variables_list = []
     accepted_text = []
     wordParser = newWordParser()
+    fileReader = TextFileReader(text_filename)
     
     while to_continue_reading:
         # Speech to text
-        #read_words = SpeechReader.get_voice_input(variables_list)
-        read_words = raw_input("Type in speech : ")
+        if read_from == READ_FROM_SPEECH:
+            read_words = SpeechReader.get_voice_input(variables_list, api_used, VOICE)
+        elif read_from == READ_FROM_AUDIO_FILE:
+            read_words = SpeechReader.get_voice_input(variables_list, api_used, AUDIO_FILE)
+        elif read_from == READ_FROM_TYPING:
+            read_words = raw_input("Type in speech : ")
+        elif read_from == READ_FROM_TEXT_FILE:
+            read_words = fileReader.read_line()
+            if read_words == "": # EOF
+                to_continue_reading = False
+                
+        else:
+            print "Error: unknown read_from detected"
+            return None # terminate the program
+
         if (read_words is None):
-            print "Invalid input when reading from audio"
+            print "Invalid input when reading"
             continue
 
         # text to processed_text
@@ -88,8 +127,16 @@ def main():
         print "Corrected text : " + corrected
         print "\n"
 
-        input_continue = raw_input("\nType 'y' to accept and continue, 'n' to reject and continue, 'd' to accept and stop, " + \
-                                   "'t' to reject and stop. \n")
+        if read_from == READ_FROM_TEXT_FILE:
+            if to_continue_reading == True:
+                input_continue = "y"
+            else:
+                input_continue = "d"
+        else:
+            input_continue = raw_input("\nType 'y' to accept and continue, 'n' to reject and continue, 'd' to accept and stop, " + \
+                               "'t' to reject and stop. \n")
+
+            
         if input_continue.lower() == "y":
             # Accept and continue
             to_continue_reading = True

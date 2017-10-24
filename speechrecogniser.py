@@ -5,18 +5,19 @@ from os import path
 # import from user-defined class
 from credentials import APICredentials
 
-def get_voice_input(variables_list):
+# variables_list is list of string of variables
+# input_user: 1 for Google, 2 for Google Cloud
+# input_method: 1 for voice, 2 for audio file
+def get_voice_input(variables_list, input_user, input_method):
         enableGoogle = False
         enableGoogleCloud = False # free 60 mins, $0.006 per 15 seconds thereafter
         enableMicrosoftBing = False # free 5000 transactions, $4 per 1000 transactions thereafter
-        
-        input_user = raw_input('Type 1 for Google, 2 for Google Cloud: \n')
 
         # process the API to be used based on user input
         try:
                 input_user = int(input_user)
         except ValueError:
-                print "input is not a number"
+                print "Error: input_user is not a number"
                 return None
                 
         if (input_user == 1):
@@ -24,17 +25,16 @@ def get_voice_input(variables_list):
         elif (input_user == 2):
                 enableGoogleCloud = True 
         else:
+                print "Error: input_user is not 1 nor 2"
                 return None # terminate the program
                                                                       
         r = sr.Recognizer()
 
-        while True:
-                input_method = raw_input("Type 1 for Record from voice, 2 for Read from audio file : \n")
-                try:
-                        input_method = int(input_method)
-                        break
-                except ValueError:
-                        print "input is not a number"
+        try:
+                input_method = int(input_method)
+        except ValueError:
+                print "Error: input_method is not a number"
+                return None # terminate the program
                 
         if (input_method == 1):
                 # record from voice
@@ -43,6 +43,7 @@ def get_voice_input(variables_list):
                 # read from audio file
                 audio = read_from_audio_file(r)
         else:
+                print "Error: input_method is not 1 nor 2"
                 return None # terminate the program
 
         print "Analyzing..."
