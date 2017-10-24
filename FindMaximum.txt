@@ -1,0 +1,12 @@
+create function find maximum with return type integer 
+with parameter integer array numbers 
+with parameter integer length begin
+declare integer max equal numbers array index zero end declare 
+declare integer i end declare
+for loop condition i equal one condition i less than length condition i plus plus begin
+begin if numbers array index i greater than max then
+max equal numbers array index i end equal
+end if 
+end for loop 
+return max 
+end function
