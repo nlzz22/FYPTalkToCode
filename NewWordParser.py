@@ -205,7 +205,7 @@ class WordParser:
 
 
     def parse_assignment_statement(self, tokens):
-        return "#assign " + tokens[0] + " #with " + tokens[1] + ";; "
+        return "#assign " + self.parse_var_arr_or_literal_word(tokens[0]) + " #with " + tokens[1] + ";; "
 
 
     def parse_if_statement(self, tokens):
@@ -431,7 +431,7 @@ class WordParser:
 
         # Secondary parsable
 
-        variable_assignment_statement = var_arr_or_literal + assignment_operator + expression + keyword_end_equal
+        variable_assignment_statement = variable_or_variable_with_array_index + assignment_operator + expression + keyword_end_equal
         variable_assignment_statement.setParseAction(self.parse_assignment_statement)
 
         if_statement = keyword_if + expression + comparison_operator + expression + keyword_then + ZeroOrMore(statement) + \
