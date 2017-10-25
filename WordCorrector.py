@@ -14,6 +14,35 @@ class WordCorrector:
         self.variables_list = var_list
 
 
+    def remove_string(self, input_str):
+        if "string" in input_str:
+            index_str = input_str.find("string")  
+            index_end_str = input_str.find("end string")
+
+            if index_end_str == -1:
+                return input_str[:index_str]
+            else:
+                return input_str[:index_str] + self.remove_string(input_str[index_end_str + 10:])
+        else:
+            return input_str
+
+
+    def remove_character(self, input_str):
+        if "character" in input_str:
+            index_character = input_str.find("character")
+
+            return input_str[:index_character] + self.remove_character(input_str[index_character + 11:])
+        else:
+            return input_str
+
+
+    def remove_escape_words(self, input_str):
+        input_str = self.remove_string(input_str)
+        input_str = self.remove_character(input_str)
+
+        return input_str
+
+
     def run_correct_variables(self):
         parts = self.corrected.split()
         
@@ -38,7 +67,10 @@ class WordCorrector:
                 temp_not_all_keywords |= Suppress(Keyword(keyword))
         variables = ZeroOrMore(ZeroOrMore(temp_not_all_keywords) + Word(alphas))
 
-        variables_name = variables.parseString(self.corrected)
+        string_to_process = self.corrected
+        string_to_process = self.remove_escape_words(string_to_process)
+
+        variables_name = variables.parseString(string_to_process)
 
         for variable in variables_name:
             to_replace = get_most_similar_word(variable, self.variables_list)

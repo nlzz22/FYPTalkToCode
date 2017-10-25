@@ -37,7 +37,7 @@ class WordParser:
         return word
 
 
-    def is_literal(self, words):
+    def is_number(self, words):
         if words.strip() == "":
             return False
         
@@ -86,8 +86,12 @@ class WordParser:
         if word.strip() == "":
             return ""
         
-        if self.is_literal(word):
+        if self.is_number(word): # if is number
             return " #value " + str(w2n.word_to_num(word))
+        elif "\"" in word: # if is string
+            return " #value " + word[:-2] + "\""
+        elif "'" in word: # if is character
+            return " #value " + word
         else:
             try:
                 # if word is already in number form
@@ -190,6 +194,8 @@ class WordParser:
             return " long "
         elif tokens.void != "": # void
             return " "
+        elif tokens.char != "": # character
+            return " char "
         else:
             # Code should not reach here
             return " unknown "
@@ -202,6 +208,16 @@ class WordParser:
             return "--"
         else: # should not reach here
             return " unknown "
+
+
+    def parse_literal(self, tokens):      
+        if tokens.charlit != "": # character literal
+            return "'" + tokens[0] + "'"
+        elif tokens.strlit != "": # string literal
+            return "\"" + tokens[0] + "\""
+        else: # normal literal (number / floating pt number)
+            return tokens
+        
 
     def update_join_tokens(self, tokens):
         return ' '.join(tokens)
@@ -403,6 +419,9 @@ class WordParser:
         keyword_ns_double = Keyword("double")
         keyword_ns_long = Keyword("long")
         keyword_ns_void = Keyword("void")
+        keyword_ns_character = Keyword("character")
+        keyword_character = Suppress("character")
+        keyword_string = Suppress("string")
         keyword_end_declare = Suppress("end declare").setName("\"end declare\"").setFailAction(self.handle_fail_parse)
         keyword_with = Suppress("with")
         keyword_size = Suppress("size")
@@ -412,6 +431,7 @@ class WordParser:
         keyword_return_type = Suppress("return type")
         keyword_parameter = Suppress("parameter")
         keyword_end_function = Suppress("end function").setName("\"end function\"").setFailAction(self.handle_fail_parse)
+        keyword_end_string = Suppress("end string").setName("\"end string\"").setFailAction(self.handle_fail_parse)
 
         # The list of required keywords
         keywords = Keywords()
@@ -422,7 +442,10 @@ class WordParser:
         self.literal = self.get_all_literal() 
         
         variable_name = Combine(OneOrMore(not_all_keywords + Word(alphas) + Optional(" ")))
-        literal_name = OneOrMore(self.literal)
+        character_literal = keyword_character + Word( alphas, max=1 )
+        string_literal = keyword_string + Combine(OneOrMore(~keyword_end_string + Word(alphas) + Optional(" "))) + keyword_end_string
+        literal_name = OneOrMore(self.literal) | character_literal("charlit") | string_literal("strlit")
+        literal_name.setParseAction(self.parse_literal)
         variable_or_literal = variable_name | literal_name
 
         # This function cannot use variable_name or it will ruin other functions due to the pre-formatting.
@@ -436,7 +459,7 @@ class WordParser:
         comparison_operator.setParseAction(self.update_comparison_ops) # Additional processing for output
 
         variable_type = keyword_ns_integer("int") | keyword_ns_float("float") | keyword_ns_double("double") | keyword_ns_long("long") | \
-                        keyword_ns_void("void") # todo
+                        keyword_ns_void("void") | keyword_ns_character("char") # todo
         variable_type.setParseAction(self.update_var_type)
 
         increment_for_operator = (keyword_ns_plus_plus("pp") | keyword_ns_minus_minus("mm"))
@@ -997,6 +1020,22 @@ if __name__ == "__main__":
 
     speech = "while i less than j begin call function do something end function end while"
     struct = "while #condition #variable i < #variable j #while_start #function doSomething();; #while_end;;"
+    print compare(speech, struct, wordParser)
+
+    speech = "call function print f parameter string hello end string end function"
+    struct = "#function printF(#parameter #value \"hello\");;"
+    print compare(speech, struct, wordParser)
+
+    speech = "call function test parameter string hello world man end string end function"
+    struct = "#function test(#parameter #value \"hello world man\");;"
+    print compare(speech, struct, wordParser)
+
+    speech = "call function abc parameter string hello end string with parameter string world end string end function"
+    struct = "#function abc(#parameter #value \"hello\" #parameter #value \"world\");;"
+    print compare(speech, struct, wordParser)
+
+    speech = "declare character c equal character c end declare"
+    struct = "#create char #variable c #value 'c' #dec_end;;"
     print compare(speech, struct, wordParser)
 
     # Test partial code
