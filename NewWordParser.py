@@ -1,6 +1,7 @@
 import re
 from word2number import w2n # External library to parse words to numbers
 from pyparsing import * # External parser library
+from Keywords import Keywords
 
 class WordParser:
     ## This function returns the following: 
@@ -413,12 +414,8 @@ class WordParser:
         keyword_end_function = Suppress("end function").setName("\"end function\"").setFailAction(self.handle_fail_parse)
 
         # The list of required keywords
-        list_keywords = ["equal", "end equal", "array index", "begin if", "greater than", "greater than equal"]
-        list_keywords += ["less than", "less than equal", "not equal", "then", "else", "end if", "for", "loop"]
-        list_keywords += ["condition", "begin", "plus", "minus", "declare", "integer", "float", "double", "long"]
-        list_keywords += ["end for", "times", "divide", "modulo", "end declare", "array", "with", "size", "return"]
-        list_keywords += ["void", "create function", "return type", "parameter", "end function", "while", "end while"]
-        list_keywords += ["call function"]
+        keywords = Keywords()
+        list_keywords = keywords.get_keywords()
 
         # The components of parser
         not_all_keywords = self.build_not_all_keywords(list_keywords)
