@@ -1,12 +1,55 @@
 from num2words import num2words
+from word2number import w2n
 import hashlib
+from Keywords import Keywords
+from pyparsing import * # External parser library
+from WordSimilarity import get_most_similar_word
 
 class WordCorrector:
-    def __init__(self, words):
+    def __init__(self, words, var_list):
         self.words_list = words.split(" ")
         self.corrected = ""
         self.space = ""
         self.var_types = ["integer", "short", "long", "float", "double", "boolean", "character", "string"]
+        self.variables_list = var_list
+
+
+    def run_correct_variables(self):
+        parts = self.corrected.split()
+        
+        if len(parts) > 1 and parts[0] == "declare":
+            # declaring variables does not trigger correction
+            return self.corrected
+        elif len(parts) > 2 and parts[0] + " " + parts[1] == "create function":
+            return self.corrected
+        
+        keywords = Keywords()
+        keyword_list = keywords.get_keywords()
+        for num in w2n.american_number_system:
+            keyword_list.append(num)
+        keyword_list.append("and")
+        
+        temp_not_all_keywords = None
+        
+        for keyword in keyword_list:
+            if temp_not_all_keywords is None:
+                temp_not_all_keywords = Suppress(Keyword(keyword))
+            else:
+                temp_not_all_keywords |= Suppress(Keyword(keyword))
+        variables = ZeroOrMore(ZeroOrMore(temp_not_all_keywords) + Word(alphas))
+
+        variables_name = variables.parseString(self.corrected)
+
+        for variable in variables_name:
+            to_replace = get_most_similar_word(variable, self.variables_list)
+            if to_replace == "":
+                continue # no suitable replacement
+            
+            if variable != to_replace:
+                self.corrected = self.corrected.replace(variable, to_replace)
+
+        return self.corrected
+        
 
     def run_correct_words_multiple(self, prev_hash = ""):
         self.correct_words()
@@ -197,5 +240,3 @@ class WordCorrector:
 ## for Loop condition is equal one condition I less than length condition I plus plus begin \
 ## if numbers array index I greater than Max Den Max equal numbers array index I and equal and if and for Loop return Max \
 ## and function"
-##wc = WordCorrector(word)
-##print wc.run_correct_words_multiple()

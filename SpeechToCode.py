@@ -67,8 +67,9 @@ def main():
             continue
 
         # text to processed_text
-        wordCorrector = WordCorrector(read_words)
+        wordCorrector = WordCorrector(read_words, variables_list)
         corrected = wordCorrector.run_correct_words_multiple("")
+        corrected = wordCorrector.run_correct_variables()
 
         # processed_text to structured_command / code and display to user.
         text_to_parse = str(previous_text) + " " + str(corrected)
@@ -89,6 +90,7 @@ def main():
             parsed = result_struct["parsed"]
         else: # can parse
             parsed = structured_command
+            variables_list = wordParser.get_variables()
 
         accepted_struct_commands = get_struct_command_from_text_list(wordParser, accepted_text)
         parsed = accepted_struct_commands + " " + parsed
