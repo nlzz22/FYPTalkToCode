@@ -153,6 +153,8 @@ class WordCorrector:
                 if next_word == "loop":
                     self.get_next_word()
                     self.add_word_to_corrected("for loop")
+                else:
+                    self.add_word_to_corrected(current_word)
             elif (current_word == "than"):
                 prev_word = self.query_latest_added_word()
                 if (prev_word == "greater" or prev_word == "less"):
