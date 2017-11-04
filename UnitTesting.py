@@ -81,6 +81,15 @@ class TestParserMethods(unittest.TestCase):
         
         self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
 
+    def test_word_corrector_bug_with_four(self):
+        word = "sequence array index three equal four end equal"
+        wc = WordCorrector(word, [])
+        corrected = wc.run_correct_words_multiple("")
+        expected = word
+        
+        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
+        
+
     # Test word similarity
 
     def test_word_similarity_1(self):
