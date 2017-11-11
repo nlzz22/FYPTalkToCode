@@ -65,7 +65,8 @@ class WordParser:
         word_list = processed_words.split()
 
         final_var_name = word_list[0]
-        self.variables.append(word_list[0])
+        if word_list[0] not in self.list_keywords:
+            self.variables.append(word_list[0])
         
         if (len(word_list) > 1):
             rest_words = word_list[1:]
@@ -383,6 +384,7 @@ class WordParser:
         
     def __init__(self):
         self.error_message = ""
+        self.variables = []
         
         # Define all keywords here
         keyword_equal = Suppress("equal")
@@ -435,10 +437,10 @@ class WordParser:
 
         # The list of required keywords
         keywords = Keywords()
-        list_keywords = keywords.get_keywords()
+        self.list_keywords = keywords.get_keywords()
 
         # The components of parser
-        not_all_keywords = self.build_not_all_keywords(list_keywords)
+        not_all_keywords = self.build_not_all_keywords(self.list_keywords)
         self.literal = self.get_all_literal() 
         
         variable_name = Combine(OneOrMore(not_all_keywords + Word(alphas) + Optional(" ")))
@@ -616,10 +618,11 @@ class WordParser:
         return result_struct
         
  
-    def parse(self, sentence):
+    def parse(self, sentence, new_instance = True):
         sentence = str(sentence).lower()
         self.error_message = ""
-        self.variables = []
+        if new_instance:
+            self.variables = []
         
         if sentence == "":
             return ""

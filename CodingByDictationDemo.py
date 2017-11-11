@@ -66,7 +66,7 @@ def get_struct_command_from_text_list(wordParser, text_list):
     struct_command_list = []
     
     for text in text_list:
-        structured_command = wordParser.parse(text)
+        structured_command = wordParser.parse(text, False)
         struct_command_list.append(structured_command)
     return " ".join(struct_command_list)
 
@@ -110,7 +110,7 @@ def main():
 
         error_message = ""
         potential_missing = ""
-        structured_command = wordParser.parse(text_to_parse)
+        structured_command = wordParser.parse(text_to_parse, False)
         if structured_command == "": # cannot parse
             result_struct = wordParser.parse_with_correction(text_to_parse)
 
