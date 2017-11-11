@@ -88,6 +88,16 @@ class TestParserMethods(unittest.TestCase):
         expected = word
         
         self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
+
+
+    def test_word_corrector_bug_with_no_whole_word_replace(self):
+        word = "for loop condition i equal one"
+        wc = WordCorrector(word, ["max"])
+        corrected = wc.run_correct_words_multiple("")
+        corrected = wc.run_correct_variables()
+        expected = "for loop condition max equal one"
+        
+        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
         
 
     # Test word similarity
