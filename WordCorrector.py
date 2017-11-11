@@ -1,6 +1,7 @@
 from num2words import num2words
 from word2number import w2n
 import hashlib
+import re
 from Keywords import Keywords
 from pyparsing import * # External parser library
 from WordSimilarity import get_most_similar_word
@@ -78,7 +79,10 @@ class WordCorrector:
                 continue # no suitable replacement
             
             if variable != to_replace:
-                self.corrected = self.corrected.replace(variable, to_replace)
+                # Ensures only whole word gets replaced: i.e. when replacing "i", "condition" is not affected as
+                # the "i" inside "condition" is not a whole word by itself.
+                regex_expr_var = r"\b" + re.escape(variable) + r"\b"
+                self.corrected = re.sub(regex_expr_var, to_replace, self.corrected)
 
         return self.corrected
         
