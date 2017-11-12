@@ -25,8 +25,8 @@ AUDIO_FILE = 2
 
 # EDIT THIS ONLY.
 # User defined: Method of reading here.
-read_from = READ_FROM_TYPING
-api_used = GOOGLE
+read_from = READ_FROM_SPEECH
+api_used = GOOGLE_CLOUD
 text_filename = "FindMaximum.txt" # default is "FindMaximum.txt"
 
 

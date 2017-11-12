@@ -46,7 +46,7 @@ def get_voice_input(variables_list, input_user, input_method):
                 print "Error: input_method is not 1 nor 2"
                 return None # terminate the program
 
-        print "Analyzing..."
+        print "\nInput recognized! Please wait while we analyze the audio ..."
 
 
         # Recognize the speech         
@@ -80,7 +80,7 @@ def get_voice_input(variables_list, input_user, input_method):
                         bing_key = credential_object.get_bing_key()
 
                         read_words_bing = r.recognize_bing(audio, bing_key, "en-US", False)
-                        print("Microsoft Bing : " + read_words_bing + "\n\n")               
+                        print("Microsoft Bing : " + read_words_bing + "\n\n")
 
         except sr.UnknownValueError:
                 print("Could not understand audio")
@@ -88,14 +88,15 @@ def get_voice_input(variables_list, input_user, input_method):
                 print("Could not request results; {0}".format(e))
 
 def read_from_microphone(r):
-        print "Reading from microphone selected! \n"
-        print "Adjusting for environment ambient noise ... \n"
+        print "\nPlease wait while we adjust for environment ambient noise ... \n"
         with sr.Microphone() as source: r.adjust_for_ambient_noise(source)
 
         print("Minimum energy threshold to {}".format(r.energy_threshold))
+        print "\n"
 
-        with sr.Microphone() as source:                                                                       
-                print("You can start speaking now:")                                                                                   
+        with sr.Microphone() as source:
+                raw_input("Enter anything to start recording.")
+                print("Please start speaking now:")                                                                                   
                 audio = r.listen(source)
                 return audio
 
@@ -104,7 +105,7 @@ def read_from_audio_file(r):
         print "Reading from audio file selected! \n"
         input_filename = raw_input('Please enter the filename (Work\\...\\filenamewithoutwav) : \n')
         
-        print "Reading from audio file..."
+        print "Reading from audio file, please wait..."
         AUDIO_FILE = path.join(path.dirname(path.realpath(__file__)), "TestSamples\\" + input_filename + ".wav")
 
         with sr.AudioFile(AUDIO_FILE) as source:
