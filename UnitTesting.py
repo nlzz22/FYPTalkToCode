@@ -278,14 +278,29 @@ class TestParserMethods(unittest.TestCase):
         struct = "#create int #variable i #dec_end;; "
         self.wordparser_compare(speech, struct)
 
+    def test_word_parser_declare_var_two_words(self):
+        speech = "declare integer mountain fox end declare"
+        struct = "#create int #variable mountainFox #dec_end;; "
+        self.wordparser_compare(speech, struct)
+
     def test_word_parser_declare_var_equal_expr(self):
         speech = "declare integer i equal j plus one end declare"
         struct = "#create int #variable i #variable j + #value 1 #dec_end;; "
         self.wordparser_compare(speech, struct)
 
+    def test_word_parser_declare_var_equal_expr_multiple_words(self):
+        speech = "declare integer i equal tax rate plus thirty one plus flower end declare"
+        struct = "#create int #variable i #variable taxRate + #value 31 + #variable flower #dec_end;; "
+        self.wordparser_compare(speech, struct)
+
     def test_word_parser_declare_arr_size_number(self):
         speech = "declare integer array sequence with size ten end declare"
         struct = "#create int #array #variable sequence #indexes #value 10 #index_end #dec_end;;"    
+        self.wordparser_compare(speech, struct)
+
+    def test_word_parser_declare_arr_two_words_size_number(self):
+        speech = "declare integer array sequence now with size ten end declare"
+        struct = "#create int #array #variable sequenceNow #indexes #value 10 #index_end #dec_end;;"    
         self.wordparser_compare(speech, struct)
 
     def test_word_parser_declare_arr_size_var_with(self):
@@ -296,6 +311,11 @@ class TestParserMethods(unittest.TestCase):
     def test_word_parser_declare_arr_size_var(self):
         speech = "declare integer array sequence size amount end declare"
         struct = "#create int #array #variable sequence #indexes #variable amount #index_end #dec_end;;"
+        self.wordparser_compare(speech, struct)
+
+    def test_word_parser_declare_arr_size_var_two_words(self):
+        speech = "declare integer array sequence size amount obtained end declare"
+        struct = "#create int #array #variable sequence #indexes #variable amountObtained #index_end #dec_end;;"
         self.wordparser_compare(speech, struct)
 
     def test_word_parser_return_var(self):
@@ -464,7 +484,70 @@ class TestParserMethods(unittest.TestCase):
         struct = "if #condition #variable x < #variable y #if_branch_start #assign #variable max #with #value 2;; #if_branch_end;;"
         self.wordparser_compare_correction(speech, struct)
 
+    # Test Word Parser added variables
+    def test_word_parser_added_variables_func_declare(self):
+        speech = "create function find the tree with return type void with parameter integer wei he with parameter integer because begin end function"
+        expected = ["find", "the", "tree", "wei", "he", "because"]
+
+        self.wordparser_compare_added_variables(speech, expected)
+
+    def test_word_parser_added_variables_func_declare_param_arr(self):
+        speech = "create function find maximum return type void with parameter integer array wei he with parameter integer because " + \
+                 " with parameter integer array hello begin end function"  
+        expected = ["find", "maximum", "hello", "wei", "he", "because"]
+        
+        self.wordparser_compare_added_variables(speech, expected)
+
+    def test_word_parser_added_variables_declare_variable_two_word(self):
+        speech = "declare integer water bottle end declare"        
+        expected = ["water", "bottle"]
+        
+        self.wordparser_compare_added_variables(speech, expected)
+
+    def test_word_parser_added_variables_declare_variable_one_word(self):
+        speech = "declare integer water end declare"        
+        expected = ["water"]
+        
+        self.wordparser_compare_added_variables(speech, expected)
+
+    def test_word_parser_added_variables_declare_array_one_word(self):
+        speech = "declare integer array fire with size one end declare"        
+        expected = ["fire"]
+        
+        self.wordparser_compare_added_variables(speech, expected)
+
+    def test_word_parser_added_variables_declare_array_two_word(self):
+        speech = "declare integer array fire alarm with size twenty two end declare"     
+        expected = ["fire", "alarm"]
+        
+        self.wordparser_compare_added_variables(speech, expected)
+
+    def test_word_parser_added_variables_declare_array_size_var_one_word(self):
+        speech = "declare integer array fire alarm with size length end declare"     
+        expected = ["fire", "alarm", "length"]
+        
+        self.wordparser_compare_added_variables(speech, expected)
+
+    def test_word_parser_added_variables_declare_array_size_var_two_word(self):
+        speech = "declare integer array fire alarm with size wei he end declare"     
+        expected = ["fire", "alarm", "wei", "he"]
+        
+        self.wordparser_compare_added_variables(speech, expected)
+
     # Utility functions below.
+
+    def wordparser_compare_added_variables(self, raw_text, expected):
+        wordParser = WordParser()
+        wordParser.parse(raw_text)
+        
+        expected.sort()
+
+        variables = wordParser.get_variables()
+        variables.sort()
+
+        self.assertTrue(expected is not None)
+        self.assertTrue(variables is not None)
+        self.assertEqual(expected, variables)
 
     def wordparser_compare(self, raw_text, expected):
         wordParser = WordParser()

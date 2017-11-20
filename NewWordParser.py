@@ -20,10 +20,13 @@ class WordParser:
         return temp_not_all_keywords
 
     def get_all_literal(self):
+        self.literal_words = []
+        
         # All the numeric words
         temp_num = ""
         for word in w2n.american_number_system:
             temp_num += " " + word
+            self.literal_words.append(word)
         temp_num += " and"
         literal = oneOf(temp_num)
 
@@ -65,14 +68,11 @@ class WordParser:
         word_list = processed_words.split()
 
         final_var_name = word_list[0]
-        if word_list[0] not in self.list_keywords:
-            self.variables.append(word_list[0])
         
         if (len(word_list) > 1):
             rest_words = word_list[1:]
             # build lower camel case
             for word in rest_words:
-                self.variables.append(word)
                 first_letter = word[0]
                 rest_letters = ""
                 if len(word) > 1:
@@ -125,7 +125,7 @@ class WordParser:
     
 
     def parse_arr_with_size(self, toks):
-        var_name = toks[0]
+        var_name = self.build_var_name(toks[0])
         size = toks[1]
 
         return "#variable " + var_name + " #indexes " + self.process_variable_or_literal(size) + " #index_end"
@@ -145,9 +145,19 @@ class WordParser:
             # Test if it is an array
             inner_tokens = self.array_variable_phrase.parseString(var_or_array)
 
-            return " #parameter_a #dimension 1 " + var_type + " #array " + self.build_var_name(inner_tokens[0])
+            variable_name = self.build_var_name(inner_tokens[0])
+
+            # Add to variables list.
+            self.add_variable_by_word(variable_name)
+
+            return " #parameter_a #dimension 1 " + var_type + " #array " + variable_name
         except ParseException: # no match: not an array, but a variable
-            return " #parameter " + var_type + self.build_var_name(var_or_array)
+            variable_name = self.build_var_name(var_or_array)
+
+            # Add to variables list.
+            self.add_variable_by_word(variable_name)
+            
+            return " #parameter " + var_type + variable_name
 
 
     def update_comparison_ops(self, tokens):        
@@ -294,7 +304,12 @@ class WordParser:
     def parse_function_declaration(self, tokens):
         # tokens consist of [ var_name, var_type, parameter_statements (multiple) + statement (multiple) ]
         # statements are tokens.stmts and parameter_statements are token.params
-        parsed_stmt = "#function_declare " + self.build_var_name(tokens[0]) + " " + tokens[1]
+        function_name = self.build_var_name(tokens[0])
+
+        # add function name to variables list.
+        self.add_variable_by_word(function_name)
+        
+        parsed_stmt = "#function_declare " + function_name + " " + tokens[1]
         
         for i in range(0, len(tokens.params)):
             parsed_stmt += tokens.params[i]
@@ -332,6 +347,33 @@ class WordParser:
             else:
                 new_tokens.append(token)
         return new_tokens
+
+
+    # variable is given in lower camel case form, separates them into individual words and
+    # adds individual words to the variables list
+    # e.g. findTheTree will add "find", "the", "tree" to the variables_list
+    def add_variable_by_word(self, variable):
+        variable = variable.replace(" ", "") # remove all spaces
+        variable = variable.replace("#variable", "") # remove all #variable word.
+        
+        has_added = False
+            
+        for index in range(len(variable)):
+            if variable[index].isupper():
+                has_added = True
+                word_to_add = variable[:index]
+
+                # if part of variable name is NOT a keyword
+                if word_to_add not in self.list_keywords and word_to_add not in self.literal_words:
+                    # add that to variables list.
+                    self.variables.append(variable[:index])
+                # recursively try to add the rest of the words.
+                self.add_variable_by_word(variable[index].lower() + variable[index + 1:])
+                break
+
+        # if variable is a word by itself (e.g. "tree")
+        if not has_added:
+            self.variables.append(variable)        
         
 
     def parse_declare_var_statement(self, tokens):
@@ -341,10 +383,21 @@ class WordParser:
             parsed_stmt += " " + tokens[2]
         parsed_stmt += " #dec_end;;"
 
+        # add to variables list.
+        self.add_variable_by_word(tokens[1])
+
         return parsed_stmt
 
     def parse_declare_arr_statement(self, tokens):
-        # tokens consist of [ variable_type, variable_name_with_size ] 
+        # tokens consist of [ variable_type, variable_name_with_size ]
+
+        # add to variables list.
+        extracted_variables = Suppress("#variable") + Word(alphas)
+        extracted_variables_list = extracted_variables.searchString(tokens[1])
+        for inner_list in extracted_variables_list:
+            word = inner_list[0]
+            self.add_variable_by_word(word)
+        
         return "#create " + tokens[0] + " #array " + tokens[1] + " #dec_end;;"
 
     def parse_return_statement(self, tokens):
