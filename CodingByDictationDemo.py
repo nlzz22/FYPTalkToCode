@@ -70,6 +70,14 @@ def get_struct_command_from_text_list(wordParser, text_list):
         struct_command_list.append(structured_command)
     return " ".join(struct_command_list)
 
+def add_var_list(temp_variable_list, variables_list):
+    temp_set = set()
+    merged_list = temp_variable_list + variables_list
+    for item in merged_list:
+        temp_set.add(item)
+
+    return list(temp_set)     
+
 def main():
     to_continue_reading = True
     previous_text = ""
@@ -80,6 +88,8 @@ def main():
     fileReader = TextFileReader(text_filename)
     
     while to_continue_reading:
+        temp_variable_list = [] # reset the var list
+        
         # Speech to text
         if read_from == READ_FROM_SPEECH:
             read_words = SpeechReader.get_voice_input(variables_list, api_used, VOICE)
@@ -119,12 +129,12 @@ def main():
             if "potential_missing" in result_struct.keys():
                 potential_missing = result_struct["potential_missing"]
             if "variables" in result_struct.keys() and len(result_struct["variables"]) != 0:
-                variables_list = result_struct["variables"]
+                temp_variable_list = result_struct["variables"]
 
             parsed = result_struct["parsed"]
         else: # can parse
             parsed = structured_command
-            variables_list = wordParser.get_variables()
+            temp_variable_list = wordParser.get_variables()
 
         accepted_struct_commands = get_struct_command_from_text_list(wordParser, accepted_text)
         parsed = accepted_struct_commands + " " + parsed
@@ -178,6 +188,7 @@ def main():
             if error_message == "":
                 accepted_text.append(text_to_parse)
                 previous_text = ""
+                variables_list = add_var_list(temp_variable_list, variables_list)
             else: # incomplete
                 previous_text = text_to_parse
         elif input_continue.lower() == "n":
@@ -191,6 +202,7 @@ def main():
             if error_message == "":
                 accepted_text.append(text_to_parse)
                 previous_text = ""
+                variables_list = add_var_list(temp_variable_list, variables_list)
             else: # incomplete
                 previous_text = text_to_parse
         elif input_continue.lower() == "t":
