@@ -98,6 +98,33 @@ class TestParserMethods(unittest.TestCase):
         expected = "for loop condition max equal one"
         
         self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
+
+    def test_word_corrector_correct_ii_to_i(self):
+        word = "first equal II end equal"
+        wc = WordCorrector(word, ["first", "i"])
+        corrected = wc.run_correct_words_multiple("")
+        corrected = wc.run_correct_variables()
+        expected = "first equal i end equal"
+        
+        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
+
+    def test_word_corrector_correct_ii_to_second(self):
+        word = "first equal II end equal"
+        wc = WordCorrector(word, ["first", "second"])
+        corrected = wc.run_correct_words_multiple("")
+        corrected = wc.run_correct_variables()
+        expected = "first equal second end equal"
+        
+        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
+
+    def test_word_corrector_correct_ii_to_none(self):
+        word = "first equal II end equal"
+        wc = WordCorrector(word, ["first"])
+        corrected = wc.run_correct_words_multiple("")
+        corrected = wc.run_correct_variables()
+        expected = word.lower()
+        
+        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
         
 
     # Test word similarity

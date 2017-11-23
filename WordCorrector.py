@@ -198,6 +198,10 @@ class WordCorrector:
                         self.add_word_to_corrected("condition is")
                 else:
                     self.add_word_to_corrected("condition")
+            elif (current_word == "to"):
+                prev_word = self.query_latest_added_word()
+                if prev_word == "equal":
+                    self.add_word_to_corrected("two")
             elif (current_word == "away"):
                 # away -> array
                 next_word = self.query_next_word()
@@ -222,7 +226,12 @@ class WordCorrector:
             elif (current_word == "became" or current_word == "beginning"):
                 self.add_word_to_corrected("begin")
             elif (current_word == "ii"):
-                self.add_word_to_corrected("i")
+                if "i" in self.variables_list:
+                    self.add_word_to_corrected("i")
+                elif "second" in self.variables_list:
+                    self.add_word_to_corrected("second")
+                else:
+                    self.add_word_to_corrected(current_word)
             elif (current_word == "ecuador"):
                 prev_word = self.query_latest_added_word()
                 if (prev_word == "end"):
