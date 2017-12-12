@@ -1,11 +1,43 @@
 import os
 import wx
+import threading
+from threading import Thread
+import time
 
 class CustomColor:
     DARK_GRAY = (111,111,116)
     LIGHT_GRAY = (213, 213, 214)
     PALE_GRAY = (235, 235, 236)
     WHITE = (255,255,255)
+
+class CodingByDictRecognition(Thread):
+    def __init__(self, ui):
+        Thread.__init__(self)
+        self.ui = ui
+
+    def run(self):
+        wx.CallAfter(self.ui.UpdateDisplayFeedback, "wei to the he")
+        time.sleep(1)
+        wx.CallAfter(self.ui.UpdateDisplayFeedback, "update display fdback working.")
+        time.sleep(1)
+        wx.CallAfter(self.ui.UpdateRecognitionFeedback, "update recognition fdback working.")
+        time.sleep(1)
+        wx.CallAfter(self.ui.UpdateCodeBody, "update code body fdback working.")
+        time.sleep(1)
+        wx.CallAfter(self.ui.UpdateHistoryBody, "update history body fdback working.")
+
+        time.sleep(1)
+        wx.CallAfter(self.ui.UpdateDisplayFeedback, "update display fdback working. +1")
+        time.sleep(1)
+        wx.CallAfter(self.ui.UpdateRecognitionFeedback, "update recognition fdback working. +1")
+        time.sleep(1)
+        wx.CallAfter(self.ui.UpdateCodeBody, "update code body fdback working. +1")
+        time.sleep(1)
+        wx.CallAfter(self.ui.UpdateHistoryBody, "update history body fdback working. +1")
+        print "all systems working..."
+
+
+
 
 ''' We derive a new class of Frame. '''
 class CodeByDictUI(wx.Frame):
@@ -102,14 +134,33 @@ class CodeByDictUI(wx.Frame):
         self.sizer.Add(self.buttonSizer, 0, wx.EXPAND)
         self.sizer.AddSpacer(CodeByDictUI.SPACE_VERTICAL_BUTTONS)
 
-        #Layout sizers
+        # Layout sizers
         self.SetSizer(self.sizer) # tell frame to use which sizer.
         self.SetAutoLayout(True)
         self.sizer.Fit(self)
         self.Show()
 
+        # run the recognition
+        self.recognition = CodingByDictRecognition(ui=self)
+        self.recognition.start()
+
     def UpdateDisplayFeedback(self, feedback):
         self.displayFeedback.SetLabel(feedback)
+        self.RefreshSizer()
+
+    def UpdateRecognitionFeedback(self, feedback):
+        self.recognitionFeedback.SetLabel(feedback)
+        self.RefreshSizer()
+
+    def UpdateCodeBody(self, code):
+        self.bodyCode.SetValue(code)
+        self.RefreshSizer()
+
+    def UpdateHistoryBody(self, hist):
+        self.bodyHistory.SetValue(hist)
+        self.RefreshSizer()
+
+    def RefreshSizer(self):
         self.sizer.Layout() # reupdate the layout of sizer.
 
     def OnUndo(self, event):
