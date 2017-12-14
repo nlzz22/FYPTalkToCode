@@ -10,6 +10,7 @@ class CustomColor:
     LIGHT_GRAY = (213, 213, 214)
     PALE_GRAY = (235, 235, 236)
     WHITE = (255,255,255)
+    RED = (255, 10, 10)
 
 class CodingByDictRecognition(Thread):
     def __init__(self, ui):
@@ -76,6 +77,7 @@ class CodeByDictUI(wx.Frame):
         # Create the 3 lines of feedback
         self.feedbackOne = wx.StaticText(self, label=" ", style=wx.ALIGN_CENTER | wx.BORDER)
         self.feedbackOne.SetBackgroundColour(CustomColor.PALE_GRAY)
+        self.feedbackOne.SetForegroundColour(CustomColor.RED)
         self.feedbackTwo = wx.StaticText(self, label=" ", style=wx.ALIGN_CENTER | wx.BORDER)
         self.feedbackTwo.SetBackgroundColour(CustomColor.LIGHT_GRAY)
         self.feedbackThree = wx.StaticText(self, label=" ", style=wx.ALIGN_CENTER | wx.BORDER)

@@ -98,7 +98,7 @@ def build_string_from_stack(stackClass, accepted_indices):
 
     for i in range(last_accepted_index + 1, len(stackClass.stack)):
         joined_string += stackClass.stack[i] + " "
-    return joined_string    
+    return joined_string
 
 def main(uiThread):
     to_continue_reading = True
@@ -171,12 +171,12 @@ def main(uiThread):
         # Feedback to user
         if error_message != "":
             if potential_missing != "":
-                print_feedback_two("Expected  : " + potential_missing, uiThread)
+                print_feedback_three("Expected  : " + potential_missing, uiThread)
             else:
                 if error_message.strip() == "Expected":
-                    print_feedback_two("Incomplete statement.", uiThread)
+                    print_feedback_three("Incomplete statement.", uiThread)
                 else:
-                    print_feedback_two("Error     : " + error_message, uiThread)
+                    print_feedback_three("Error     : " + error_message, uiThread)
         else:
             print_feedback_two(" ", uiThread)
 
@@ -184,7 +184,7 @@ def main(uiThread):
         print "Audio read by Speech Recognizer : " + read_words
         print "Processed text after correction : " + corrected
 
-        print_feedback_three("Read: " + corrected, uiThread)
+        print_feedback_two("Read: " + corrected, uiThread)
 
         if read_from == READ_FROM_TEXT_FILE:
             if to_continue_reading == True:
