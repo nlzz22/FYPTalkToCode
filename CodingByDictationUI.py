@@ -2,8 +2,7 @@ import os
 import wx
 import threading
 from threading import Thread
-import time
-import CodingByDictationLogic as programLogic
+from CodingByDictationLogic import CodingByDictationLogic as ProgramLogic
 
 class CustomColor:
     DARK_GRAY = (111,111,116)
@@ -18,7 +17,11 @@ class CodingByDictRecognition(Thread):
         self.ui = ui
 
     def run(self):
-        programLogic.main(self)
+        self.programLogic = ProgramLogic()
+        self.programLogic.main(self)
+
+    def undo(self):
+        self.programLogic.undo()
 
     def UpdateFeedbackOne(self, feedback):
         wx.CallAfter(self.ui.UpdateFeedbackOne, feedback)
@@ -158,10 +161,14 @@ class CodeByDictUI(wx.Frame):
         self.RefreshSizer()
 
     def UpdateCodeBody(self, code):
+        if code.strip() == "":
+            code = "No code has been generated yet."
         self.bodyCode.SetValue(code)
         self.RefreshSizer()
 
     def UpdateHistoryBody(self, hist):
+        if hist.strip() == "":
+            hist = "There is no history."
         self.bodyHistory.SetValue(hist)
         self.RefreshSizer()
 
@@ -169,7 +176,7 @@ class CodeByDictUI(wx.Frame):
         self.sizer.Layout() # reupdate the layout of sizer.
 
     def OnUndo(self, event):
-        print "undo"
+        self.recognition.undo()
         
     def OnExport(self, event):
         print "export"

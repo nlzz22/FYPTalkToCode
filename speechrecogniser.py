@@ -7,8 +7,7 @@ from credentials import APICredentials
 
 class SpeechRecognitionModule:
         def __init__(self):
-            self.has_noise_set = False
-            self.ambient_noise = -1
+            pass
 
         def print_feedback_one(self, feedback, uiThread):
             uiThread.UpdateFeedbackOne(feedback)
@@ -102,16 +101,12 @@ class SpeechRecognitionModule:
                         self.print_feedback_one("Could not request results; {0}".format(e), uiThread)
 
         def read_from_microphone(self, r, uiThread):
-                if not self.has_noise_set:
-                        self.has_noise_set = True
-                        self.print_feedback_three("Please wait while we adjust for environment ambient noise ...", uiThread)
-                        with sr.Microphone() as source: r.adjust_for_ambient_noise(source)
-                        self.print_feedback_two("Minimum energy threshold to {}".format(r.energy_threshold), uiThread)
-                        self.ambient_noise = r.energy_threshold
+                self.print_feedback_three("Please wait while we adjust for environment ambient noise ...", uiThread)
+                with sr.Microphone() as source: r.adjust_for_ambient_noise(source)
 
                 with sr.Microphone() as source:
-                        self.print_feedback_one(" ", uiThread)
-                        self.print_feedback_three("Please start speaking now ... ", uiThread)                                                                                   
+                        string_to_show = "Minimum energy threshold to {}, Please start speaking now ... ".format(r.energy_threshold)
+                        self.print_feedback_three(string_to_show, uiThread)
                         audio = r.listen(source)
                         return audio
 
