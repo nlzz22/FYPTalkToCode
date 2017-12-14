@@ -5,112 +5,127 @@ from os import path
 # import from user-defined class
 from credentials import APICredentials
 
-# variables_list is list of string of variables
-# input_user: 1 for Google, 2 for Google Cloud
-# input_method: 1 for voice, 2 for audio file
-def get_voice_input(variables_list, input_user, input_method):
-        enableGoogle = False
-        enableGoogleCloud = False # free 60 mins, $0.006 per 15 seconds thereafter
-        enableMicrosoftBing = False # free 5000 transactions, $4 per 1000 transactions thereafter
+class SpeechRecognitionModule:
+        def __init__(self):
+            self.has_noise_set = False
+            self.ambient_noise = -1
 
-        # process the API to be used based on user input
-        try:
-                input_user = int(input_user)
-        except ValueError:
-                print "Error: input_user is not a number"
-                return None
-                
-        if (input_user == 1):
-                enableGoogle = True
-        elif (input_user == 2):
-                enableGoogleCloud = True 
-        else:
-                print "Error: input_user is not 1 nor 2"
-                return None # terminate the program
-                                                                      
-        r = sr.Recognizer()
+        def print_feedback_one(self, feedback, uiThread):
+            uiThread.UpdateFeedbackOne(feedback)
 
-        try:
-                input_method = int(input_method)
-        except ValueError:
-                print "Error: input_method is not a number"
-                return None # terminate the program
-                
-        if (input_method == 1):
-                # record from voice
-                audio = read_from_microphone(r)
-        elif (input_method == 2):
-                # read from audio file
-                audio = read_from_audio_file(r)
-        else:
-                print "Error: input_method is not 1 nor 2"
-                return None # terminate the program
+        def print_feedback_two(self, feedback, uiThread):
+            uiThread.UpdateFeedbackTwo(feedback)
 
-        print "\nInput recognized! Please wait while we analyze the audio ..."
+        def print_feedback_three(self, feedback, uiThread):
+            uiThread.UpdateFeedbackThree(feedback)
 
+        # variables_list is list of string of variables
+        # input_user: 1 for Google, 2 for Google Cloud
+        # input_method: 1 for voice, 2 for audio file
+        def get_voice_input(self, variables_list, input_user, input_method, uiThread):
+                enableGoogle = False
+                enableGoogleCloud = False # free 60 mins, $0.006 per 15 seconds thereafter
+                enableMicrosoftBing = False # free 5000 transactions, $4 per 1000 transactions thereafter
 
-        # Recognize the speech         
-        try:
-                if (enableGoogle):
-                        # recognize speech using Google Speech Recognition
-                        read_words = r.recognize_google(audio)
-                        print("Google finished deciphering ! \n")
-                        return read_words
-
-                if (enableGoogleCloud):
-                        # recognize speech using Google Cloud Speech Recognition
-                        credential_object = APICredentials()
-                        google_cloud_json = credential_object.get_google_json_file()
-                        preferred_phrases = ["equal", "if", "then", "else", "end", "declare integer", "integer", "boolean", \
-                                             "declare boolean", "declare string", "declare float", "declare double", "declare character", \
-                                             "string", "float", "double", "character", "size", "index", "create function", \
-                                             "function", "return", "return type", "parameter", "call function", "for", "plus", "plus plus", \
-                                             "minus", "minus minus", "times", "divide", "while", "switch", "case", "dot", "end if", \
-                                             "end switch", "end declare", "for loop", "end equal", "for loop condition i", "end while", \
-                                             "end string"]
-                        preferred_phrases += variables_list
+                # process the API to be used based on user input
+                try:
+                        input_user = int(input_user)
+                except ValueError:
+                        print "Error: input_user is not a number"
+                        return None
                         
-                        read_words_google = RecognizerGA().recognize_google_cloud(audio, google_cloud_json, "en-US", preferred_phrases, False)
-                        print("Google Cloud finished deciphering ! \n")
-                        return read_words_google
+                if (input_user == 1):
+                        enableGoogle = True
+                elif (input_user == 2):
+                        enableGoogleCloud = True 
+                else:
+                        print "Error: input_user is not 1 nor 2"
+                        return None # terminate the program
+                                                                              
+                r = sr.Recognizer()
 
-                if (enableMicrosoftBing):
-                        # recognize speech using Microsoft Bing Speech Recognition
-                        credential_object = APICredentials()
-                        bing_key = credential_object.get_bing_key()
+                try:
+                        input_method = int(input_method)
+                except ValueError:
+                        print "Error: input_method is not a number"
+                        return None # terminate the program
+                        
+                if (input_method == 1):
+                        # record from voice
+                        audio = self.read_from_microphone(r, uiThread)
+                elif (input_method == 2):
+                        # read from audio file
+                        audio = self.read_from_audio_file(r, uiThread)
+                else:
+                        print "Error: input_method is not 1 nor 2"
+                        return None # terminate the program
 
-                        read_words_bing = r.recognize_bing(audio, bing_key, "en-US", False)
-                        print("Microsoft Bing : " + read_words_bing + "\n\n")
-
-        except sr.UnknownValueError:
-                print("Could not understand audio")
-        except sr.RequestError as e:
-                print("Could not request results; {0}".format(e))
-
-def read_from_microphone(r):
-        print "\nPlease wait while we adjust for environment ambient noise ... \n"
-        with sr.Microphone() as source: r.adjust_for_ambient_noise(source)
-
-        print("Minimum energy threshold to {}".format(r.energy_threshold))
-        print "\n"
-
-        with sr.Microphone() as source:
-                raw_input("Enter anything to start recording.")
-                print("Please start speaking now:")                                                                                   
-                audio = r.listen(source)
-                return audio
+                self.print_feedback_three("Input recognized! Please wait while we analyze the audio ...", uiThread)
 
 
-def read_from_audio_file(r):
-        print "Reading from audio file selected! \n"
-        input_filename = raw_input('Please enter the filename (Work\\...\\filenamewithoutwav) : \n')
-        
-        print "Reading from audio file, please wait..."
-        AUDIO_FILE = path.join(path.dirname(path.realpath(__file__)), "TestSamples\\" + input_filename + ".wav")
+                # Recognize the speech         
+                try:
+                        if (enableGoogle):
+                                # recognize speech using Google Speech Recognition
+                                read_words = r.recognize_google(audio)
+                                self.print_feedback_three("Google finished deciphering !", uiThread)
+                                return read_words
 
-        with sr.AudioFile(AUDIO_FILE) as source:
-                audio = r.record(source)  # read the entire audio file
-                return audio
+                        if (enableGoogleCloud):
+                                # recognize speech using Google Cloud Speech Recognition
+                                credential_object = APICredentials()
+                                google_cloud_json = credential_object.get_google_json_file()
+                                preferred_phrases = ["equal", "if", "then", "else", "end", "declare integer", "integer", "boolean", \
+                                                     "declare boolean", "declare string", "declare float", "declare double", "declare character", \
+                                                     "string", "float", "double", "character", "size", "index", "create function", \
+                                                     "function", "return", "return type", "parameter", "call function", "for", "plus", "plus plus", \
+                                                     "minus", "minus minus", "times", "divide", "while", "switch", "case", "dot", "end if", \
+                                                     "end switch", "end declare", "for loop", "end equal", "for loop condition i", "end while", \
+                                                     "end string"]
+                                preferred_phrases += variables_list
+                                
+                                read_words_google = RecognizerGA().recognize_google_cloud(audio, google_cloud_json, "en-US", preferred_phrases, False)
+                                self.print_feedback_three("Google Cloud finished deciphering !", uiThread)
+                                return read_words_google
+
+                        if (enableMicrosoftBing):
+                                # recognize speech using Microsoft Bing Speech Recognition
+                                credential_object = APICredentials()
+                                bing_key = credential_object.get_bing_key()
+
+                                read_words_bing = r.recognize_bing(audio, bing_key, "en-US", False)
+                                print("Microsoft Bing : " + read_words_bing + "\n\n")
+
+                except sr.UnknownValueError:
+                        self.print_feedback_one("Could not understand audio", uiThread)
+                except sr.RequestError as e:
+                        self.print_feedback_one("Could not request results; {0}".format(e), uiThread)
+
+        def read_from_microphone(self, r, uiThread):
+                if not self.has_noise_set:
+                        self.has_noise_set = True
+                        self.print_feedback_three("Please wait while we adjust for environment ambient noise ...", uiThread)
+                        with sr.Microphone() as source: r.adjust_for_ambient_noise(source)
+                        self.print_feedback_two("Minimum energy threshold to {}".format(r.energy_threshold), uiThread)
+                        self.ambient_noise = r.energy_threshold
+
+                with sr.Microphone() as source:
+                        self.print_feedback_one(" ", uiThread)
+                        self.print_feedback_three("Please start speaking now ... ", uiThread)                                                                                   
+                        audio = r.listen(source)
+                        return audio
+
+
+        def read_from_audio_file(self, r, uiThread):
+                self.print_feedback_three("Reading from audio file selected! ", uiThread)
+                input_filename = raw_input('Please enter the filename (Work\\...\\filenamewithoutwav) : \n')
+                
+                self.print_feedback_three("Reading from audio file, please wait...", uiThread)
+                AUDIO_FILE = path.join(path.dirname(path.realpath(__file__)), "TestSamples\\" + input_filename + ".wav")
+
+                with sr.AudioFile(AUDIO_FILE) as source:
+                        audio = r.record(source)  # read the entire audio file
+                        return audio
 
 
 # This inherits the parent Recognizer class so we can override its functions

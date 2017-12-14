@@ -1,11 +1,12 @@
 import os
 import wx
-import speechrecogniser as SpeechReader
+from SpeechRecogniser import SpeechRecognitionModule as SpeechReader
 from WordCorrector import WordCorrector
 from NewWordParser import WordParser as newWordParser
 from NewWordParser import Stack
 import StructuralCommandParser as scParser
 from TextFileReader import TextFileReader
+import time
 
 ##########################################
 ###### DO NOT TOUCH THESE CONSTANTS ######
@@ -63,11 +64,14 @@ def print_code(text_hist_stack, accepted_indices, to_add_corrected, parsed_sc, w
   
     uiThread.UpdateCodeBody(code)
 
-def print_display_feedback(feedback, uiThread):
-    uiThread.UpdateDisplayFeedback(feedback)
+def print_feedback_one(feedback, uiThread):
+    uiThread.UpdateFeedbackOne(feedback)
 
-def print_recognition_feedback(feedback, uiThread):
-    uiThread.UpdateRecognitionFeedback(feedback)
+def print_feedback_two(feedback, uiThread):
+    uiThread.UpdateFeedbackTwo(feedback)
+
+def print_feedback_three(feedback, uiThread):
+    uiThread.UpdateFeedbackThree(feedback)
 
 def get_struct_command_from_text_list(wordParser, text_list):
     struct_command_list = []
@@ -102,6 +106,7 @@ def main(uiThread):
     text_history_stack = Stack()
     accepted_indices = []
     current_index = 0
+    speechReader = SpeechReader()
     wordParser = newWordParser()
     fileReader = TextFileReader(text_filename)
     
@@ -110,9 +115,9 @@ def main(uiThread):
         
         # Speech to text
         if read_from == READ_FROM_SPEECH:
-            read_words = SpeechReader.get_voice_input(variables_list, api_used, VOICE)
+            read_words = speechReader.get_voice_input(variables_list, api_used, VOICE, uiThread)
         elif read_from == READ_FROM_AUDIO_FILE:
-            read_words = SpeechReader.get_voice_input(variables_list, api_used, AUDIO_FILE)
+            read_words = speechReader.get_voice_input(variables_list, api_used, AUDIO_FILE, uiThread)
         elif read_from == READ_FROM_TYPING:
             read_words = raw_input("Type in speech : ")
         elif read_from == READ_FROM_TEXT_FILE:
@@ -121,11 +126,12 @@ def main(uiThread):
                 to_continue_reading = False
                 
         else:
-            print_display_feedback("Error: unknown read_from detected", uiThread)
+            print_feedback_one("Error: unknown read_from detected", uiThread)
             return None # terminate the program
 
         if (read_words is None):
-            print_recognition_feedback("Invalid input when reading", uiThread)
+            print_feedback_one("Invalid input when reading", uiThread)
+            time.sleep(2)
             continue
 
         # text to processed_text
@@ -139,7 +145,7 @@ def main(uiThread):
         error_message = ""
         potential_missing = ""
         structured_command = wordParser.parse(text_to_parse, False)
-        print "struct command is: " + structured_command
+
         to_add_corrected = False
         if structured_command == "": # cannot parse
             result_struct = wordParser.parse_with_correction(text_to_parse)
@@ -165,20 +171,20 @@ def main(uiThread):
         # Feedback to user
         if error_message != "":
             if potential_missing != "":
-                print_recognition_feedback("Expected  : " + potential_missing, uiThread)
+                print_feedback_two("Expected  : " + potential_missing, uiThread)
             else:
                 if error_message.strip() == "Expected":
-                    print_recognition_feedback("Incomplete statement.", uiThread)
+                    print_feedback_two("Incomplete statement.", uiThread)
                 else:
-                    print_recognition_feedback("Error     : " + error_message, uiThread)
+                    print_feedback_two("Error     : " + error_message, uiThread)
         else:
-            print_recognition_feedback(" ", uiThread)
+            print_feedback_two(" ", uiThread)
 
         # printlines for debug
         print "Audio read by Speech Recognizer : " + read_words
         print "Processed text after correction : " + corrected
 
-        print_display_feedback("Read: " + corrected, uiThread)
+        print_feedback_three("Read: " + corrected, uiThread)
 
         if read_from == READ_FROM_TEXT_FILE:
             if to_continue_reading == True:
