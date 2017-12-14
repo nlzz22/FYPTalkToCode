@@ -3,6 +3,7 @@ import wx
 import threading
 from threading import Thread
 import time
+import CodingByDictationLogic as programLogic
 
 class CustomColor:
     DARK_GRAY = (111,111,116)
@@ -16,27 +17,19 @@ class CodingByDictRecognition(Thread):
         self.ui = ui
 
     def run(self):
-        wx.CallAfter(self.ui.UpdateDisplayFeedback, "wei to the he")
-        time.sleep(1)
-        wx.CallAfter(self.ui.UpdateDisplayFeedback, "update display fdback working.")
-        time.sleep(1)
-        wx.CallAfter(self.ui.UpdateRecognitionFeedback, "update recognition fdback working.")
-        time.sleep(1)
-        wx.CallAfter(self.ui.UpdateCodeBody, "update code body fdback working.")
-        time.sleep(1)
-        wx.CallAfter(self.ui.UpdateHistoryBody, "update history body fdback working.")
+        programLogic.main(self)
 
-        time.sleep(1)
-        wx.CallAfter(self.ui.UpdateDisplayFeedback, "update display fdback working. +1")
-        time.sleep(1)
-        wx.CallAfter(self.ui.UpdateRecognitionFeedback, "update recognition fdback working. +1")
-        time.sleep(1)
-        wx.CallAfter(self.ui.UpdateCodeBody, "update code body fdback working. +1")
-        time.sleep(1)
-        wx.CallAfter(self.ui.UpdateHistoryBody, "update history body fdback working. +1")
-        print "all systems working..."
+    def UpdateDisplayFeedback(self, feedback):
+        wx.CallAfter(self.ui.UpdateDisplayFeedback, feedback)
 
+    def UpdateRecognitionFeedback(self, feedback):
+        wx.CallAfter(self.ui.UpdateRecognitionFeedback, feedback)
 
+    def UpdateCodeBody(self, feedback):
+        wx.CallAfter(self.ui.UpdateCodeBody, feedback)
+
+    def UpdateHistoryBody(self, feedback):
+        wx.CallAfter(self.ui.UpdateHistoryBody, feedback)
 
 
 ''' We derive a new class of Frame. '''
