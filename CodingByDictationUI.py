@@ -44,6 +44,7 @@ class CodeByDictUI(wx.Frame):
     SPACE_BETWEEN_BUTTONS = 50
     SPACE_SIDE_OF_BUTTONS = 10
     SPACE_VERTICAL_BUTTONS = 7
+    FONT_SIZE_FEEDBACK = 12
     
     def __init__(self, parent, title):
         wx.Frame.__init__(self, parent, title=title)
@@ -81,10 +82,13 @@ class CodeByDictUI(wx.Frame):
         self.feedbackOne = wx.StaticText(self, label=" ", style=wx.ALIGN_CENTER | wx.BORDER)
         self.feedbackOne.SetBackgroundColour(CustomColor.PALE_GRAY)
         self.feedbackOne.SetForegroundColour(CustomColor.RED)
+        self.SetFont(self.feedbackOne, CodeByDictUI.FONT_SIZE_FEEDBACK)
         self.feedbackTwo = wx.StaticText(self, label=" ", style=wx.ALIGN_CENTER | wx.BORDER)
         self.feedbackTwo.SetBackgroundColour(CustomColor.LIGHT_GRAY)
+        self.SetFont(self.feedbackTwo, CodeByDictUI.FONT_SIZE_FEEDBACK)
         self.feedbackThree = wx.StaticText(self, label=" ", style=wx.ALIGN_CENTER | wx.BORDER)
         self.feedbackThree.SetBackgroundColour(CustomColor.PALE_GRAY)
+        self.SetFont(self.feedbackThree, CodeByDictUI.FONT_SIZE_FEEDBACK)
 
         # Feedback Sizer
         self.feedbackSizer = wx.BoxSizer(wx.VERTICAL)
@@ -147,6 +151,10 @@ class CodeByDictUI(wx.Frame):
         # run the recognition
         self.recognition = CodingByDictRecognition(ui=self)
         self.recognition.start()
+
+    def SetFont(self, textControl, fontSize, family=wx.DEFAULT, style=wx.NORMAL, weight=wx.NORMAL):
+        font = wx.Font(fontSize, family, style, weight)
+        textControl.SetFont(font)
 
     def UpdateFeedbackOne(self, feedback):
         self.feedbackOne.SetLabel(feedback)
