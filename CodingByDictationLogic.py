@@ -169,6 +169,10 @@ class CodingByDictationLogic:
             corrected = wordCorrector.run_correct_words_multiple("")
             corrected = wordCorrector.run_correct_variables()
 
+            if corrected.strip() == "undo":
+                self.undo()
+                continue
+
             # processed_text to structured_command / code and display to user.
             text_to_parse = self.build_string_from_stack(self.text_history_stack, self.accepted_indices) + " " + str(corrected)
 
