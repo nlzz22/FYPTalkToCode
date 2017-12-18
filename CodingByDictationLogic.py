@@ -116,10 +116,16 @@ class CodingByDictationLogic:
             joined_string += stackClass.stack[i] + " "
         return joined_string
 
+    # This function prints all variables in the stack, for debug purposes only.
+    def print_all_var(self):
+        for var in self.variables_stack.stack:
+            print var
+        print "\n"
+
     def undo(self):
         if self.current_index > 0:
             self.variables_stack.pop()
-            self.text_history_stack.pop()
+            undo_text = self.text_history_stack.pop()
             self.code_stack.pop()
 
             if len(self.accepted_indices) > 0:
@@ -130,6 +136,9 @@ class CodingByDictationLogic:
             self.current_index -= 1
             self.print_history_text(self.uiThread)
             self.print_latest_code(self.uiThread)
+            self.print_feedback_one("Your undo is registered for " + str(undo_text), self.uiThread)
+        else:
+            self.print_feedback_one("There is nothing to undo.", self.uiThread)
         
 
     def main(self, uiThread):
@@ -178,7 +187,7 @@ class CodingByDictationLogic:
 
             error_message = ""
             potential_missing = ""
-            structured_command = wordParser.parse(text_to_parse, False)
+            structured_command = wordParser.parse(text_to_parse, True)
 
             to_add_corrected = False
             if structured_command == "": # cannot parse
@@ -244,4 +253,5 @@ class CodingByDictationLogic:
 
             self.print_history_text(uiThread)
             self.print_code(to_add_corrected, parsed, wordParser, scParser, uiThread)
+            # self.print_all_var() # for debug only.
 

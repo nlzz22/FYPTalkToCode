@@ -152,6 +152,8 @@ class CodeByDictUI(wx.Frame):
         self.recognition = CodingByDictRecognition(ui=self)
         self.recognition.start()
 
+        self.dirname = ''
+
     def SetFont(self, textControl, fontSize, family=wx.DEFAULT, style=wx.NORMAL, weight=wx.NORMAL):
         font = wx.Font(fontSize, family, style, weight)
         textControl.SetFont(font)
@@ -187,7 +189,24 @@ class CodeByDictUI(wx.Frame):
         self.recognition.undo()
         
     def OnExport(self, event):
-        print "export"
+        # Save away the edited text
+        # Open the file, do an RU sure check for an overwrite!
+        dlg = wx.FileDialog(self, "Choose a file", self.dirname, "", "*.*", \
+                wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT)
+        if dlg.ShowModal() == wx.ID_OK:
+            # Grab the content to be saved
+            itcontains = self.bodyCode.GetValue()
+
+            # Open the file for write, write, close
+            self.filename=self.process_file_name(dlg.GetFilename())
+            self.dirname=dlg.GetDirectory()
+            filehandle=open(os.path.join(self.dirname, self.filename),'w')
+            filehandle.write(itcontains)
+            filehandle.close()
+
+            self.UpdateFeedbackOne("Your code has been saved to " + self.filename)
+        # Get rid of the dialog to keep things tidy
+        dlg.Destroy()
     
     def OnCheatsheet(self, event):
         cheatsheetContents = "Structured Language\n\n" + \
@@ -206,6 +225,12 @@ class CodeByDictUI(wx.Frame):
 
     def OnExit(self, event):
         self.Close(True) # close the frame
+
+    def process_file_name(self, file_name):
+        if len(file_name) < 2 or file_name[-2:] != ".c":
+            return file_name + ".c"
+        else:
+            return file_name
         
 
 app = wx.App(False) # create a new app, don't redirect stdout to window.
