@@ -7,6 +7,7 @@ from NewWordParser import Stack
 import StructuralCommandParser as scParser
 from TextFileReader import TextFileReader
 import time
+import threading
 
 class CodingByDictationLogic:    
     def __init__(self):
@@ -39,6 +40,8 @@ class CodingByDictationLogic:
         self.code_stack = Stack()
         self.accepted_indices = []
         self.current_index = 0
+
+        self.voice_lock = threading.Lock()
 
     def print_history_text(self, uiThread):
         hist_text = ""
@@ -122,7 +125,9 @@ class CodingByDictationLogic:
             print var
         print "\n"
 
-    def undo(self):
+    def undo(self, to_continue_reading=False):
+        if to_continue_reading:
+            self.unlock_voice(self.uiThread)
         if self.current_index > 0:
             self.variables_stack.pop()
             undo_text = self.text_history_stack.pop()
@@ -139,7 +144,19 @@ class CodingByDictationLogic:
             self.print_feedback_one("Your undo is registered for " + str(undo_text), self.uiThread)
         else:
             self.print_feedback_one("There is nothing to undo.", self.uiThread)
+
+    def lock_voice(self, uiThread):
+        uiThread.OffRecordingMode()
         
+    def unlock_voice(self, uiThread):
+        uiThread.OnRecordingMode()
+        self.release_voice_lock()
+
+    def release_voice_lock(self):
+        try:
+            self.voice_lock.release()
+        except:
+            pass
 
     def main(self, uiThread):
         to_continue_reading = True
@@ -150,6 +167,7 @@ class CodingByDictationLogic:
         fileReader = TextFileReader(self.text_filename)
         
         while to_continue_reading:
+            self.voice_lock.acquire()
             variables_list = self.build_var_list_from_stack(self.variables_stack)
             
             # Speech to text
@@ -170,7 +188,8 @@ class CodingByDictationLogic:
 
             if (read_words is None):
                 self.print_feedback_one("Invalid input when reading", uiThread)
-                time.sleep(2)
+                # time.sleep(2)
+                self.lock_voice(uiThread)
                 continue
 
             # text to processed_text
@@ -179,7 +198,7 @@ class CodingByDictationLogic:
             corrected = wordCorrector.run_correct_variables()
 
             if corrected.strip() == "undo":
-                self.undo()
+                self.undo(True)
                 continue
 
             # processed_text to structured_command / code and display to user.
@@ -187,7 +206,16 @@ class CodingByDictationLogic:
 
             error_message = ""
             potential_missing = ""
-            structured_command = wordParser.parse(text_to_parse, True)
+            structured_command = ""
+
+            try:
+                structured_command = wordParser.parse(text_to_parse, True)
+            except Exception as ex:
+                self.print_feedback_one("Unable to understand : " + str(corrected), uiThread)
+                self.lock_voice(uiThread)
+                continue
+
+            self.release_voice_lock()
 
             to_add_corrected = False
             if structured_command == "": # cannot parse

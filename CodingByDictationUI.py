@@ -10,6 +10,7 @@ class CustomColor:
     PALE_GRAY = (235, 235, 236)
     WHITE = (255,255,255)
     RED = (255, 10, 10)
+    GREEN = (0, 100, 0)
 
 class CodingByDictRecognition(Thread):
     def __init__(self, ui):
@@ -22,6 +23,9 @@ class CodingByDictRecognition(Thread):
 
     def undo(self):
         self.programLogic.undo()
+
+    def startRecording(self):
+        self.programLogic.unlock_voice(self)
 
     def UpdateFeedbackOne(self, feedback):
         wx.CallAfter(self.ui.UpdateFeedbackOne, feedback)
@@ -37,6 +41,12 @@ class CodingByDictRecognition(Thread):
 
     def UpdateHistoryBody(self, feedback):
         wx.CallAfter(self.ui.UpdateHistoryBody, feedback)
+
+    def OnRecordingMode(self):
+        wx.CallAfter(self.ui.OnRecordingMode)
+
+    def OffRecordingMode(self):
+        wx.CallAfter(self.ui.OffRecordingMode)
 
 
 ''' We derive a new class of Frame. '''
@@ -114,6 +124,21 @@ class CodeByDictUI(wx.Frame):
         self.buttonSizer.AddSpacer(CodeByDictUI.SPACE_BETWEEN_BUTTONS)
         self.buttonSizer.Add(self.buttonCheatsheet, 1, wx.EXPAND)
         self.buttonSizer.AddSpacer(CodeByDictUI.SPACE_SIDE_OF_BUTTONS)
+
+        # Recording Bar
+        self.recordStatus = wx.StaticText(self, label="Recording mode is ON", style=wx.ALIGN_CENTER)
+        self.recordStatus.SetBackgroundColour(CustomColor.LIGHT_GRAY)
+        self.recordStatus.SetForegroundColour(CustomColor.GREEN)
+        self.SetFont(self.recordStatus, CodeByDictUI.FONT_SIZE_FEEDBACK)
+        self.recordButton = wx.Button(self, -1, "Start Recording")
+        self.recordButton.Disable()
+
+        self.Bind(wx.EVT_BUTTON, self.OnRecord, self.recordButton)
+
+        # Recording Bar sizer
+        self.recordSizer = wx.BoxSizer(wx.HORIZONTAL)
+        self.recordSizer.Add(self.recordStatus, 1, wx.EXPAND)
+        self.recordSizer.Add(self.recordButton, 1, wx.EXPAND)        
                                        
         # Status Bar
         self.CreateStatusBar() # A status bar in the bottom of the window
@@ -141,6 +166,7 @@ class CodeByDictUI(wx.Frame):
         self.sizer.AddSpacer(CodeByDictUI.SPACE_VERTICAL_BUTTONS)
         self.sizer.Add(self.buttonSizer, 0, wx.EXPAND)
         self.sizer.AddSpacer(CodeByDictUI.SPACE_VERTICAL_BUTTONS)
+        self.sizer.Add(self.recordSizer, 0, wx.EXPAND)
 
         # Layout sizers
         self.SetSizer(self.sizer) # tell frame to use which sizer.
@@ -169,6 +195,18 @@ class CodeByDictUI(wx.Frame):
     def UpdateFeedbackThree(self, feedback):
         self.feedbackThree.SetLabel(feedback)
         self.RefreshSizer()
+
+    def OnRecordingMode(self):
+        self.recordStatus.SetLabel("Recording mode is ON")
+        self.recordStatus.SetForegroundColour(CustomColor.GREEN)
+        self.RefreshSizer()
+        self.recordButton.Disable()
+
+    def OffRecordingMode(self):
+        self.recordStatus.SetLabel("Recording mode is OFF")
+        self.recordStatus.SetForegroundColour(CustomColor.RED)
+        self.RefreshSizer()
+        self.recordButton.Enable()
 
     def UpdateCodeBody(self, code):
         if code.strip() == "":
@@ -222,6 +260,9 @@ class CodeByDictUI(wx.Frame):
         dlg = wx.MessageDialog(self, aboutMessage, "About Coding by Dictation", wx.OK) # we can omit the id (last param)
         dlg.ShowModal()
         dlg.Destroy() # finally destroy it when finished.
+
+    def OnRecord(self, event):
+        self.recognition.startRecording()
 
     def OnExit(self, event):
         self.Close(True) # close the frame

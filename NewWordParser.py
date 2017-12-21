@@ -678,11 +678,11 @@ class WordParser:
             self.variables = []
         
         if sentence == "":
-            return ""
+            raise Exception('Invalid statement.')
 
         words = sentence.split()
         if len(words) < 2:
-            return ""
+            raise Exception('Invalid statement.')
 
         first_word = words[0]
         start_word = words[0] + " " + words[1]
@@ -705,9 +705,12 @@ class WordParser:
         # Check call function statements
         elif start_word == "call function":
             result = self.parse_check_call_function_statement(sentence)
-        # Else, assume variable assignment check
-        else:
+        # Check variable assignment statement
+        elif "equal" in sentence:
             result = self.parse_check_variable_assignment(sentence)
+        # Else, raise an exception.
+        else:
+            raise Exception('Invalid statement.')
 
         if result["has_match"]:
             return self.trim_all_spaces(result["struct_cmd"])
