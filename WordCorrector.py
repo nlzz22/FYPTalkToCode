@@ -171,6 +171,8 @@ class WordCorrector:
                 if next_word == "if" or next_word == "declare" or next_word == "equal" or next_word == "function" or \
                    next_word == "for" or next_word == "fall" or next_word == "switch" or next_word == "while":
                     self.add_word_to_corrected("end")
+                else:
+                    self.add_word_to_corrected(current_word)
             elif (current_word == "written"):
                 next_word = self.query_next_word()
                 if (next_word == "type"):
@@ -178,6 +180,8 @@ class WordCorrector:
                 elif (next_word == "tie"):
                     self.get_next_word()
                     self.add_word_to_corrected("return type")
+                else:
+                    self.add_word_to_corrected(current_word)
             elif (current_word == "wow" or current_word == "wild"):
                 self.add_word_to_corrected("while")
             elif (current_word == "dan" or current_word == "den"):
@@ -199,9 +203,14 @@ class WordCorrector:
                 else:
                     self.add_word_to_corrected("condition")
             elif (current_word == "to"):
-                prev_word = self.query_latest_added_word()
-                if prev_word == "equal":
-                    self.add_word_to_corrected("two")
+                if "to" in self.variables_list:
+                    self.add_word_to_corrected(current_word)
+                else:
+                    prev_word = self.query_latest_added_word()
+                    if prev_word == "equal":
+                        self.add_word_to_corrected("two")
+                    else:
+                        self.add_word_to_corrected(current_word)
             elif (current_word == "away"):
                 # away -> array
                 next_word = self.query_next_word()
@@ -236,6 +245,8 @@ class WordCorrector:
                 prev_word = self.query_latest_added_word()
                 if (prev_word == "end"):
                     self.add_word_to_corrected("equal")
+                else:
+                    self.add_word_to_corrected(current_word)
             elif (self.is_number(current_word)):
                 # Convert numbers to words (e.g. 42 -> forty-two)
                 number_in_word_form = num2words(int(current_word))

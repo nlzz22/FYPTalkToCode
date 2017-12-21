@@ -125,7 +125,34 @@ class TestParserMethods(unittest.TestCase):
         expected = word.lower()
         
         self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
+
+    def test_word_corrector_correct_equal_to(self):
+        word = "declare integer second equal to end declare"
+        wc = WordCorrector(word, [])
+        corrected = wc.run_correct_words_multiple("")
+        corrected = wc.run_correct_variables()
+        expected = "declare integer second equal two end declare"
         
+        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
+
+    def test_word_corrector_do_not_correct_equal_to(self):
+        word = "declare integer second equal to end declare"
+        wc = WordCorrector(word, ["to"])
+        corrected = wc.run_correct_words_multiple("")
+        corrected = wc.run_correct_variables()
+        expected = "declare integer second equal to end declare"
+        
+        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
+
+    def test_word_corrector_bug_declare_var_to(self):
+        word = "declare integer to end declare"
+        wc = WordCorrector(word, [])
+        corrected = wc.run_correct_words_multiple("")
+        corrected = wc.run_correct_variables()
+        expected = word
+        
+        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
+
 
     # Test word similarity
 
