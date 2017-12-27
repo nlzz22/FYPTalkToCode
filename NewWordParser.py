@@ -559,6 +559,9 @@ class WordParser:
 
         parameter_without_type_stmt = Optional(keyword_with) + keyword_parameter + expression
 
+        conditional_expression = expression + \
+                               Optional(comparison_operator.setResultsName("comp") + expression.setResultsName("expr"))
+
         # Secondary parsable
 
         variable_assignment_statement = variable_or_variable_with_array_index + assignment_operator + expression + keyword_end_equal
@@ -590,8 +593,7 @@ class WordParser:
                              ZeroOrMore(statement) + keyword_end_for_loop
         for_loop_statement.setParseAction(self.parse_for_loop_statement)
 
-        while_loop_statement = keyword_while + expression + \
-                               Optional(comparison_operator.setResultsName("comp") + expression.setResultsName("expr")) + \
+        while_loop_statement = keyword_while + conditional_expression + \
                                keyword_begin + ZeroOrMore(statement) + keyword_end_while
         while_loop_statement.setParseAction(self.parse_while_loop_statement)
 
