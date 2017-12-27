@@ -302,6 +302,25 @@ class TestParserMethods(unittest.TestCase):
         struct = "if #condition #variable max == #variable min #if_branch_start #assign #variable max #with #value 1;; #if_branch_end #else_branch_start #assign #variable a #with #variable b;; #assign #variable max #with #value 2;; #else_branch_end;; "
         self.wordparser_compare(speech, struct)
 
+    def test_word_parser_if_var_else(self):
+        speech = "begin if max then max equal one end equal else max equal two end equal end if"
+        struct = "if #condition #variable max #if_branch_start #assign #variable max #with #value 1;; #if_branch_end #else_branch_start #assign #variable max #with #value 2;; #else_branch_end;; "
+        self.wordparser_compare(speech, struct)
+
+        speech = "begin if max minus two then max equal one end equal else max equal two end equal end if"
+        struct = "if #condition #variable max - #value 2 #if_branch_start #assign #variable max #with #value 1;; #if_branch_end #else_branch_start #assign #variable max #with #value 2;; #else_branch_end;; "
+        self.wordparser_compare(speech, struct)
+
+    def test_word_parser_if_var(self):
+        speech = "begin if max minus two then end if"
+        struct = "if #condition #variable max - #value 2 #if_branch_start #if_branch_end;; "
+        self.wordparser_compare(speech, struct)
+
+    def test_word_parser_if_var_mult_stmts(self):
+        speech = "begin if max then a equal b end equal c equal d end equal end if"
+        struct = "if #condition #variable max #if_branch_start #assign #variable a #with #variable b;; #assign #variable c #with #variable d;; #if_branch_end;; "
+        self.wordparser_compare(speech, struct)
+
     def test_word_parser_for_loop(self):
         speech = "for loop condition i equal one condition i less than length condition i plus plus begin end for loop"
         struct = "for #condition #assign #variable i #with #value 1 #condition #variable i < #variable length #condition #post #variable i ++ #for_start #for_end;;"

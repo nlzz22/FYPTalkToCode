@@ -239,10 +239,16 @@ class WordParser:
 
 
     def parse_if_statement(self, tokens):
-        # tokens consist of [ expression, comparison_operator, expression, statements (multiple) ]
-        parsed_stmt = "if #condition " + tokens[0] + " " + tokens[1] + " " + tokens[2] + " #if_branch_start "
+        # tokens consist of [ expression, optional(comparison_operator), optional(expression), statements (multiple) ]
+        parsed_stmt = "if #condition " + tokens[0] + " "
+        statement_index = 1
+        if tokens.comp != "" and tokens.expr != "":
+            parsed_stmt += tokens.comp + " " + tokens.expr
+            statement_index += 2
 
-        for i in range(3, len(tokens)):
+        parsed_stmt += " #if_branch_start "
+
+        for i in range(statement_index, len(tokens)):
             parsed_stmt += tokens[i] + " "
 
         parsed_stmt += "#if_branch_end;;"
@@ -251,9 +257,15 @@ class WordParser:
 
 
     def parse_if_else_statement(self, tokens):
-        # tokens consist of [ expression, comparison_operator, expression, statements (multiple) ]
+        # tokens consist of [ expression, optional(comparison_operator), optional(expression), statements (multiple) ]
         # statements are split into ifclause statements and elseclause statements
-        parsed_stmt = "if #condition " + tokens[0] + " " + tokens[1] + " " + tokens[2] + " #if_branch_start "
+        parsed_stmt = "if #condition " + tokens[0] + " "
+        statement_index = 1
+        if tokens.comp != "" and tokens.expr != "":
+            parsed_stmt += tokens.comp + " " + tokens.expr
+            statement_index += 2
+
+        parsed_stmt += " #if_branch_start "
 
         for i in range(0, len(tokens.ifclause)):
             parsed_stmt += tokens.ifclause[i] + " "
@@ -567,11 +579,11 @@ class WordParser:
         variable_assignment_statement = variable_or_variable_with_array_index + assignment_operator + expression + keyword_end_equal
         variable_assignment_statement.setParseAction(self.parse_assignment_statement)
 
-        if_statement = keyword_if + expression + comparison_operator + expression + keyword_then + ZeroOrMore(statement) + \
+        if_statement = keyword_if + conditional_expression + keyword_then + ZeroOrMore(statement) + \
                            keyword_end_if
         if_statement.setParseAction(self.parse_if_statement)
 
-        if_else_statement = keyword_if + expression + comparison_operator + expression + \
+        if_else_statement = keyword_if + conditional_expression + \
                             keyword_then + ZeroOrMore(statement.setResultsName("ifclause", True)) + \
                              keyword_else + ZeroOrMore(statement.setResultsName("elseclause", True)) + \
                              keyword_end_if
