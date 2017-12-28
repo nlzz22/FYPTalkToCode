@@ -390,7 +390,7 @@ class WordParser:
                 new_tokens.append(token[:-2]) # get string w/o last 2 characters
             else:
                 new_tokens.append(token)
-        return new_tokens
+        return ' '.join(new_tokens)
 
 
     # variable is given in lower camel case form, separates them into individual words and
@@ -611,7 +611,9 @@ class WordParser:
         mathematical_expression << var_arr_or_literal + ZeroOrMore(operators + mathematical_expression)
         mathematical_expression.setParseAction(self.update_join_tokens) # join completed var/arr/literal with operators
 
-        expression = (mathematical_expression | function_call_statement)
+        single_expr = mathematical_expression | function_call_statement
+        single_expr.setParseAction(self.update_join_tokens)
+        expression = single_expr + ZeroOrMore(operators + single_expr)
         expression.setParseAction(self.parse_expression)
 
         parameter_without_type_stmt = Optional(keyword_with) + keyword_parameter + expression

@@ -587,7 +587,17 @@ class TestParserMethods(unittest.TestCase):
     def test_word_parser_logical_multiple_etc(self):
         speech = "while red tomato not equal five hundred and blue sofa less than twenty one begin end while"
         struct = "while #condition #variable redTomato != #value 500 && #variable blueSofa < #value 21 #while_start #while_end;;"
-        self.wordparser_compare(speech, struct)    
+        self.wordparser_compare(speech, struct)
+
+    def test_word_parser_complex_expressions(self):
+        speech = "a equal b plus c minus two plus call function hello world end function end equal"
+        struct = "#assign #variable a #with #variable b + #variable c - #value 2 + #function helloWorld();;"
+        self.wordparser_compare(speech, struct)
+
+    def test_word_parser_complex_expressions_2(self):
+        speech = "a equal call function hey end function plus two minus call function hello world end function end equal"
+        struct = "#assign #variable a #with #function hey() + #value 2 - #function helloWorld();;"
+        self.wordparser_compare(speech, struct)
 
 
     # Word Parser - Test partial code
