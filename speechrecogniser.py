@@ -80,7 +80,7 @@ class SpeechRecognitionModule:
                                                      "function", "return", "return type", "parameter", "call function", "for", "plus", "plus plus", \
                                                      "minus", "minus minus", "times", "divide", "while", "switch", "case", "dot", "end if", \
                                                      "end switch", "end declare", "for loop", "end equal", "for loop condition i", "end while", \
-                                                     "end string", "undo"]
+                                                     "end string", "undo", "default", "break"]
                                 preferred_phrases += variables_list
                                 
                                 read_words_google = RecognizerGA().recognize_google_cloud(audio, google_cloud_json, "en-US", preferred_phrases, False)
