@@ -232,7 +232,7 @@ class TestParserMethods(unittest.TestCase):
         self.wordparser_compare(speech, struct)
 
     def test_word_parser_var_assign_number(self):
-        speech = "max equal one hundred and twenty two end equal"
+        speech = "max equal one hundred twenty two end equal"
         struct = "#assign #variable max #with #value 122;;"
         self.wordparser_compare(speech, struct)
 
@@ -559,7 +559,36 @@ class TestParserMethods(unittest.TestCase):
                     " case #value 1 #case_start #assign #variable a #with #value 2;; break;; #case_end " + \
                     " default #case_start #assign #variable a #with #value 3;; #case_end;; "
         self.wordparser_compare(speech, struct)
-        
+
+    def test_word_parser_logical_and(self):
+        speech = "begin if i less than two and j less than three then end if"
+        struct = "if #condition #variable i < #value 2 && #variable j < #value 3 #if_branch_start #if_branch_end;;"
+        self.wordparser_compare(speech, struct)
+
+    def test_word_parser_logical_or(self):
+        speech = "begin if i less than two or j less than three then end if"
+        struct = "if #condition #variable i < #value 2 || #variable j < #value 3 #if_branch_start #if_branch_end;;"
+        self.wordparser_compare(speech, struct)
+
+    def test_word_parser_logical_and_or_multiple(self):
+        speech = "begin if i less than two or j less than three and k greater than l and h less than o or l equal b then end if"
+        struct = "if #condition #variable i < #value 2 || #variable j < #value 3 && #variable k > #variable l " + \
+                 " && #variable h < #variable o || #variable l == #variable b #if_branch_start #if_branch_end;;"
+        self.wordparser_compare(speech, struct)
+
+    def test_word_parser_logical_single_conditionals_multiple(self):
+        speech = "begin if hello world and bye world or why world then a equal b end equal c equal d end equal " + \
+                 "else e equal f end equal end if"
+        struct = "if #condition #variable helloWorld && #variable byeWorld || #variable whyWorld #if_branch_start " + \
+                 "#assign #variable a #with #variable b;; #assign #variable c #with #variable d;; #if_branch_end " + \
+                 "#else_branch_start #assign #variable e #with #variable f;; #else_branch_end;;"
+        self.wordparser_compare(speech, struct)
+
+    def test_word_parser_logical_multiple_etc(self):
+        speech = "while red tomato not equal five hundred and blue sofa less than twenty one begin end while"
+        struct = "while #condition #variable redTomato != #value 500 && #variable blueSofa < #value 21 #while_start #while_end;;"
+        self.wordparser_compare(speech, struct)    
+
 
     # Word Parser - Test partial code
     def test_word_parser_partial_declare_var(self):

@@ -30,8 +30,8 @@ class WordParser:
         for word in w2n.american_number_system:
             temp_num += " " + word
             self.literal_words.append(word)
-        temp_num += " and"
-        self.literal_words.append("and")
+        #temp_num += " and"
+        #self.literal_words.append("and")
         literal = oneOf(temp_num)
 
         return literal
@@ -370,6 +370,18 @@ class WordParser:
         return parsed_stmt
 
 
+    def parse_logical_and_cond_expr(self, tokens):
+        # tokens consist of [ conditional_expression ]
+        parsed_stmt = " && " + tokens[0]
+        return parsed_stmt
+
+
+    def parse_logical_or_cond_expr(self, tokens):
+        # tokens consist of [ conditional_expression ]
+        parsed_stmt = " || " + tokens[0]
+        return parsed_stmt
+
+
     # Ensures that expression does not have terminating ;; symbol.
     def parse_expression(self, tokens):
         new_tokens = []
@@ -605,14 +617,13 @@ class WordParser:
         parameter_without_type_stmt = Optional(keyword_with) + keyword_parameter + expression
 
         single_conditional_expression = expression + Optional(comparison_operator + expression)
-        and_conditional_expression = Forward()
-        or_conditional_expression = Forward()
-        and_conditional_expression << keyword_and + single_conditional_expression + \
-                                  Optional(and_conditional_expression | or_conditional_expression)
-        or_conditional_expression << keyword_or + single_conditional_expression + \
-                                  Optional(and_conditional_expression | or_conditional_expression)
+        single_conditional_expression.setParseAction(self.update_join_tokens)
+        and_conditional_expression = keyword_and + single_conditional_expression
+        and_conditional_expression.setParseAction(self.parse_logical_and_cond_expr)
+        or_conditional_expression = keyword_or + single_conditional_expression
+        or_conditional_expression.setParseAction(self.parse_logical_or_cond_expr)
 
-        conditional_expression = single_conditional_expression + Optional(and_conditional_expression | or_conditional_expression)
+        conditional_expression = single_conditional_expression + ZeroOrMore(and_conditional_expression | or_conditional_expression)
         conditional_expression.setParseAction(self.update_join_tokens)
 
         case_statement = keyword_case + literal_name + ZeroOrMore(statement)
@@ -637,7 +648,7 @@ class WordParser:
                              keyword_end_if
         if_else_statement.setParseAction(self.parse_if_else_statement)
 
-        switch_statement = keyword_switch + conditional_expression + ZeroOrMore(case_or_default_stmts) + keyword_end_switch
+        switch_statement = keyword_switch + expression + ZeroOrMore(case_or_default_stmts) + keyword_end_switch
         switch_statement.setParseAction(self.parse_switch_statement)
 
         declare_variable_statement = keyword_declare + variable_type + variable_name_processed + \
@@ -939,6 +950,10 @@ if __name__ == "__main__":
     wordParser = WordParser()
 
     # Some quick hack unit tests
+    speech = "begin if i less than two or j less than three then end if"
+    struct = "if #condition #variable i < #value 2 || #variable j < #value 3 #if_branch_start #if_branch_end;;"
+    print compare(speech, struct, wordParser)
+        
     speech = "switch a case zero call function hello world end function break case one a equal two end equal break " + \
                 " default a equal three end equal end switch"
     struct = "switch #condition #variable a case #value 0 #case_start #function helloWorld();; break;; #case_end " + \
@@ -972,7 +987,7 @@ if __name__ == "__main__":
     struct = "#assign #variable max #with #array numbersHello #indexes #value 2 #index_end;;"
     print compare(speech, struct, wordParser)
 
-    speech = "max equal one hundred and twenty two end equal"
+    speech = "max equal one hundred twenty two end equal"
     struct = "#assign #variable max #with #value 122;;"
     print compare(speech, struct, wordParser)
 
