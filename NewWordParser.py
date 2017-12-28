@@ -243,16 +243,10 @@ class WordParser:
 
 
     def parse_if_statement(self, tokens):
-        # tokens consist of [ expression, optional(comparison_operator), optional(expression), statements (multiple) ]
-        parsed_stmt = "if #condition " + tokens[0] + " "
-        statement_index = 1
-        if tokens.comp != "" and tokens.expr != "":
-            parsed_stmt += tokens.comp + " " + tokens.expr
-            statement_index += 2
+        # tokens consist of [ conditional_expression, statements (multiple) ]
+        parsed_stmt = "if #condition " + tokens[0] + " #if_branch_start "
 
-        parsed_stmt += " #if_branch_start "
-
-        for i in range(statement_index, len(tokens)):
+        for i in range(1, len(tokens)):
             parsed_stmt += tokens[i] + " "
 
         parsed_stmt += "#if_branch_end;;"
@@ -261,15 +255,9 @@ class WordParser:
 
 
     def parse_if_else_statement(self, tokens):
-        # tokens consist of [ expression, optional(comparison_operator), optional(expression), statements (multiple) ]
+        # tokens consist of [ conditional_expression, statements (multiple) ]
         # statements are split into ifclause statements and elseclause statements
-        parsed_stmt = "if #condition " + tokens[0] + " "
-        statement_index = 1
-        if tokens.comp != "" and tokens.expr != "":
-            parsed_stmt += tokens.comp + " " + tokens.expr
-            statement_index += 2
-
-        parsed_stmt += " #if_branch_start "
+        parsed_stmt = "if #condition " + tokens[0] + " #if_branch_start "
 
         for i in range(0, len(tokens.ifclause)):
             parsed_stmt += tokens.ifclause[i] + " "
@@ -300,16 +288,10 @@ class WordParser:
 
 
     def parse_while_loop_statement(self, tokens):
-        # tokens consist of [ expression, optional(comparison_operator), optional(expression), statements (multiple) ]
-        parsed_stmt = "while #condition " + tokens[0]
-        statement_index = 1
-        if tokens.comp != "" and tokens.expr != "":
-            parsed_stmt += " " + tokens.comp + " " + tokens.expr
-            statement_index += 2
+        # tokens consist of [ conditional_expression, statements (multiple) ]
+        parsed_stmt = "while #condition " + tokens[0] + " #while_start "
 
-        parsed_stmt += " #while_start "
-
-        for i in range(statement_index, len(tokens)):
+        for i in range(1, len(tokens)):
             parsed_stmt += tokens[i] + " "
 
         parsed_stmt += " #while_end;;"
@@ -377,14 +359,10 @@ class WordParser:
 
 
     def parse_switch_statement(self, tokens):
-        # tokens consist of [ expression, optional(comparison_operator), optional(expression), case/default stmts (multiple) ]
+        # tokens consist of [ conditional_expression, case/default stmts (multiple) ]
         parsed_stmt = " switch #condition " + tokens[0]
-        statement_index = 1
-        if tokens.comp != "" and tokens.expr != "":
-            parsed_stmt += " " + tokens.comp + " " + tokens.expr
-            statement_index += 2
 
-        for i in range(statement_index, len(tokens)):
+        for i in range(1, len(tokens)):
             parsed_stmt += " " + tokens[i]
 
         parsed_stmt += ";;"
@@ -503,6 +481,8 @@ class WordParser:
         keyword_array = Suppress("array")
         keyword_array_index = Suppress("array index")
         keyword_if = Suppress("begin if")
+        keyword_and = Suppress("and")
+        keyword_or = Suppress("or")
         keyword_ns_greater_than = Keyword("greater than")
         keyword_ns_greater_than_equal = Keyword("greater than equal")
         keyword_ns_less_than = Keyword("less than")
@@ -624,9 +604,16 @@ class WordParser:
 
         parameter_without_type_stmt = Optional(keyword_with) + keyword_parameter + expression
 
-        conditional_expression = expression + \
-                               Optional(comparison_operator.setResultsName("comp") + expression.setResultsName("expr"))
+        single_conditional_expression = expression + Optional(comparison_operator + expression)
+        and_conditional_expression = Forward()
+        or_conditional_expression = Forward()
+        and_conditional_expression << keyword_and + single_conditional_expression + \
+                                  Optional(and_conditional_expression | or_conditional_expression)
+        or_conditional_expression << keyword_or + single_conditional_expression + \
+                                  Optional(and_conditional_expression | or_conditional_expression)
 
+        conditional_expression = single_conditional_expression + Optional(and_conditional_expression | or_conditional_expression)
+        conditional_expression.setParseAction(self.update_join_tokens)
 
         case_statement = keyword_case + literal_name + ZeroOrMore(statement)
         case_statement.setParseAction(self.parse_case_stmt)
