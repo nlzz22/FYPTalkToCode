@@ -349,6 +349,44 @@ class WordParser:
 
         return parsed_stmt
 
+    def parse_case_stmt(self, tokens):
+        # tokens consist of [ literal_name, statements (multiple)]
+        parsed_stmt = " case " + self.process_variable_or_literal(tokens[0]) + " #case_start "
+
+        for i in range(1, len(tokens)):
+            parsed_stmt += tokens[i] + " "
+
+        parsed_stmt += " #case_end"
+
+        return parsed_stmt
+
+    def parse_default_stmt(self, tokens):
+        # tokens consist of [ statements (multiple)]
+        parsed_stmt = " default #case_start "
+
+        for i in range(0, len(tokens)):
+            parsed_stmt += tokens[i] + " "
+
+        parsed_stmt += " #case_end"
+
+        return parsed_stmt
+
+
+    def parse_switch_statement(self, tokens):
+        # tokens consist of [ expression, optional(comparison_operator), optional(expression), case/default stmts (multiple) ]
+        parsed_stmt = " switch #condition " + tokens[0]
+        statement_index = 1
+        if tokens.comp != "" and tokens.expr != "":
+            parsed_stmt += " " + tokens.comp + " " + tokens.expr
+            statement_index += 2
+
+        for i in range(statement_index, len(tokens)):
+            parsed_stmt += " " + tokens[i]
+
+        parsed_stmt += ";;"
+
+        return parsed_stmt
+
 
     # Ensures that expression does not have terminating ;; symbol.
     def parse_expression(self, tokens):
@@ -415,6 +453,10 @@ class WordParser:
     def parse_return_statement(self, tokens):
         # tokens consist of [ expression ]
         return "return " + tokens[0] + ";;"
+
+    def parse_break_statement(self, tokens):
+        # no tokens here.
+        return "break;;"
 
     def handle_fail_parse(self, string, loc, expr, err):
         if self.error_message != "":
@@ -493,12 +535,17 @@ class WordParser:
         keyword_with = Suppress("with")
         keyword_size = Suppress("size")
         keyword_return = Suppress("return")
+        keyword_switch = Suppress("switch")
+        keyword_case = Suppress("case")
+        keyword_default = Suppress("default")
+        keyword_break = Suppress("break")
         keyword_create_function = Suppress("create function")
         keyword_call_function = Suppress("call function")
         keyword_return_type = Suppress("return type")
         keyword_parameter = Suppress("parameter")
         keyword_end_function = Suppress("end function").setName("\"end function\"").setFailAction(self.handle_fail_parse)
         keyword_end_string = Suppress("end string").setName("\"end string\"").setFailAction(self.handle_fail_parse)
+        keyword_end_switch = Suppress("end switch").setName("\"end switch\"").setFailAction(self.handle_fail_parse)
 
         # The list of required keywords
         keywords = Keywords()
@@ -574,6 +621,13 @@ class WordParser:
         conditional_expression = expression + \
                                Optional(comparison_operator.setResultsName("comp") + expression.setResultsName("expr"))
 
+        case_statement = keyword_case + literal_name + ZeroOrMore(statement)
+        case_statement.setParseAction(self.parse_case_stmt)
+        default_statement = keyword_default + ZeroOrMore(statement)
+        default_statement.setParseAction(self.parse_default_stmt)
+
+        case_or_default_stmts = case_statement | default_statement
+
         # Secondary parsable
 
         variable_assignment_statement = variable_or_variable_with_array_index + assignment_operator + expression + keyword_end_equal
@@ -589,6 +643,8 @@ class WordParser:
                              keyword_end_if
         if_else_statement.setParseAction(self.parse_if_else_statement)
 
+        switch_statement = keyword_switch + conditional_expression + ZeroOrMore(case_or_default_stmts) + keyword_end_switch
+        switch_statement.setParseAction(self.parse_switch_statement)
 
         declare_variable_statement = keyword_declare + variable_type + variable_name_processed + \
                                      Optional(assignment_operator + expression) + keyword_end_declare
@@ -612,6 +668,9 @@ class WordParser:
         return_statement = keyword_return + expression
         return_statement.setParseAction(self.parse_return_statement)
 
+        break_statement = keyword_break
+        break_statement.setParseAction(self.parse_break_statement)
+
         function_declaration_line = keyword_create_function + variable_name + Optional(keyword_with) + keyword_return_type + \
                                variable_type + ZeroOrMore(parameter_statement.setResultsName("params", True)) + keyword_begin + \
                                ZeroOrMore(statement.setResultsName("stmts", True)) + keyword_end_function
@@ -624,13 +683,13 @@ class WordParser:
         # Constructs parsable
         self.assignment_statement = variable_assignment_statement
 
-        self.selection_statement = if_statement | if_else_statement
+        self.selection_statement = if_statement | if_else_statement | switch_statement
 
         self.declaration_statement = declare_variable_statement | declare_array_statement
 
         self.iteration_statement = for_loop_statement | while_loop_statement
 
-        self.jump_statement = return_statement
+        self.jump_statement = return_statement | break_statement
 
         self.call_function_statement = function_call_statement
 
@@ -702,7 +761,7 @@ class WordParser:
         start_word = words[0] + " " + words[1]
 
         # Check selection statements
-        if start_word == "begin if":
+        if start_word == "begin if" or first_word == "switch":
             result = self.parse_check_selection_statement(sentence)
         # Check declaration statements
         elif first_word == "declare":
@@ -710,8 +769,8 @@ class WordParser:
         # Check iteration statements
         elif first_word == "for" or first_word == "while":
             result = self.parse_check_iteration_statement(sentence)
-        # Check jump statements
-        elif first_word == "return":
+        # Check jump statements (should not run as this shouldnt be at the start)
+        elif first_word == "return" or first_word == "break":
             result = self.parse_check_jump_statement(sentence)
         # Check function declaration
         elif start_word == "create function":
@@ -886,6 +945,31 @@ if __name__ == "__main__":
     wordParser = WordParser()
 
     # Some quick hack unit tests
+    speech = "switch a case zero call function hello world end function break case one a equal two end equal break " + \
+                " default a equal three end equal end switch"
+    struct = "switch #condition #variable a case #value 0 #case_start #function helloWorld();; break;; #case_end " + \
+                " case #value 1 #case_start #assign #variable a #with #value 2;; break;; #case_end " + \
+                " default #case_start #assign #variable a #with #value 3;; #case_end;; "
+    print compare(speech, struct, wordParser)
+
+    speech = "switch a case zero call function hello world end function break case one a equal two end equal break " + \
+                " end switch"
+    struct = "switch #condition #variable a case #value 0 #case_start #function helloWorld();; break;; #case_end " + \
+                " case #value 1 #case_start #assign #variable a #with #value 2;; break;; #case_end;; "
+    print compare(speech, struct, wordParser)
+
+    speech = "switch alphabet case character a call function x end function case character b x equal one end equal end switch "
+    struct = "switch #condition #variable alphabet case #value 'a' #case_start #function x();; #case_end " + \
+                " case #value 'b' #case_start #assign #variable x #with #value 1;; #case_end;; "
+    print compare(speech, struct, wordParser)
+
+    speech = "switch a minus two case zero call function hello world end function break case one a equal two end equal break " + \
+                " default a equal three end equal end switch"
+    struct = "switch #condition #variable a - #value 2 case #value 0 #case_start #function helloWorld();; break;; #case_end " + \
+                " case #value 1 #case_start #assign #variable a #with #value 2;; break;; #case_end " + \
+                " default #case_start #assign #variable a #with #value 3;; #case_end;; "
+    print compare(speech, struct, wordParser)
+    
     speech = "max two equal numbers array index i end equal"
     struct = "#assign #variable maxTwo #with #array numbers #indexes #variable i #index_end;;"
     print compare(speech, struct, wordParser)
