@@ -52,3 +52,8 @@ def get_sample_hello_world_program_in_structured_command():
     program_code += "#program_end\n"
 
     return program_code
+
+if __name__ == "__main__":
+    struct = raw_input("please enter your structured command: ")
+    print "Converted to : "
+    print parse_structural_command_to_code(struct)
