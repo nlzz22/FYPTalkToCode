@@ -551,6 +551,14 @@ class TestParserMethods(unittest.TestCase):
         struct = "switch #condition #variable alphabet case #value 'a' #case_start #function x();; #case_end " + \
                     " case #value 'b' #case_start #assign #variable x #with #value 1;; #case_end;; "
         self.wordparser_compare(speech, struct)
+
+    def test_word_parser_switch_condition_expr(self):
+        speech = "switch a minus two case zero call function hello world end function break case one a equal two end equal break " + \
+                    " default a equal three end equal end switch"
+        struct = "switch #condition #variable a - #value 2 case #value 0 #case_start #function helloWorld();; break;; #case_end " + \
+                    " case #value 1 #case_start #assign #variable a #with #value 2;; break;; #case_end " + \
+                    " default #case_start #assign #variable a #with #value 3;; #case_end;; "
+        self.wordparser_compare(speech, struct)
         
 
     # Word Parser - Test partial code
