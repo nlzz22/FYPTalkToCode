@@ -223,8 +223,8 @@ class TestParserMethods(unittest.TestCase):
     # Test word parser
 
     def test_word_parser_var_assign_equal_arr(self):
-        speech = "max two equal numbers array index i end equal"
-        struct = "#assign #variable maxTwo #with #array numbers #indexes #variable i #index_end;;"
+        speech = "max too equal numbers array index i end equal"
+        struct = "#assign #variable maxToo #with #array numbers #indexes #variable i #index_end;;"
         self.wordparser_compare(speech, struct)
 
         speech = "max equal numbers hello array index two end equal"
@@ -242,8 +242,8 @@ class TestParserMethods(unittest.TestCase):
         self.wordparser_compare(speech, struct)
 
     def test_word_parser_array_index_var_assign_var(self):
-        speech = "max three array index i equal min end equal"
-        struct = "#assign #array maxThree #indexes #variable i #index_end #with #variable min;;"
+        speech = "max tree array index i equal min end equal"
+        struct = "#assign #array maxTree #indexes #variable i #index_end #with #variable min;;"
         self.wordparser_compare(speech, struct)
 
     def test_word_parser_array_index_number_assign_var(self):

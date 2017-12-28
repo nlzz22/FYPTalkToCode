@@ -17,6 +17,9 @@ class WordParser:
             else:
                 temp_not_all_keywords += ~Keyword(keyword)
 
+        for keyword in self.literal_words:
+            temp_not_all_keywords += ~Keyword(keyword)
+
         return temp_not_all_keywords
 
     def get_all_literal(self):
@@ -28,6 +31,7 @@ class WordParser:
             temp_num += " " + word
             self.literal_words.append(word)
         temp_num += " and"
+        self.literal_words.append("and")
         literal = oneOf(temp_num)
 
         return literal
@@ -221,7 +225,7 @@ class WordParser:
             return " unknown "
 
 
-    def parse_literal(self, tokens):      
+    def parse_literal(self, tokens):       
         if tokens.charlit != "": # character literal
             return "'" + tokens[0] + "'"
         elif tokens.strlit != "": # string literal
@@ -552,15 +556,17 @@ class WordParser:
         self.list_keywords = keywords.get_keywords()
 
         # The components of parser
+        self.literal = self.get_all_literal()
         not_all_keywords = self.build_not_all_keywords(self.list_keywords)
-        self.literal = self.get_all_literal() 
+         
         
         variable_name = Combine(OneOrMore(not_all_keywords + Word(alphas) + Optional(" ")))
         character_literal = keyword_character + Word( alphas, max=1 )
         string_literal = keyword_string + Combine(OneOrMore(~keyword_end_string + Word(alphas) + Optional(" "))) + keyword_end_string
-        literal_name = OneOrMore(self.literal) | character_literal("charlit") | string_literal("strlit")
+        literal_name = Combine(OneOrMore(Optional(" ") + self.literal)) | character_literal("charlit") | string_literal("strlit")
         literal_name.setParseAction(self.parse_literal)
-        variable_or_literal = variable_name | literal_name
+        
+        variable_or_literal =  variable_name | literal_name
 
         # This function cannot use variable_name or it will ruin other functions due to the pre-formatting.
         variable_name_processed = Combine(OneOrMore(not_all_keywords + Word(alphas) + Optional(" ")))
@@ -620,6 +626,7 @@ class WordParser:
 
         conditional_expression = expression + \
                                Optional(comparison_operator.setResultsName("comp") + expression.setResultsName("expr"))
+
 
         case_statement = keyword_case + literal_name + ZeroOrMore(statement)
         case_statement.setParseAction(self.parse_case_stmt)
@@ -970,8 +977,8 @@ if __name__ == "__main__":
                 " default #case_start #assign #variable a #with #value 3;; #case_end;; "
     print compare(speech, struct, wordParser)
     
-    speech = "max two equal numbers array index i end equal"
-    struct = "#assign #variable maxTwo #with #array numbers #indexes #variable i #index_end;;"
+    speech = "max too equal numbers array index i end equal"
+    struct = "#assign #variable maxToo #with #array numbers #indexes #variable i #index_end;;"
     print compare(speech, struct, wordParser)
 
     speech = "max equal numbers hello array index two end equal"
@@ -986,8 +993,8 @@ if __name__ == "__main__":
     struct = "#assign #variable max #with #variable min;;"
     print compare(speech, struct, wordParser)
 
-    speech = "max three array index i equal min end equal"
-    struct = "#assign #array maxThree #indexes #variable i #index_end #with #variable min;;"
+    speech = "max tree array index i equal min end equal"
+    struct = "#assign #array maxTree #indexes #variable i #index_end #with #variable min;;"
     print compare(speech, struct, wordParser)
     
     speech = "max array index twenty one equal min end equal"
