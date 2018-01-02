@@ -625,6 +625,32 @@ class TestParserMethods(unittest.TestCase):
         struct = "for #condition #assign #variable i #with #value 1 #condition #variable isDone && #variable isComplete || #variable hasNoWrong #condition #post #variable i ++ #for_start #for_end;;"
         self.wordparser_compare(speech, struct)
 
+    def test_word_parser_var_plus_equal_expr(self):
+        speech = "max plus equal max plus one end equal"
+        struct = "#assign #variable max += #variable max + #value 1;;"
+        self.wordparser_compare(speech, struct)
+
+    def test_word_parser_var_minus_equal_expr(self):
+        speech = "max minus equal max plus one end equal"
+        struct = "#assign #variable max -= #variable max + #value 1;;"
+        self.wordparser_compare(speech, struct)
+
+    def test_word_parser_var_times_equal_expr(self):
+        speech = "max times equal max plus one end equal"
+        struct = "#assign #variable max *= #variable max + #value 1;;"
+        self.wordparser_compare(speech, struct)
+
+    def test_word_parser_var_divide_equal_expr(self):
+        speech = "max divide equal max plus one end equal"
+        struct = "#assign #variable max /= #variable max + #value 1;;"
+        self.wordparser_compare(speech, struct)
+
+    def test_word_parser_var_modulo_equal_expr(self):
+        speech = "max modulo equal max plus one end equal"
+        struct = "#assign #variable max %= #variable max + #value 1;;"
+        self.wordparser_compare(speech, struct)
+        
+
     # Word Parser - Test partial code
     def test_word_parser_partial_declare_var(self):
         speech = "declare integer abc "

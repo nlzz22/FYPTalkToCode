@@ -198,6 +198,24 @@ class WordParser:
             return " unknown "
 
 
+    def update_assignment_operators(self, tokens):
+        if tokens.eq != "": # equal
+            return " #with "
+        elif tokens.pe != "": # plus equal
+            return " += "
+        elif tokens.me != "": # minus equal
+            return " -= "
+        elif tokens.modeq != "": # modulo equal
+            return " %= "
+        elif tokens.te != "": # times equal
+            return " *= "
+        elif tokens.de != "": # divide equal
+            return" /= "
+        else:
+            # Code should not reach here
+            return " unknown "
+
+
     def update_var_type(self, tokens):
         if tokens.int != "": # integer
             return " int "
@@ -239,7 +257,10 @@ class WordParser:
 
 
     def parse_assignment_statement(self, tokens):
-        return "#assign " + self.parse_var_arr_or_literal_word(tokens[0]) + " #with " + tokens[1] + ";; "
+        # tokens consist of [ var_or_arr, assignment_operator, expression ]
+        parsed_stmt = "#assign " + self.parse_var_arr_or_literal_word(tokens[0]) + " " + tokens[1] + " " + tokens[2] + ";; "
+        
+        return parsed_stmt
 
 
     def parse_if_statement(self, tokens):
@@ -518,6 +539,11 @@ class WordParser:
         keyword_ns_times = Keyword("times")
         keyword_ns_divide = Keyword("divide")
         keyword_ns_modulo = Keyword("modulo")
+        keyword_ns_plus_equal = Keyword("plus equal")
+        keyword_ns_minus_equal = Keyword("minus equal")
+        keyword_ns_times_equal = Keyword("times equal")
+        keyword_ns_divide_equal = Keyword("divide equal")
+        keyword_ns_modulo_equal = Keyword("modulo equal")
         keyword_declare = Suppress("declare")
         keyword_ns_integer = Keyword("integer")
         keyword_ns_float = Keyword("float")
@@ -581,7 +607,9 @@ class WordParser:
                     keyword_ns_divide("d") | keyword_ns_modulo("mod")
         operators.setParseAction(self.update_operators)
 
-        assignment_operator = keyword_equal
+        assignment_operator = keyword_ns_equal("eq") | keyword_ns_plus_equal("pe") | keyword_ns_minus_equal("me") | \
+                              keyword_ns_times_equal("te") | keyword_ns_divide_equal("de") | keyword_ns_modulo_equal("modeq")
+        assignment_operator.setParseAction(self.update_assignment_operators)
 
         variable_with_array_index = variable_name("varname") + keyword_array_index + variable_or_literal("index")
         variable_with_array_index.setParseAction(self.update_array_tags)
