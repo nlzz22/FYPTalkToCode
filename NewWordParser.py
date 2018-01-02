@@ -654,7 +654,7 @@ class WordParser:
         switch_statement.setParseAction(self.parse_switch_statement)
 
         declare_variable_statement = keyword_declare + variable_type + variable_name_processed + \
-                                     Optional(assignment_operator + expression) + keyword_end_declare
+                                     Optional(keyword_equal + expression) + keyword_end_declare
         declare_variable_statement.setParseAction(self.parse_declare_var_statement)
 
         declare_array_statement = keyword_declare + variable_type + keyword_array + variable_with_size + \
