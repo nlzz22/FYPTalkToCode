@@ -665,8 +665,25 @@ class TestParserMethods(unittest.TestCase):
         struct = "#post #variable max ++;;"
         self.wordparser_compare(speech, struct)
 
-    # TODO: for loop prefix , prefix assignment
-        
+    def test_word_parser_postfix_assignment_2(self):
+        speech = "time counter plus plus end equal"
+        struct = "#post #variable timeCounter ++;;"
+        self.wordparser_compare(speech, struct)
+
+    def test_word_parser_prefix_assignment(self):
+        speech = "plus plus max end equal"
+        struct = "++ #variable max;;"
+        self.wordparser_compare(speech, struct)
+
+    def test_word_parser_prefix_assignment_2(self):
+        speech = "plus plus splash counter end equal"
+        struct = "++ #variable splashCounter;;"
+        self.wordparser_compare(speech, struct)
+
+    def test_word_parser_for_loop_prefix_increment(self):
+        speech = "for loop condition i equal one condition i less than length condition plus plus i begin end for loop"
+        struct = "for #condition #assign #variable i #with #value 1 #condition #variable i < #variable length #condition ++ #variable i #for_start #for_end;;"
+        self.wordparser_compare(speech, struct)        
 
     # Word Parser - Test partial code
     def test_word_parser_partial_declare_var(self):

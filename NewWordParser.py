@@ -266,6 +266,11 @@ class WordParser:
         return "#post " + self.parse_var_arr_or_literal_word(tokens[0]) + " " + tokens[1]
 
 
+    def parse_prefix_expression(self, tokens):
+        # tokens consist of [ unary_operator, var_or_arr ]
+        return tokens[0] + " " + self.parse_var_arr_or_literal_word(tokens[1])
+
+
     def parse_assignment_statement(self, tokens):
         # tokens consist of [ assignment_expression ]
         parsed_stmt = tokens[0] + ";; "
@@ -676,8 +681,10 @@ class WordParser:
         simple_assign_expression.setParseAction(self.parse_simple_assign_expression)
         postfix_expression = variable_or_variable_with_array_index + unary_operators
         postfix_expression.setParseAction(self.parse_postfix_expression)
+        prefix_expression = unary_operators + variable_or_variable_with_array_index
+        prefix_expression.setParseAction(self.parse_prefix_expression)
 
-        assignment_expression = simple_assign_expression | postfix_expression
+        assignment_expression = simple_assign_expression | postfix_expression | prefix_expression
 
         # Secondary parsable
 
