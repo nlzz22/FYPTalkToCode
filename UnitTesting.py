@@ -599,6 +599,31 @@ class TestParserMethods(unittest.TestCase):
         struct = "#assign #variable a #with #function hey() + #value 2 - #function helloWorld();;"
         self.wordparser_compare(speech, struct)
 
+    def test_word_parser_for_loop_conditional_logical_and(self):
+        speech = "for loop condition i equal one condition i plus two less than length and j less than length minus alpha condition i plus plus begin end for loop"
+        struct = "for #condition #assign #variable i #with #value 1 #condition #variable i + #value 2 < #variable length && #variable j < #variable length - #variable alpha #condition #post #variable i ++ #for_start #for_end;;"
+        self.wordparser_compare(speech, struct)
+
+    def test_word_parser_for_loop_conditional_logical_or(self):
+        speech = "for loop condition i equal one condition i plus j greater than equal length plus two or j less than length condition i plus plus begin end for loop"
+        struct = "for #condition #assign #variable i #with #value 1 #condition #variable i + #variable j >= #variable length + #value 2 || #variable j < #variable length #condition #post #variable i ++ #for_start #for_end;;"
+        self.wordparser_compare(speech, struct)
+
+    def test_word_parser_for_loop_conditional_complex_expr(self):
+        speech = "for loop condition i equal one " + \
+                 "condition trigger value less than equal length plus two " + \
+                 "or j less than length and k greater than control value " + \
+                 "condition i plus plus begin end for loop"
+        struct = "for #condition #assign #variable i #with #value 1 " + \
+                 "#condition #variable triggerValue <= #variable length + #value 2 " + \
+                 "|| #variable j < #variable length && #variable k > #variable controlValue " + \
+                 "#condition #post #variable i ++ #for_start #for_end;;"
+        self.wordparser_compare(speech, struct)
+
+    def test_word_parser_for_loop_conditional_lone_variables(self):
+        speech = "for loop condition i equal one condition is done and is complete or has no wrong condition i plus plus begin end for loop"
+        struct = "for #condition #assign #variable i #with #value 1 #condition #variable isDone && #variable isComplete || #variable hasNoWrong #condition #post #variable i ++ #for_start #for_end;;"
+        self.wordparser_compare(speech, struct)
 
     # Word Parser - Test partial code
     def test_word_parser_partial_declare_var(self):

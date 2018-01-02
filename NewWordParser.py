@@ -273,13 +273,13 @@ class WordParser:
 
 
     def parse_for_loop_statement(self, tokens):
-        # tokens consist of [ var_arr_literal, expression, expression, comparison_operator, expression, var_arr, increment_for_op,
+        # tokens consist of [ var_arr_literal, expression, conditional_expression, var_arr, increment_for_op,
         # statements (multiple)]
-        parsed_stmt = "for #condition #assign " + tokens[0] + " #with " + tokens[1] + " #condition " + tokens[2] + " " + \
-                      tokens[3] + " " + tokens[4] + " #condition #post " + self.parse_var_arr_or_literal_word(tokens[5]) + \
-                      " "  + tokens[6] + " #for_start "
+        parsed_stmt = "for #condition #assign " + tokens[0] + " #with " + tokens[1] + " #condition " + tokens[2] + \
+                      " #condition #post " + self.parse_var_arr_or_literal_word(tokens[3]) + \
+                      " "  + tokens[4] + " #for_start "
 
-        for i in range(7, len(tokens)):
+        for i in range(5, len(tokens)):
             parsed_stmt += tokens[i] + " "
 
         parsed_stmt += "#for_end;;"
@@ -663,7 +663,7 @@ class WordParser:
 
         for_loop_statement = for_loop + \
                              keyword_condition + var_arr_or_literal + keyword_equal + expression + \
-                             keyword_condition + expression + comparison_operator + expression + \
+                             keyword_condition + conditional_expression + \
                              keyword_condition + variable_or_variable_with_array_index + increment_for_operator + keyword_begin + \
                              ZeroOrMore(statement) + keyword_end_for_loop
         for_loop_statement.setParseAction(self.parse_for_loop_statement)
