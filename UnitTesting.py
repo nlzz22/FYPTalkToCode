@@ -659,6 +659,13 @@ class TestParserMethods(unittest.TestCase):
         speech = "for loop condition numbers tree array index i plus equal max condition i less than length condition i plus plus begin end for loop"
         struct = "for #condition #assign #array numbersTree #indexes #variable i #index_end += #variable max #condition #variable i < #variable length #condition #post #variable i ++ #for_start #for_end;;"
         self.wordparser_compare(speech, struct)
+
+    def test_word_parser_postfix_assignment(self):
+        speech = "max plus plus end equal"
+        struct = "#post #variable max ++;;"
+        self.wordparser_compare(speech, struct)
+
+    # TODO: for loop prefix , prefix assignment
         
 
     # Word Parser - Test partial code

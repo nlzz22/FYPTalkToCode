@@ -234,7 +234,7 @@ class WordParser:
             return " unknown "
         
 
-    def update_increment_for_operator(self, tokens):
+    def update_unary_operators(self, tokens):
         if tokens.pp != "": # plus plus operation
             return "++"
         elif tokens.mm != "": # minus minus operation
@@ -256,14 +256,19 @@ class WordParser:
         return ' '.join(tokens)
 
 
-    def parse_assignment_expression(self, tokens):
+    def parse_simple_assign_expression(self, tokens):
         # tokens consist of [ var_or_arr, assignment_operator, expression ]
-        return self.parse_var_arr_or_literal_word(tokens[0]) + " " + tokens[1] + " " + tokens[2]
+        return "#assign " + self.parse_var_arr_or_literal_word(tokens[0]) + " " + tokens[1] + " " + tokens[2]
+
+
+    def parse_postfix_expression(self, tokens):
+        # tokens consist of [ var_or_arr, unary_operator ]
+        return "#post " + self.parse_var_arr_or_literal_word(tokens[0]) + " " + tokens[1]
 
 
     def parse_assignment_statement(self, tokens):
         # tokens consist of [ assignment_expression ]
-        parsed_stmt = "#assign " + tokens[0] + ";; "
+        parsed_stmt = tokens[0] + ";; "
         
         return parsed_stmt
 
@@ -299,13 +304,12 @@ class WordParser:
 
 
     def parse_for_loop_statement(self, tokens):
-        # tokens consist of [ assignment_expression, conditional_expression, var_arr, increment_for_op,
+        # tokens consist of [ assignment_expression, conditional_expression, assignment_expression,
         # statements (multiple)]
-        parsed_stmt = "for #condition #assign " + tokens[0] + " #condition " + tokens[1] + \
-                      " #condition #post " + self.parse_var_arr_or_literal_word(tokens[2]) + \
-                      " "  + tokens[3] + " #for_start "
+        parsed_stmt = "for #condition " + tokens[0] + " #condition " + tokens[1] + \
+                      " #condition " + tokens[2] + " #for_start "
 
-        for i in range(4, len(tokens)):
+        for i in range(3, len(tokens)):
             parsed_stmt += tokens[i] + " "
 
         parsed_stmt += "#for_end;;"
@@ -605,8 +609,8 @@ class WordParser:
                         keyword_ns_void("void") | keyword_ns_character("char") # todo
         variable_type.setParseAction(self.update_var_type)
 
-        increment_for_operator = (keyword_ns_plus_plus("pp") | keyword_ns_minus_minus("mm"))
-        increment_for_operator.setParseAction(self.update_increment_for_operator)
+        unary_operators = (keyword_ns_plus_plus("pp") | keyword_ns_minus_minus("mm"))
+        unary_operators.setParseAction(self.update_unary_operators)
 
         operators = keyword_ns_plus("p") |  keyword_ns_minus("min") | keyword_ns_times("t") | \
                     keyword_ns_divide("d") | keyword_ns_modulo("mod")
@@ -668,8 +672,12 @@ class WordParser:
 
         case_or_default_stmts = case_statement | default_statement
 
-        assignment_expression = variable_or_variable_with_array_index + assignment_operator + expression
-        assignment_expression.setParseAction(self.parse_assignment_expression)
+        simple_assign_expression = variable_or_variable_with_array_index + assignment_operator + expression
+        simple_assign_expression.setParseAction(self.parse_simple_assign_expression)
+        postfix_expression = variable_or_variable_with_array_index + unary_operators
+        postfix_expression.setParseAction(self.parse_postfix_expression)
+
+        assignment_expression = simple_assign_expression | postfix_expression
 
         # Secondary parsable
 
@@ -700,7 +708,7 @@ class WordParser:
         for_loop_statement = for_loop + \
                              keyword_condition + assignment_expression + \
                              keyword_condition + conditional_expression + \
-                             keyword_condition + variable_or_variable_with_array_index + increment_for_operator + keyword_begin + \
+                             keyword_condition + assignment_expression + keyword_begin + \
                              ZeroOrMore(statement) + keyword_end_for_loop
         for_loop_statement.setParseAction(self.parse_for_loop_statement)
 
