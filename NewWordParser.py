@@ -256,9 +256,14 @@ class WordParser:
         return ' '.join(tokens)
 
 
-    def parse_assignment_statement(self, tokens):
+    def parse_assignment_expression(self, tokens):
         # tokens consist of [ var_or_arr, assignment_operator, expression ]
-        parsed_stmt = "#assign " + self.parse_var_arr_or_literal_word(tokens[0]) + " " + tokens[1] + " " + tokens[2] + ";; "
+        return self.parse_var_arr_or_literal_word(tokens[0]) + " " + tokens[1] + " " + tokens[2]
+
+
+    def parse_assignment_statement(self, tokens):
+        # tokens consist of [ assignment_expression ]
+        parsed_stmt = "#assign " + tokens[0] + ";; "
         
         return parsed_stmt
 
@@ -294,13 +299,13 @@ class WordParser:
 
 
     def parse_for_loop_statement(self, tokens):
-        # tokens consist of [ var_arr_literal, expression, conditional_expression, var_arr, increment_for_op,
+        # tokens consist of [ assignment_expression, conditional_expression, var_arr, increment_for_op,
         # statements (multiple)]
-        parsed_stmt = "for #condition #assign " + tokens[0] + " #with " + tokens[1] + " #condition " + tokens[2] + \
-                      " #condition #post " + self.parse_var_arr_or_literal_word(tokens[3]) + \
-                      " "  + tokens[4] + " #for_start "
+        parsed_stmt = "for #condition #assign " + tokens[0] + " #condition " + tokens[1] + \
+                      " #condition #post " + self.parse_var_arr_or_literal_word(tokens[2]) + \
+                      " "  + tokens[3] + " #for_start "
 
-        for i in range(5, len(tokens)):
+        for i in range(4, len(tokens)):
             parsed_stmt += tokens[i] + " "
 
         parsed_stmt += "#for_end;;"
@@ -663,9 +668,12 @@ class WordParser:
 
         case_or_default_stmts = case_statement | default_statement
 
+        assignment_expression = variable_or_variable_with_array_index + assignment_operator + expression
+        assignment_expression.setParseAction(self.parse_assignment_expression)
+
         # Secondary parsable
 
-        variable_assignment_statement = variable_or_variable_with_array_index + assignment_operator + expression + keyword_end_equal
+        variable_assignment_statement = assignment_expression + keyword_end_equal
         variable_assignment_statement.setParseAction(self.parse_assignment_statement)
 
         if_statement = keyword_if + conditional_expression + keyword_then + ZeroOrMore(statement) + \
@@ -690,7 +698,7 @@ class WordParser:
         declare_array_statement.setParseAction(self.parse_declare_arr_statement)
 
         for_loop_statement = for_loop + \
-                             keyword_condition + var_arr_or_literal + keyword_equal + expression + \
+                             keyword_condition + assignment_expression + \
                              keyword_condition + conditional_expression + \
                              keyword_condition + variable_or_variable_with_array_index + increment_for_operator + keyword_begin + \
                              ZeroOrMore(statement) + keyword_end_for_loop

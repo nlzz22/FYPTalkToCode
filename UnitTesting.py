@@ -649,6 +649,11 @@ class TestParserMethods(unittest.TestCase):
         speech = "max modulo equal max plus one end equal"
         struct = "#assign #variable max %= #variable max + #value 1;;"
         self.wordparser_compare(speech, struct)
+
+    def test_word_parser_for_loop_initial_plus_eq(self):
+        speech = "for loop condition i plus equal max minus one condition i less than length condition i plus plus begin end for loop"
+        struct = "for #condition #assign #variable i += #variable max - #value 1 #condition #variable i < #variable length #condition #post #variable i ++ #for_start #for_end;;"
+        self.wordparser_compare(speech, struct)
         
 
     # Word Parser - Test partial code
