@@ -191,6 +191,8 @@ class WordParser:
             return "%"
         elif tokens.bac != "": # backslash
             return "\\"
+        elif tokens.col != "": # colon
+            return ":"
         else:
             # Code should not reach here
             return " unknown "
@@ -603,6 +605,7 @@ class WordParser:
         symbol_dollar = Keyword("dollar")
         symbol_percent = Keyword("percent")
         symbol_backslash = Keyword("backslash")
+        symbol_colon = Keyword("colon")
 
         # The list of required keywords
         keywords = Keywords()
@@ -613,7 +616,7 @@ class WordParser:
         not_all_keywords = self.build_not_all_keywords(self.list_keywords)
 
         symbol_expression = keyword_symbol + space + ( symbol_ampersand("amp") | symbol_dollar("dol") | symbol_percent("per") | \
-                                               symbol_backslash("bac") )
+                                               symbol_backslash("bac") | symbol_colon("col") )
         symbol_expression.setParseAction(self.update_symbol_expr)
          
         variable_name = Combine(OneOrMore(not_all_keywords + Word(alphas) + Optional(space)))

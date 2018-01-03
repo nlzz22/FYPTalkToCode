@@ -81,7 +81,7 @@ class SpeechRecognitionModule:
                                                      "minus", "minus minus", "times", "divide", "while", "switch", "case", "dot", "end if", \
                                                      "end switch", "end declare", "for loop", "end equal", "for loop condition i", "end while", \
                                                      "end string", "undo", "default", "break", "and", "or", "symbol", "ampersand", \
-                                                     "percent", "dollar", "backslash"]
+                                                     "percent", "dollar", "backslash", "colon"]
                                 preferred_phrases += variables_list
                                 
                                 read_words_google = RecognizerGA().recognize_google_cloud(audio, google_cloud_json, "en-US", preferred_phrases, False)

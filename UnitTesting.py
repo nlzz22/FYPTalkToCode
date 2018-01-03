@@ -705,6 +705,11 @@ class TestParserMethods(unittest.TestCase):
         struct = "#function a(#parameter #value \"hello\" + #value \"world\");;"
         self.wordparser_compare(speech, struct)
 
+    def test_word_parser_symbol_new(self):
+        speech = "call function print with parameter string enter the value symbol colon symbol backslash n end string end function"
+        struct = "#function print(#parameter #value \"enter the value :\\n\");;"
+        self.wordparser_compare(speech, struct)
+
     # Word Parser - Test partial code
     def test_word_parser_partial_declare_var(self):
         speech = "declare integer abc "
