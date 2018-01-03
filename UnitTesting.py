@@ -162,6 +162,15 @@ class TestParserMethods(unittest.TestCase):
         
         self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
 
+    def test_word_corrector_scanf(self):
+        word = "call function scan f parameter string symbol percent d end string parameter symbol ampersand print end function"
+        wc = WordCorrector(word, ["print", "wink"])
+        corrected = wc.run_correct_words_multiple("")
+        corrected = wc.run_correct_variables()
+        expected = "call function scanf parameter string symbol percent d end string parameter symbol ampersand print end function"
+
+        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
+
 
     # Test word similarity
 
@@ -209,6 +218,14 @@ class TestParserMethods(unittest.TestCase):
         word = "makes"
         list_vars = ["i", "numbers", "max", "length"]
         expected = "max"
+        most_sim_word = WordSimilarity.get_most_similar_word(word, list_vars)
+
+        self.assertEqual(self.format_spaces(most_sim_word), self.format_spaces(expected))
+
+    def test_word_similarity_printf(self):
+        word = "printf"
+        list_vars = ["print", "f"]
+        expected = "printf"
         most_sim_word = WordSimilarity.get_most_similar_word(word, list_vars)
 
         self.assertEqual(self.format_spaces(most_sim_word), self.format_spaces(expected))
@@ -718,6 +735,17 @@ class TestParserMethods(unittest.TestCase):
         speech = "call function print with parameter string enter the value symbol colon symbol backslash n end string end function"
         struct = "#function print(#parameter #value \"enter the value :\\n\");;"
         self.wordparser_compare(speech, struct)
+
+    def test_word_parser_printf(self):
+        speech = "call function printf parameter string symbol percent d end string parameter print end function"
+        struct = "#function printf(#parameter #value \"%d\" #parameter #variable print);; "
+        self.wordparser_compare(speech, struct)
+
+    def test_word_parser_scanf(self):
+        speech = "call function scanf parameter string symbol percent d end string parameter symbol ampersand print end function"
+        struct = "#function scanf(#parameter #value \"%d\" #parameter & #variable print);;"
+        self.wordparser_compare(speech, struct)
+        
 
     # Word Parser - Test partial code
     def test_word_parser_partial_declare_var(self):
