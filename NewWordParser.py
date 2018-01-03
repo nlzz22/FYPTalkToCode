@@ -182,6 +182,20 @@ class WordParser:
             return " unknown "
 
 
+    def update_symbol_expr(self, tokens):
+        if tokens.amp != "": # ampersand
+            return "&"
+        elif tokens.dol != "": # dollar
+            return "$"
+        elif tokens.per != "": # percent
+            return "%"
+        elif tokens.bac != "": # backslash
+            return "\\"
+        else:
+            # Code should not reach here
+            return " unknown "
+
+
     def update_operators(self, tokens):
         if tokens.p != "": # plus
             return " + "
@@ -582,6 +596,13 @@ class WordParser:
         keyword_end_function = Suppress("end function").setName("\"end function\"").setFailAction(self.handle_fail_parse)
         keyword_end_string = Suppress("end string").setName("\"end string\"").setFailAction(self.handle_fail_parse)
         keyword_end_switch = Suppress("end switch").setName("\"end switch\"").setFailAction(self.handle_fail_parse)
+        space = " "
+        suppress_space = Suppress(space)
+        keyword_symbol = Suppress("symbol")
+        symbol_ampersand = Keyword("ampersand")
+        symbol_dollar = Keyword("dollar")
+        symbol_percent = Keyword("percent")
+        symbol_backslash = Keyword("backslash")
 
         # The list of required keywords
         keywords = Keywords()
@@ -590,11 +611,16 @@ class WordParser:
         # The components of parser
         self.literal = self.get_all_literal()
         not_all_keywords = self.build_not_all_keywords(self.list_keywords)
+
+        symbol_expression = keyword_symbol + space + ( symbol_ampersand("amp") | symbol_dollar("dol") | symbol_percent("per") | \
+                                               symbol_backslash("bac") )
+        symbol_expression.setParseAction(self.update_symbol_expr)
          
-        
-        variable_name = Combine(OneOrMore(not_all_keywords + Word(alphas) + Optional(" ")))
+        variable_name = Combine(OneOrMore(not_all_keywords + Word(alphas) + Optional(space)))
         character_literal = keyword_character + Word( alphas, max=1 )
-        string_literal = keyword_string + Combine(OneOrMore(~keyword_end_string + Word(alphas) + Optional(" "))) + keyword_end_string
+        string_literal = keyword_string + Combine(OneOrMore(~keyword_end_string + \
+                                                            (symbol_expression + Optional(suppress_space) | \
+                                                             Word(alphas) + Optional(space)))) + keyword_end_string
         literal_name = Combine(OneOrMore(Optional(" ") + self.literal)) | character_literal("charlit") | string_literal("strlit")
         literal_name.setParseAction(self.parse_literal)
         
@@ -658,7 +684,8 @@ class WordParser:
         expression = single_expr + ZeroOrMore(operators + single_expr)
         expression.setParseAction(self.parse_expression)
 
-        parameter_without_type_stmt = Optional(keyword_with) + keyword_parameter + expression
+        parameter_without_type_stmt = Optional(keyword_with) + keyword_parameter + Optional(Combine(symbol_expression)) + expression
+        parameter_without_type_stmt.setParseAction(self.update_join_tokens)
 
         single_conditional_expression = expression + Optional(comparison_operator + expression)
         single_conditional_expression.setParseAction(self.update_join_tokens)

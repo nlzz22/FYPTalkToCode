@@ -683,7 +683,27 @@ class TestParserMethods(unittest.TestCase):
     def test_word_parser_for_loop_prefix_increment(self):
         speech = "for loop condition i equal one condition i less than length condition plus plus i begin end for loop"
         struct = "for #condition #assign #variable i #with #value 1 #condition #variable i < #variable length #condition ++ #variable i #for_start #for_end;;"
-        self.wordparser_compare(speech, struct)        
+        self.wordparser_compare(speech, struct)
+
+    def test_word_parser_symbol(self):
+        speech = "call function print that parameter string symbol dollar symbol percent symbol ampersand hello world symbol backslash n end string end function"
+        struct = "#function printThat(#parameter #value \"$%&hello world \\n\");;"
+        self.wordparser_compare(speech, struct)
+
+    def test_word_parser_scan_symbol(self):
+        speech = "call function scan thing parameter string symbol percent c end string parameter symbol ampersand ch end function"
+        struct = "#function scanThing(#parameter #value \"%c\" #parameter & #variable ch);;"
+        self.wordparser_compare(speech, struct)
+
+    def test_word_parser_print_symbol(self):
+        speech = "call function print print parameter string entered character is symbol percent c symbol backslash n end string parameter ch end function"
+        struct = "#function printPrint(#parameter #value \"entered character is %c \\n\" #parameter #variable ch);;"
+        self.wordparser_compare(speech, struct)
+
+    def test_word_parser_call_function_complex_string(self):
+        speech = "call function a parameter string hello end string plus string world end string end function"
+        struct = "#function a(#parameter #value \"hello\" + #value \"world\");;"
+        self.wordparser_compare(speech, struct)
 
     # Word Parser - Test partial code
     def test_word_parser_partial_declare_var(self):
