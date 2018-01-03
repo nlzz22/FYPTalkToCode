@@ -153,6 +153,15 @@ class TestParserMethods(unittest.TestCase):
         
         self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
 
+    def test_word_corrector_printf(self):
+        word = "call function print f parameter string symbol percent d end string parameter print end function"
+        wc = WordCorrector(word, ["print", "wink"])
+        corrected = wc.run_correct_words_multiple("")
+        corrected = wc.run_correct_variables()
+        expected = "call function printf parameter string symbol percent d end string parameter print end function"
+        
+        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
+
 
     # Test word similarity
 

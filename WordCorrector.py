@@ -3,6 +3,7 @@ from word2number import w2n
 import hashlib
 import re
 from Keywords import Keywords
+from StandardFunctions import StandardFunctions
 from pyparsing import * # External parser library
 from WordSimilarity import get_most_similar_word
 
@@ -12,7 +13,7 @@ class WordCorrector:
         self.corrected = ""
         self.space = ""
         self.var_types = ["integer", "short", "long", "float", "double", "boolean", "character", "string"]
-        self.variables_list = var_list
+        self.variables_list = var_list + StandardFunctions().get_std_functions()
 
 
     def remove_string(self, input_str):
@@ -245,6 +246,13 @@ class WordCorrector:
                 prev_word = self.query_latest_added_word()
                 if (prev_word == "end"):
                     self.add_word_to_corrected("equal")
+                else:
+                    self.add_word_to_corrected(current_word)
+            elif (current_word == "print" or current_word == "scan"):
+                next_word = self.query_next_word()
+                if next_word == "f":
+                    self.get_next_word()
+                    self.add_word_to_corrected(current_word + "f")
                 else:
                     self.add_word_to_corrected(current_word)
             elif (self.is_number(current_word)):

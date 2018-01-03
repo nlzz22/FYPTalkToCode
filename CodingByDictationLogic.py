@@ -6,6 +6,7 @@ from NewWordParser import WordParser as newWordParser
 from NewWordParser import Stack
 import StructuralCommandParser as scParser
 from TextFileReader import TextFileReader
+from StandardFunctions import StandardFunctions
 import time
 import threading
 
@@ -40,6 +41,7 @@ class CodingByDictationLogic:
         self.code_stack = Stack()
         self.accepted_indices = []
         self.current_index = 0
+        self.std_funcs = StandardFunctions().get_std_functions()
 
         self.voice_lock = threading.Lock()
 
@@ -105,6 +107,10 @@ class CodingByDictationLogic:
         for curr_var_list in stackClass.stack:
             for variable in curr_var_list:
                 temp_set.add(variable)
+
+        # add standard function calls
+        for std_func in self.std_funcs:
+            temp_set.add(std_func)  
 
         return list(temp_set)
 

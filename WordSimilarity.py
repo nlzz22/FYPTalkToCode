@@ -1,4 +1,5 @@
 import jellyfish
+from StandardFunctions import StandardFunctions
 
 def sounds_like_index(word1, word2):
     # convert from string to unicode
@@ -14,12 +15,18 @@ def sounds_like_index(word1, word2):
 def get_most_similar_word(word, word_list):
     max_sim_index = -1
     best_word = ""
+    list_std_funcs = StandardFunctions().get_std_functions()
     
     for ground_word in word_list:
         if word == ground_word:
             return word
-        
+
         current_sim = sounds_like_index(word, ground_word)
+
+        # if ground word is a std function, need higher similarity index to correct.
+        if ground_word in list_std_funcs and current_sim < 0.7:
+            continue
+        
         if current_sim > max_sim_index and current_sim > 0.5:
             max_sim_index = current_sim
             best_word = ground_word
