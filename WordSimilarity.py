@@ -16,6 +16,7 @@ def get_most_similar_word(word, word_list):
     max_sim_index = -1
     best_word = ""
     list_std_funcs = StandardFunctions().get_std_functions()
+    word_list += list_std_funcs
     
     for ground_word in word_list:
         if word == ground_word:
