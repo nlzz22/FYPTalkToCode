@@ -503,6 +503,10 @@ class WordParser:
         # no tokens here.
         return "break;;"
 
+    def parse_continue_statement(self, tokens):
+        # no tokens here.
+        return "continue;;"
+
     def handle_fail_parse(self, string, loc, expr, err):
         if self.error_message != "":
             self.error_message += " or " + str(expr)
@@ -591,6 +595,7 @@ class WordParser:
         keyword_case = Suppress("case")
         keyword_default = Suppress("default")
         keyword_break = Suppress("break")
+        keyword_continue = Suppress("continue")
         keyword_create_function = Suppress("create function")
         keyword_call_function = Suppress("call function")
         keyword_return_type = Suppress("return type")
@@ -759,6 +764,9 @@ class WordParser:
         break_statement = keyword_break
         break_statement.setParseAction(self.parse_break_statement)
 
+        continue_statement = keyword_continue
+        continue_statement.setParseAction(self.parse_continue_statement)
+
         function_declaration_line = keyword_create_function + variable_name + Optional(keyword_with) + keyword_return_type + \
                                variable_type + ZeroOrMore(parameter_statement.setResultsName("params", True)) + keyword_begin + \
                                ZeroOrMore(statement.setResultsName("stmts", True)) + keyword_end_function
@@ -777,7 +785,7 @@ class WordParser:
 
         self.iteration_statement = for_loop_statement | while_loop_statement
 
-        self.jump_statement = return_statement | break_statement
+        self.jump_statement = return_statement | break_statement | continue_statement
 
         self.call_function_statement = function_call_statement
 
@@ -858,7 +866,7 @@ class WordParser:
         elif first_word == "for" or first_word == "while":
             result = self.parse_check_iteration_statement(sentence)
         # Check jump statements (should not run as this shouldnt be at the start)
-        elif first_word == "return" or first_word == "break":
+        elif first_word == "return" or first_word == "break" or first_word == "continue":
             result = self.parse_check_jump_statement(sentence)
         # Check function declaration
         elif start_word == "create function":

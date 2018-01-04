@@ -4,7 +4,7 @@ class Keywords:
         list_keywords += ["double", "else", "end", "equal", "float", "for", "function", "greater", "if", "index", "integer"]
         list_keywords += ["less", "long", "loop", "minus", "modulo", "not", "parameter", "plus", "return", "size", "string"]
         list_keywords += ["than", "then", "times", "type", "void", "while", "with", "undo", "default", "break", "switch", "case"]
-        list_keywords += ["and", "or", "symbol"]
+        list_keywords += ["and", "or", "symbol", "continue"]
         self.keywords = list_keywords
     
     def get_keywords(self):

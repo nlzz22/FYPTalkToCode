@@ -763,6 +763,24 @@ class TestParserMethods(unittest.TestCase):
                  "break;; #if_branch_end;; #while_end;;"
         self.wordparser_compare(speech, struct)
 
+    def test_word_parser_for_continue(self):
+        speech = "for loop condition i equal one condition i less than length condition i plus plus begin " + \
+                 "begin if i equal ten then is done equal one end equal continue end if end for loop"
+        struct = "for #condition #assign #variable i #with #value 1 #condition #variable i < #variable length " + \
+                 "#condition #post #variable i ++ #for_start " + \
+                 "if #condition #variable i == #value 10 #if_branch_start #assign #variable isDone #with #value 1;; " + \
+                 "continue;; #if_branch_end;; #for_end;;"
+        self.wordparser_compare(speech, struct)
+
+    def test_word_parser_while_continue(self):
+        speech = "while i less than length begin " + \
+                 "begin if i equal ten then is done equal one end equal continue end if end while"
+        struct = "while #condition #variable i < #variable length #while_start " + \
+                 "if #condition #variable i == #value 10 #if_branch_start #assign #variable isDone #with #value 1;; " + \
+                 "continue;; #if_branch_end;; #while_end;;"
+        self.wordparser_compare(speech, struct)
+        
+
     # Word Parser - Test partial code
     def test_word_parser_partial_declare_var(self):
         speech = "declare integer abc "
