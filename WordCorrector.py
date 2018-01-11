@@ -2,10 +2,9 @@ from num2words import num2words
 from word2number import w2n
 import hashlib
 import re
-from Keywords import Keywords
+from Keywords import Keywords, Keyword as KeywordObj
 from StandardFunctions import StandardFunctions
-from pyparsing import * # External parser library
-from WordSimilarity import get_most_similar_word
+from WordSimilarity import get_most_similar_word, sounds_like_index, get_num_syllable
 
 class WordCorrector:
     def __init__(self, words, var_list):
@@ -14,79 +13,6 @@ class WordCorrector:
         self.space = ""
         self.var_types = ["integer", "short", "long", "float", "double", "boolean", "character", "string"]
         self.variables_list = var_list + StandardFunctions().get_std_functions()
-
-
-    def remove_string(self, input_str):
-        if "string" in input_str:
-            index_str = input_str.find("string")  
-            index_end_str = input_str.find("end string")
-
-            if index_end_str == -1:
-                return input_str[:index_str]
-            else:
-                return input_str[:index_str] + self.remove_string(input_str[index_end_str + 10:])
-        else:
-            return input_str
-
-
-    def remove_character(self, input_str):
-        if "character" in input_str:
-            index_character = input_str.find("character")
-
-            return input_str[:index_character] + self.remove_character(input_str[index_character + 11:])
-        else:
-            return input_str
-
-
-    def remove_escape_words(self, input_str):
-        input_str = self.remove_string(input_str)
-        input_str = self.remove_character(input_str)
-
-        return input_str
-
-
-    def run_correct_variables(self):
-        parts = self.corrected.split()
-        
-        if len(parts) > 1 and parts[0] == "declare":
-            # declaring variables does not trigger correction
-            return self.corrected
-        elif len(parts) > 2 and parts[0] + " " + parts[1] == "create function":
-            return self.corrected
-        
-        keywords = Keywords()
-        keyword_list = keywords.get_keywords()
-        for num in w2n.american_number_system:
-            keyword_list.append(num)
-        keyword_list.append("and")
-        
-        temp_not_all_keywords = None
-        
-        for keyword in keyword_list:
-            if temp_not_all_keywords is None:
-                temp_not_all_keywords = Suppress(Keyword(keyword))
-            else:
-                temp_not_all_keywords |= Suppress(Keyword(keyword))
-        variables = ZeroOrMore(ZeroOrMore(temp_not_all_keywords) + Word(alphas))
-
-        string_to_process = self.corrected
-        string_to_process = self.remove_escape_words(string_to_process)
-
-        variables_name = variables.parseString(string_to_process)
-
-        for variable in variables_name:
-            to_replace = get_most_similar_word(variable, self.variables_list)
-            if to_replace == "":
-                continue # no suitable replacement
-            
-            if variable != to_replace:
-                # Ensures only whole word gets replaced: i.e. when replacing "i", "condition" is not affected as
-                # the "i" inside "condition" is not a whole word by itself.
-                regex_expr_var = r"\b" + re.escape(variable) + r"\b"
-                self.corrected = re.sub(regex_expr_var, to_replace, self.corrected)
-
-        return self.corrected
-        
 
     def run_correct_words_multiple(self, prev_hash = ""):
         self.correct_words()
@@ -107,162 +33,164 @@ class WordCorrector:
         self.corrected = ""
         self.space = ""
 
-    def correct_words(self):
-        while (self.has_next_word()):
-            current_word = self.get_next_word()
-            if (current_word == "reef" or current_word == "beef"):
-                self.add_word_to_corrected("with")
-            elif (current_word == "width"):
-                # with (size, return type, parameter)
-                next_word = self.query_next_word()
-                if next_word == "size" or next_word == "parameter":
-                    self.add_word_to_corrected("with")
-                elif next_word == "return":
-                    self.get_next_word()
-                    next_word = self.query_next_word()
-                    if next_word == "type":
-                        self.get_next_word()
-                        self.add_word_to_corrected("with return type")
-                    else:
-                        self.reinsert_word("return")
-                        self.add_word_to_corrected("width")
-                else:
-                    self.add_word_to_corrected("width")
-            elif (current_word == "intex"):
-                self.add_word_to_corrected("index")
-            elif (current_word == "eye"):
-                prev_word = self.query_latest_added_word()
-                if (prev_word == "index"):
-                    self.add_word_to_corrected("i")
-                else:
-                    self.add_word_to_corrected(current_word)
-            elif (current_word == "in"):
-                # integer 
-                next_word = self.query_next_word()
-                if (next_word == "the" or next_word == "to"):
-                    self.get_next_word()
-                    next_word = self.query_next_word()
+    def get_word(self, index):
+        if len(self.words_list) > index:
+            return self.words_list[index]
+        else:
+            return ""
 
-                    if (next_word == "jar" or next_word == "jail" or next_word == "job" or next_word == "germ"):
-                        self.get_next_word()
-                        self.add_word_to_corrected("integer")
-                    else:
-                        self.add_word_to_corrected("integer")
-                elif (next_word == "detail" or next_word == "danger"):
-                    self.get_next_word()
-                    self.add_word_to_corrected("integer")
-                else:
-                    self.add_word_to_corrected("integer")
-            elif (current_word == "4" or current_word == "four" or current_word == "full" or current_word == "fall"):
-                next_word = self.query_next_word()
-                if next_word == "loop":
-                    self.get_next_word()
-                    self.add_word_to_corrected("for loop")
-                else:
-                    self.add_word_to_corrected(current_word)
-            elif (current_word == "than"):
-                prev_word = self.query_latest_added_word()
-                if (prev_word == "greater" or prev_word == "less"):
-                    self.add_word_to_corrected(current_word)
-                else:
-                    self.add_word_to_corrected("then")
-            elif (current_word == "and"):
-                # correct and -> end only if needed
-                next_word = self.query_next_word()
-                if next_word == "if" or next_word == "declare" or next_word == "equal" or next_word == "function" or \
-                   next_word == "for" or next_word == "fall" or next_word == "switch" or next_word == "while":
-                    self.add_word_to_corrected("end")
-                else:
-                    self.add_word_to_corrected(current_word)
-            elif (current_word == "written"):
-                next_word = self.query_next_word()
-                if (next_word == "type"):
-                    self.add_word_to_corrected("return")
-                elif (next_word == "tie"):
-                    self.get_next_word()
-                    self.add_word_to_corrected("return type")
-                else:
-                    self.add_word_to_corrected(current_word)
-            elif (current_word == "wow" or current_word == "wild"):
-                self.add_word_to_corrected("while")
-            elif (current_word == "dan" or current_word == "den"):
-                self.add_word_to_corrected("then")
-            elif (current_word == "condition"):
-                next_word = self.query_next_word()
-                if (next_word == "eye"):
-                    self.get_next_word()
-                    self.add_word_to_corrected("condition i")
-                elif (next_word == "is"):
-                    self.get_next_word()
-                    next_word = self.query_next_word()
-                    if (next_word == "equal"):
-                        # condition is equal -> condition i equal
-                        self.get_next_word()
-                        self.add_word_to_corrected("condition i equal")
-                    else:
-                        self.add_word_to_corrected("condition is")
-                else:
-                    self.add_word_to_corrected("condition")
-            elif (current_word == "to"):
-                if "to" in self.variables_list:
-                    self.add_word_to_corrected(current_word)
-                else:
-                    prev_word = self.query_latest_added_word()
-                    if prev_word == "equal":
-                        self.add_word_to_corrected("two")
-                    else:
-                        self.add_word_to_corrected(current_word)
-            elif (current_word == "away"):
-                # away -> array
-                next_word = self.query_next_word()
-                if (next_word == "index"):
-                    self.get_next_word()
-                    self.add_word_to_corrected("array index")
-                else:
-                    prev_word = self.query_latest_added_word()
-                    if (self.is_variable_type(prev_word)):
-                        self.add_word_to_corrected("array")
-                    else:
-                        self.add_word_to_corrected("away")
-            elif (current_word == "inf"):
-                self.add_word_to_corrected("i end if")
-            elif (current_word == "the"):
-                next_word = self.query_next_word()
-                if (next_word == "game"):
-                    self.get_next_word()
-                    self.add_word_to_corrected("begin")
-                else:
-                    self.add_word_to_corrected(current_word)
-            elif (current_word == "became" or current_word == "beginning"):
-                self.add_word_to_corrected("begin")
-            elif (current_word == "ii"):
+    def premature_correction(self):
+        list_end_constructs = ["if", "declare", "equal", "function", "for", "fall", "switch", "while"]
+        
+        for i in range(0, len(self.words_list)):
+            # correct and -> end for end constructs.
+            if self.get_word(i) == "and" and self.get_word(i+1) in list_end_constructs:
+                self.words_list[i] = "end"
+            # correct standard functions print f and scan f
+            elif (self.get_word(i) == "print" or self.get_word(i) == "scan") and self.get_word(i+1) == "f":
+                self.words_list[i] += "f"
+                self.words_list[i+1] = ""
+            # correct equal to -> equal two if "to" is not a variable
+            elif self.get_word(i) == "equal" and self.get_word(i+1) == "to":
+                if "to" not in self.variables_list:
+                    self.words_list[i+1] = "two"
+            # correct ii if needed
+            elif self.get_word(i) == "ii":
                 if "i" in self.variables_list:
-                    self.add_word_to_corrected("i")
+                    self.words_list[i] = "i"
                 elif "second" in self.variables_list:
-                    self.add_word_to_corrected("second")
-                else:
-                    self.add_word_to_corrected(current_word)
-            elif (current_word == "ecuador"):
-                prev_word = self.query_latest_added_word()
-                if (prev_word == "end"):
-                    self.add_word_to_corrected("equal")
-                else:
-                    self.add_word_to_corrected(current_word)
-            elif (current_word == "print" or current_word == "scan"):
-                next_word = self.query_next_word()
-                if next_word == "f":
-                    self.get_next_word()
-                    self.add_word_to_corrected(current_word + "f")
-                else:
-                    self.add_word_to_corrected(current_word)
-            elif (self.is_number(current_word)):
+                    self.words_list[i] = "second"
+            # correct common error: condition is equal --> condition i equal
+            elif self.get_word(i) == "condition" and self.get_word(i+1) == "is" and self.get_word(i+2) == "equal":
+                if "i" in self.variables_list and "is" not in self.variables_list:
+                    self.words_list[i+1] = "i"
+
+    def correct_words(self):
+        kw = Keywords()
+        max_syllable = kw.get_max_num_syllable()
+        keyword_list = kw.get_keywords()
+        word_syllable_list = self.build_word_syllable_list(kw)
+        temp_words = ""
+        word_to_add = ""
+        to_do_correction = False
+
+        self.premature_correction()
+
+        if self.has_next_word():
+            if self.query_next_word() == "declare":
+                # declaring variables does not trigger correction
+                self.corrected = " ".join(self.words_list)
+                return self.corrected
+            elif len(self.words_list) >= 2 and self.words_list[0] == "create" and self.words_list[1] == "function":
+                # create function does not trigger correction
+                self.corrected = " ".join(self.words_list)
+                return self.corrected
+        
+        # perform the correction        
+        while (self.has_next_word()):
+            is_string_encountered = False
+            is_char_encountered = False
+            current_word = self.get_next_word()
+            
+            if (self.is_number(current_word)):
                 # Convert numbers to words (e.g. 42 -> forty-two)
                 number_in_word_form = num2words(int(current_word))
-                self.add_word_to_corrected(number_in_word_form)
+                word_to_add = number_in_word_form
+                to_do_correction = True
+            elif (current_word == "string"):
+                # do not correct strings
+                word_to_add = current_word
+                to_do_correction = True
+                is_string_encountered = True
+            elif (current_word == "character"):
+                # do not correct characters
+                word_to_add = current_word
+                to_do_correction = True
+                is_char_encountered = True
+            elif (current_word in self.variables_list or current_word in keyword_list or current_word in w2n.american_number_system):
+                # do not correct any variables or keywords (including numbers)
+                word_to_add = current_word
+                to_do_correction = True
             else:
-                self.add_word_to_corrected(current_word)
+                # wrong words to perform correction
+                temp_words += current_word + " "
+                to_do_correction = False
+                
+            if to_do_correction:
+                self.perform_correction(temp_words, word_syllable_list, max_syllable)
+                self.add_word_to_corrected(word_to_add)
+                word_to_add = ""
+                temp_words = ""
+
+            if is_string_encountered:
+                is_string_encountered = False
+                words_yet_to_add = " ".join(self.words_list)
+                index_end_string = words_yet_to_add.index("end string")
+                if index_end_string == -1: # no end string found.
+                    self.add_word_to_corrected(words_yet_to_add)
+                    break
+                else: # end string found
+                    self.add_word_to_corrected(words_yet_to_add[0: index_end_string + 10])
+                    self.words_list = words_yet_to_add[index_end_string + 10:].split(" ")
+            elif is_char_encountered:
+                is_char_encountered = False
+                next_word = self.get_next_word()
+                self.add_word_to_corrected(next_word)
+
+        self.perform_correction(temp_words, word_syllable_list, max_syllable)
+        self.add_word_to_corrected(word_to_add)
 
         return self.corrected
+
+    def build_word_syllable_list(self, keywords_library):
+        temp_list = keywords_library.get_keywords_with_syllable()
+        for variable in self.variables_list:
+            
+            temp_list.append(KeywordObj(variable))
+        return temp_list
+            
+
+    def perform_correction(self, wrong_words, keyword_list_pair, max_syllable):
+        if wrong_words == "":
+            return
+        
+        parts = wrong_words.strip().split(" ")
+        if len(parts) == 0 or (len(parts) == 1 and parts[0] == ""):
+            return
+
+        part_word = []
+        # part_word[0] consist of one word, part_word[1] consist of 2 words etc.
+        for i in range(0, min(max_syllable, len(parts))):
+            part_word.append(" ".join(parts[0:i+1]))
+
+        # Match wrong word with the correct keyword.
+        max_sim = -1
+        temp_wrong_word_index = -1
+        temp_correct_word = ""
+        
+        for keyword_pair in keyword_list_pair:
+            keyword = keyword_pair.get_keyword()
+            syllable = keyword_pair.get_syllable()
+            num_part_query = min(syllable, len(parts))
+
+            # A word with j syllable can be matched with 1 to j wrong words.
+            for j in range(0, num_part_query):
+                curr_wrong_word = part_word[j]
+                curr_sim = sounds_like_index(curr_wrong_word, keyword)
+
+                if curr_sim > max_sim and curr_sim > 0.75:
+                    max_sim = curr_sim
+                    temp_wrong_word_index = j
+                    temp_correct_word = keyword
+
+        if max_sim > -1: # if there is a high similarity word.
+             self.add_word_to_corrected(temp_correct_word)
+             remaining_wrong_words = parts[temp_wrong_word_index+1: len(parts)]
+             self.perform_correction(" ".join(remaining_wrong_words), keyword_list_pair, max_syllable)
+        else: # cannot find any match.
+            self.add_word_to_corrected(part_word[0])
+            remaining_wrong_words = parts[1: len(parts)]
+            self.perform_correction(" ".join(remaining_wrong_words), keyword_list_pair, max_syllable)        
 
     def add_word_to_corrected(self, word):
         self.corrected += self.space + word

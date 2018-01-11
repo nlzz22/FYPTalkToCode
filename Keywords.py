@@ -1,3 +1,5 @@
+import WordSimilarity
+
 class Keywords:
     def __init__(self):
         list_keywords = []
@@ -49,11 +51,16 @@ class Keywords:
         list_keywords.append(Keyword("continue", 3))
 
         list_word_only = []
+        max_num_syllable = -1
         for keyword in list_keywords:
             list_word_only.append(keyword.get_keyword())
+            current_syllable = keyword.get_syllable()
+            if current_syllable > max_num_syllable:
+                max_num_syllable = current_syllable
 
         self.keywords = list_word_only
         self.keyword_syllable_pair = list_keywords
+        self.max_syllable = max_num_syllable
     
     def get_keywords(self):
         return self.keywords
@@ -61,11 +68,18 @@ class Keywords:
     def get_keywords_with_syllable(self):
         return self.keyword_syllable_pair
 
+    def get_max_num_syllable(self):
+        return self.max_syllable
+
 
 class Keyword:
-    def __init__(self, keyword, syllable):
+    def __init__(self, keyword, syllable = -1):
         self.keyword = keyword
-        self.syllable = syllable
+
+        if syllable == -1:
+            self.syllable = WordSimilarity.get_num_syllable(keyword)
+        else:
+            self.syllable = syllable
 
     def get_keyword(self):
         return self.keyword

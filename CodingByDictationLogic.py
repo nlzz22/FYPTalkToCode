@@ -201,7 +201,6 @@ class CodingByDictationLogic:
             # text to processed_text
             wordCorrector = WordCorrector(read_words, variables_list)
             corrected = wordCorrector.run_correct_words_multiple("")
-            corrected = wordCorrector.run_correct_variables()
 
             if corrected.strip() == "undo":
                 self.undo(True)
