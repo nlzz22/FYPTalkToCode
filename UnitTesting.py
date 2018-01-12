@@ -4,345 +4,7 @@ from WordCorrector import WordCorrector
 import WordSimilarity
 import StructuralCommandParser
 
-class TestParserMethods(unittest.TestCase):
-    # Test word corrector
-    def test_word_corrector_variables(self):
-        word = "eye equal one end equal "
-        word += "next equal two end equal"
-        wc = WordCorrector(word, ["max", "i"])
-        corrected = wc.run_correction()
-        expected = "i equal one end equal max equal two end equal"
-
-        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
-
-
-    def test_word_corrector_variables_not_found(self):
-        word = "height equal thirty end equal"
-        wc = WordCorrector(word, ["max", "i"])
-        corrected = wc.run_correction()
-        expected = word # no correction as "height" is not similar to either "max" or "i"
-
-        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
-
-
-    def test_word_corrector_variables_escape_words_declare(self):
-        word = "declare integer eye end declare"
-        wc = WordCorrector(word, ["max", "i"])
-        corrected = wc.run_correction()
-        expected = word # no correction as word starts with escape word "declare"
-
-        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
-
-    def test_word_corrector_variables_escape_words_create_func(self):
-        word = "create function find maximum with return type integer begin end function"
-        wc = WordCorrector(word, ["max", "bind", "mind"])
-        corrected = wc.run_correction()
-        expected = word # no correction as word starts with escape word "create function"
-
-        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
-
-    def test_word_corrector_variables_string_literal(self):
-        word = "call function find parameter string next end string end function"
-        wc = WordCorrector(word, ["max", "mind"])
-        corrected = wc.run_correction()
-        expected = "call function mind parameter string next end string end function"
-
-        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
-
-    def test_word_corrector_variables_character_literal(self):
-        word = "max equal character a end declare"
-        wc = WordCorrector(word, ["max", "eh", "aa"])
-        corrected = wc.run_correction()
-        expected = word
-        
-        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
-
-    def test_word_corrector_normal(self):
-        word = "for Loop condition is equal one condition I less than length condition I plus plus begin \
-         if numbers array index I greater than Max Den Max equal numbers array index I and equal and if and for Loop return Max \
-         and function"
-        wc = WordCorrector(word, ["max", "length", "i", "numbers"])
-        corrected = wc.run_correction()
-        expected = "for loop condition i equal one condition i less than length condition i plus plus begin \
-            if numbers array index i greater than max then max equal numbers array index i end equal \
-            end if end for loop return max end function"
-        
-        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
-
-    def test_word_corrector_num_to_alpha(self):
-        word = "sequence array index 0 equal 1 end equal"
-        wc = WordCorrector(word, ["sequence"])
-        corrected = wc.run_correction()
-        expected = "sequence array index zero equal one end equal"
-
-        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
-        
-
-    def test_word_corrector_call_func(self):
-        word = "call function hello world width parameter string how are you end string end function"
-        wc = WordCorrector(word, ["hello", "world"])
-        corrected = wc.run_correction()
-        expected = "call function hello world with parameter string how are you end string end function"
-
-        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
-
-    def test_word_corrector_bug_with_four(self):
-        word = "sequence array index three equal four end equal"
-        wc = WordCorrector(word, ["sequence"])
-        corrected = wc.run_correction()
-        expected = word
-        
-        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
-
-
-    def test_word_corrector_bug_with_no_whole_word_replace(self):
-        word = "for loop condition i equal one"
-        wc = WordCorrector(word, ["eye"])
-        corrected = wc.run_correction()
-        expected = "for loop condition eye equal one"
-        
-        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
-
-    def test_word_corrector_correct_ii_to_i(self):
-        word = "first equal II end equal"
-        wc = WordCorrector(word, ["first", "i"])
-        corrected = wc.run_correction()
-        expected = "first equal i end equal"
-        
-        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
-
-    def test_word_corrector_correct_ii_to_second(self):
-        word = "first equal II end equal"
-        wc = WordCorrector(word, ["first", "second"])
-        corrected = wc.run_correction()
-        expected = "first equal second end equal"
-        
-        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
-
-    def test_word_corrector_correct_ii_to_none(self):
-        word = "first equal II end equal"
-        wc = WordCorrector(word, ["first"])
-        corrected = wc.run_correction()
-        expected = word.lower()
-        
-        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
-
-    def test_word_corrector_correct_equal_to(self):
-        word = "declare integer second equal to end declare"
-        wc = WordCorrector(word, [])
-        corrected = wc.run_correction()
-        expected = "declare integer second equal two end declare"
-        
-        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
-
-    def test_word_corrector_do_not_correct_equal_to(self):
-        word = "declare integer second equal to end declare"
-        wc = WordCorrector(word, ["to"])
-        corrected = wc.run_correction()
-        expected = "declare integer second equal to end declare"
-        
-        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
-
-    def test_word_corrector_bug_declare_var_to(self):
-        word = "declare integer to end declare"
-        wc = WordCorrector(word, [])
-        corrected = wc.run_correction()
-        expected = word
-        
-        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
-
-    def test_word_corrector_printf(self):
-        word = "call function print f parameter string symbol percent d end string parameter print end function"
-        wc = WordCorrector(word, ["print", "wink"])
-        corrected = wc.run_correction()
-        expected = "call function printf parameter string symbol percent d end string parameter print end function"
-        
-        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
-
-    def test_word_corrector_printf_bug(self):
-        word = "call function print F parameter string hello world end string and function"
-        wc = WordCorrector(word, [])
-        corrected = wc.run_correction()
-        
-        expected = "call function printf parameter string hello world end string end function"
-
-        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
-
-    def test_word_corrector_scanf(self):
-        word = "call function scan f parameter string symbol percent d end string parameter symbol ampersand print end function"
-        wc = WordCorrector(word, ["print", "wink"])
-        corrected = wc.run_correction()
-        expected = "call function scanf parameter string symbol percent d end string parameter symbol ampersand print end function"
-
-        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
-
-    def test_word_corrector_integer(self):
-        word = "declare in detail max equal one end declare"
-        wc = WordCorrector(word, [])
-        corrected = wc.run_correction()
-        expected = "declare integer max equal one end declare"
-
-        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
-
-    def test_word_corrector_wrong_declare(self):
-        word = "degree integer max equal one end declare"
-        wc = WordCorrector(word, [])
-        corrected = wc.run_correction()
-        expected = "declare integer max equal one end declare"
-
-        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
-
-    def test_word_corrector_end_declare(self):
-        word = "declare integer max equal one end degree"
-        wc = WordCorrector(word, [])
-        corrected = wc.run_correction()
-        expected = "declare integer max equal one end declare"
-
-        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
-
-    def test_word_corrector_declare_many_errors(self):
-        word = "degree integer max equal one end degree"
-        wc = WordCorrector(word, [])
-        corrected = wc.run_correction()
-        expected = "declare integer max equal one end declare"
-
-        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
-
-    def test_word_corrector_wrong_create_func(self):
-        word = "crate junction find maximum with return type integer with parameter float array numbers begin"
-        wc = WordCorrector(word, [])
-        corrected = wc.run_correction()
-        expected = "create function find maximum with return type integer with parameter float array numbers begin"
-
-        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
-
-    def test_word_corrector_create_func_many_errors(self):
-        word = "crate junction find maximum width written type in detail with perimeter float array numbers begin"
-        wc = WordCorrector(word, [])
-        corrected = wc.run_correction()
-        expected = "create function find maximum with return type integer with parameter float array numbers begin"
-
-        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
-
-    def test_word_corrector_string_with_errors(self):
-        word = "call junction maximum width perimeter string hello world end string perimeter length end junction "
-        wc = WordCorrector(word, ["maximum", "length"])
-        corrected = wc.run_correction()
-        expected = "call function maximum with parameter string hello world end string parameter length end function"
-
-        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
-
-    def test_word_corrector_dont_correct_double_var_types(self):
-        # integer length will be corrected to integer long , if we do not implement the blocking mechanism for
-        # consecutive variable types.
-        word = "create function find maximum with parameter integer length with parameter integer array numbers begin"
-        wc = WordCorrector(word, [])
-        corrected = wc.run_correction()
-        expected = word
-
-        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
-
-    def test_word_corrector_declare_index(self):
-        word = "declare integer max equal numbers array index 0 end declare"
-        wc = WordCorrector(word, [])
-        corrected = wc.run_correction()
-        expected = "declare integer max equal numbers array index zero end declare"
-
-        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
-
-    def test_word_corrector_begin_if(self):
-        word = "begin is numbers array index i greater dan mex then"
-        wc = WordCorrector(word, ["numbers", "max"])
-        corrected = wc.run_correction()
-        expected = "begin if numbers array index i greater than max then"
-
-        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
-
-    def test_word_corrector_end_if(self):
-        word = "end eve"
-        wc = WordCorrector(word, [])
-        corrected = wc.run_correction()
-        expected = "end if"
-
-        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))        
-        
-
-    # Test word similarity
-
-    def test_word_similarity_1(self):
-        word = "eye"
-        list_vars = ["i", "numbers", "max", "length"]
-        expected = "i"
-        most_sim_word = WordSimilarity.get_most_similar_word(word, list_vars)
-
-        self.assertEqual(self.format_spaces(most_sim_word), self.format_spaces(expected))
-
-    def test_word_similarity_2(self):
-        word = "lumber"
-        list_vars = ["i", "numbers", "max", "length"]
-        expected = "numbers"
-        most_sim_word = WordSimilarity.get_most_similar_word(word, list_vars)
-
-        self.assertEqual(self.format_spaces(most_sim_word), self.format_spaces(expected))
-
-    def test_word_similarity_3(self):
-        word = "next"
-        list_vars = ["i", "numbers", "max", "length"]
-        expected = "max"
-        most_sim_word = WordSimilarity.get_most_similar_word(word, list_vars)
-
-        self.assertEqual(self.format_spaces(most_sim_word), self.format_spaces(expected))
-
-    def test_word_similarity_4(self):
-        word = "lang"
-        list_vars = ["i", "numbers", "max", "length"]
-        expected = "length"
-        most_sim_word = WordSimilarity.get_most_similar_word(word, list_vars)
-
-        self.assertEqual(self.format_spaces(most_sim_word), self.format_spaces(expected))
-
-    def test_word_similarity_5(self):
-        word = "blank"
-        list_vars = ["i", "numbers", "max", "length"]
-        expected = "length"
-        most_sim_word = WordSimilarity.get_most_similar_word(word, list_vars)
-
-        self.assertEqual(self.format_spaces(most_sim_word), self.format_spaces(expected))
-
-    def test_word_similarity_6(self):
-        word = "makes"
-        list_vars = ["i", "numbers", "max", "length"]
-        expected = "max"
-        most_sim_word = WordSimilarity.get_most_similar_word(word, list_vars)
-
-        self.assertEqual(self.format_spaces(most_sim_word), self.format_spaces(expected))
-
-    def test_word_similarity_printf(self):
-        word = "printf"
-        list_vars = ["print", "f"]
-        expected = "printf"
-        most_sim_word = WordSimilarity.get_most_similar_word(word, list_vars)
-
-        self.assertEqual(self.format_spaces(most_sim_word), self.format_spaces(expected))
-
-    # Test structured command parser
-
-    def test_struct_command_parser(self):
-        struct_command = "#function_declare findMaximum int #parameter_a #dimension 1 int #array numbers " + \
-             "#parameter int length #function_start " + \
-            "#create int #variable max #array numbers #indexes  #value 0 #index_end #dec_end;; " + \
-            "#create int #variable i #dec_end;; " + \
-            "for #condition #assign #variable i #with #value 1 #condition #variable i < #variable length #condition #post #variable i ++ #for_start " + \
-            "if #condition #array  numbers #indexes  #variable  i #index_end > #variable max #if_branch_start " + \
-            "#assign #variable max #with #array  numbers #indexes  #variable  i #index_end;; " + \
-            "#if_branch_end;; #for_end;; return #variable max;; #function_end;;"
-        converted_code = StructuralCommandParser.parse_structural_command_to_code(struct_command)
-        expected_code = "#include <stdio.h> int findMaximum(int [], int ); int findMaximum(int numbers[], int length){ int max = numbers[0]; int i; for (i = 1;i < length;i++){ if(numbers[i] > max) { max = numbers[i]; } } return max; }"
-
-        self.assertEqual(self.format_spaces(converted_code), self.format_spaces(expected_code))
-
-    # Test word parser
-
+class TestWordParserMethods(unittest.TestCase):
     def test_word_parser_var_assign_equal_arr(self):
         speech = "max too equal numbers array index i end equal"
         struct = "#assign #variable maxToo #with #array numbers #indexes #variable i #index_end;;"
@@ -873,8 +535,7 @@ class TestParserMethods(unittest.TestCase):
         struct = "while #condition #variable i < #variable length #while_start " + \
                  "if #condition #variable i == #value 10 #if_branch_start #assign #variable isDone #with #value 1;; " + \
                  "continue;; #if_branch_end;; #while_end;;"
-        self.wordparser_compare(speech, struct)
-        
+        self.wordparser_compare(speech, struct)  
 
     # Word Parser - Test partial code
     def test_word_parser_partial_declare_var(self):
@@ -986,10 +647,380 @@ class TestParserMethods(unittest.TestCase):
 
         return word
         
+    def format_spaces(self, sentence):
+        return UtilityClass().format_spaces(sentence)
 
+
+class TestWordCorrectorMethods(unittest.TestCase):
+    def test_word_corrector_variables(self):
+        word = "eye equal one end equal "
+        word += "next equal two end equal"
+        wc = WordCorrector(word, ["max", "i"])
+        corrected = wc.run_correction()
+        expected = "i equal one end equal max equal two end equal"
+
+        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
+
+
+    def test_word_corrector_variables_not_found(self):
+        word = "height equal thirty end equal"
+        wc = WordCorrector(word, ["max", "i"])
+        corrected = wc.run_correction()
+        expected = word # no correction as "height" is not similar to either "max" or "i"
+
+        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
+
+
+    def test_word_corrector_variables_escape_words_declare(self):
+        word = "declare integer eye end declare"
+        wc = WordCorrector(word, ["max", "i"])
+        corrected = wc.run_correction()
+        expected = word # no correction as word starts with escape word "declare"
+
+        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
+
+    def test_word_corrector_variables_escape_words_create_func(self):
+        word = "create function find maximum with return type integer begin end function"
+        wc = WordCorrector(word, ["max", "bind", "mind"])
+        corrected = wc.run_correction()
+        expected = word # no correction as word starts with escape word "create function"
+
+        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
+
+    def test_word_corrector_variables_string_literal(self):
+        word = "call function find parameter string next end string end function"
+        wc = WordCorrector(word, ["max", "mind"])
+        corrected = wc.run_correction()
+        expected = "call function mind parameter string next end string end function"
+
+        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
+
+    def test_word_corrector_variables_character_literal(self):
+        word = "max equal character a end declare"
+        wc = WordCorrector(word, ["max", "eh", "aa"])
+        corrected = wc.run_correction()
+        expected = word
+        
+        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
+
+    def test_word_corrector_normal(self):
+        word = "for Loop condition is equal one condition I less than length condition I plus plus begin \
+         if numbers array index I greater than Max Den Max equal numbers array index I and equal and if and for Loop return Max \
+         and function"
+        wc = WordCorrector(word, ["max", "length", "i", "numbers"])
+        corrected = wc.run_correction()
+        expected = "for loop condition i equal one condition i less than length condition i plus plus begin \
+            if numbers array index i greater than max then max equal numbers array index i end equal \
+            end if end for loop return max end function"
+        
+        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
+
+    def test_word_corrector_num_to_alpha(self):
+        word = "sequence array index 0 equal 1 end equal"
+        wc = WordCorrector(word, ["sequence"])
+        corrected = wc.run_correction()
+        expected = "sequence array index zero equal one end equal"
+
+        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
+        
+
+    def test_word_corrector_call_func(self):
+        word = "call function hello world width parameter string how are you end string end function"
+        wc = WordCorrector(word, ["hello", "world"])
+        corrected = wc.run_correction()
+        expected = "call function hello world with parameter string how are you end string end function"
+
+        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
+
+    def test_word_corrector_bug_with_four(self):
+        word = "sequence array index three equal four end equal"
+        wc = WordCorrector(word, ["sequence"])
+        corrected = wc.run_correction()
+        expected = word
+        
+        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
+
+
+    def test_word_corrector_bug_with_no_whole_word_replace(self):
+        word = "for loop condition i equal one"
+        wc = WordCorrector(word, ["eye"])
+        corrected = wc.run_correction()
+        expected = "for loop condition eye equal one"
+        
+        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
+
+    def test_word_corrector_correct_ii_to_i(self):
+        word = "first equal II end equal"
+        wc = WordCorrector(word, ["first", "i"])
+        corrected = wc.run_correction()
+        expected = "first equal i end equal"
+        
+        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
+
+    def test_word_corrector_correct_ii_to_second(self):
+        word = "first equal II end equal"
+        wc = WordCorrector(word, ["first", "second"])
+        corrected = wc.run_correction()
+        expected = "first equal second end equal"
+        
+        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
+
+    def test_word_corrector_correct_ii_to_none(self):
+        word = "first equal II end equal"
+        wc = WordCorrector(word, ["first"])
+        corrected = wc.run_correction()
+        expected = word.lower()
+        
+        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
+
+    def test_word_corrector_correct_equal_to(self):
+        word = "declare integer second equal to end declare"
+        wc = WordCorrector(word, [])
+        corrected = wc.run_correction()
+        expected = "declare integer second equal two end declare"
+        
+        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
+
+    def test_word_corrector_do_not_correct_equal_to(self):
+        word = "declare integer second equal to end declare"
+        wc = WordCorrector(word, ["to"])
+        corrected = wc.run_correction()
+        expected = "declare integer second equal to end declare"
+        
+        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
+
+    def test_word_corrector_bug_declare_var_to(self):
+        word = "declare integer to end declare"
+        wc = WordCorrector(word, [])
+        corrected = wc.run_correction()
+        expected = word
+        
+        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
+
+    def test_word_corrector_printf(self):
+        word = "call function print f parameter string symbol percent d end string parameter print end function"
+        wc = WordCorrector(word, ["print", "wink"])
+        corrected = wc.run_correction()
+        expected = "call function printf parameter string symbol percent d end string parameter print end function"
+        
+        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
+
+    def test_word_corrector_printf_bug(self):
+        word = "call function print F parameter string hello world end string and function"
+        wc = WordCorrector(word, [])
+        corrected = wc.run_correction()
+        
+        expected = "call function printf parameter string hello world end string end function"
+
+        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
+
+    def test_word_corrector_scanf(self):
+        word = "call function scan f parameter string symbol percent d end string parameter symbol ampersand print end function"
+        wc = WordCorrector(word, ["print", "wink"])
+        corrected = wc.run_correction()
+        expected = "call function scanf parameter string symbol percent d end string parameter symbol ampersand print end function"
+
+        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
+
+    def test_word_corrector_integer(self):
+        word = "declare in detail max equal one end declare"
+        wc = WordCorrector(word, [])
+        corrected = wc.run_correction()
+        expected = "declare integer max equal one end declare"
+
+        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
+
+    def test_word_corrector_wrong_declare(self):
+        word = "degree integer max equal one end declare"
+        wc = WordCorrector(word, [])
+        corrected = wc.run_correction()
+        expected = "declare integer max equal one end declare"
+
+        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
+
+    def test_word_corrector_end_declare(self):
+        word = "declare integer max equal one end degree"
+        wc = WordCorrector(word, [])
+        corrected = wc.run_correction()
+        expected = "declare integer max equal one end declare"
+
+        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
+
+    def test_word_corrector_declare_many_errors(self):
+        word = "degree integer max equal one end degree"
+        wc = WordCorrector(word, [])
+        corrected = wc.run_correction()
+        expected = "declare integer max equal one end declare"
+
+        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
+
+    def test_word_corrector_wrong_create_func(self):
+        word = "crate junction find maximum with return type integer with parameter float array numbers begin"
+        wc = WordCorrector(word, [])
+        corrected = wc.run_correction()
+        expected = "create function find maximum with return type integer with parameter float array numbers begin"
+
+        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
+
+    def test_word_corrector_create_func_many_errors(self):
+        word = "crate junction find maximum width written type in detail with perimeter float array numbers begin"
+        wc = WordCorrector(word, [])
+        corrected = wc.run_correction()
+        expected = "create function find maximum with return type integer with parameter float array numbers begin"
+
+        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
+
+    def test_word_corrector_string_with_errors(self):
+        word = "call junction maximum width perimeter string hello world end string perimeter length end junction "
+        wc = WordCorrector(word, ["maximum", "length"])
+        corrected = wc.run_correction()
+        expected = "call function maximum with parameter string hello world end string parameter length end function"
+
+        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
+
+    def test_word_corrector_dont_correct_double_var_types(self):
+        # integer length will be corrected to integer long , if we do not implement the blocking mechanism for
+        # consecutive variable types.
+        word = "create function find maximum with parameter integer length with parameter integer array numbers begin"
+        wc = WordCorrector(word, [])
+        corrected = wc.run_correction()
+        expected = word
+
+        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
+
+    def test_word_corrector_declare_index(self):
+        word = "declare integer max equal numbers array index 0 end declare"
+        wc = WordCorrector(word, [])
+        corrected = wc.run_correction()
+        expected = "declare integer max equal numbers array index zero end declare"
+
+        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
+
+    def test_word_corrector_begin_if(self):
+        word = "begin is numbers array index i greater dan mex then"
+        wc = WordCorrector(word, ["numbers", "max"])
+        corrected = wc.run_correction()
+        expected = "begin if numbers array index i greater than max then"
+
+        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
+
+    def test_word_corrector_end_if(self):
+        word = "end eve"
+        wc = WordCorrector(word, [])
+        corrected = wc.run_correction()
+        expected = "end if"
+
+        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
+
+    def test_fail(self):
+        self.assertEqual(1, 2)
+
+    def format_spaces(self, sentence):
+        return UtilityClass().format_spaces(sentence)
+
+class TestWordSimilarityMethods(unittest.TestCase):
+    def test_word_similarity_1(self):
+        word = "eye"
+        list_vars = ["i", "numbers", "max", "length"]
+        expected = "i"
+        most_sim_word = WordSimilarity.get_most_similar_word(word, list_vars)
+
+        self.assertEqual(self.format_spaces(most_sim_word), self.format_spaces(expected))
+
+    def test_word_similarity_2(self):
+        word = "lumber"
+        list_vars = ["i", "numbers", "max", "length"]
+        expected = "numbers"
+        most_sim_word = WordSimilarity.get_most_similar_word(word, list_vars)
+
+        self.assertEqual(self.format_spaces(most_sim_word), self.format_spaces(expected))
+
+    def test_word_similarity_3(self):
+        word = "next"
+        list_vars = ["i", "numbers", "max", "length"]
+        expected = "max"
+        most_sim_word = WordSimilarity.get_most_similar_word(word, list_vars)
+
+        self.assertEqual(self.format_spaces(most_sim_word), self.format_spaces(expected))
+
+    def test_word_similarity_4(self):
+        word = "lang"
+        list_vars = ["i", "numbers", "max", "length"]
+        expected = "length"
+        most_sim_word = WordSimilarity.get_most_similar_word(word, list_vars)
+
+        self.assertEqual(self.format_spaces(most_sim_word), self.format_spaces(expected))
+
+    def test_word_similarity_5(self):
+        word = "blank"
+        list_vars = ["i", "numbers", "max", "length"]
+        expected = "length"
+        most_sim_word = WordSimilarity.get_most_similar_word(word, list_vars)
+
+        self.assertEqual(self.format_spaces(most_sim_word), self.format_spaces(expected))
+
+    def test_word_similarity_6(self):
+        word = "makes"
+        list_vars = ["i", "numbers", "max", "length"]
+        expected = "max"
+        most_sim_word = WordSimilarity.get_most_similar_word(word, list_vars)
+
+        self.assertEqual(self.format_spaces(most_sim_word), self.format_spaces(expected))
+
+    def test_word_similarity_printf(self):
+        word = "printf"
+        list_vars = ["print", "f"]
+        expected = "printf"
+        most_sim_word = WordSimilarity.get_most_similar_word(word, list_vars)
+
+        self.assertEqual(self.format_spaces(most_sim_word), self.format_spaces(expected))
+
+    def format_spaces(self, sentence):
+        return UtilityClass().format_spaces(sentence)
+
+
+class TestStructuredCommandParserMethods(unittest.TestCase):
+    def test_struct_command_parser(self):
+        struct_command = "#function_declare findMaximum int #parameter_a #dimension 1 int #array numbers " + \
+             "#parameter int length #function_start " + \
+            "#create int #variable max #array numbers #indexes  #value 0 #index_end #dec_end;; " + \
+            "#create int #variable i #dec_end;; " + \
+            "for #condition #assign #variable i #with #value 1 #condition #variable i < #variable length #condition #post #variable i ++ #for_start " + \
+            "if #condition #array  numbers #indexes  #variable  i #index_end > #variable max #if_branch_start " + \
+            "#assign #variable max #with #array  numbers #indexes  #variable  i #index_end;; " + \
+            "#if_branch_end;; #for_end;; return #variable max;; #function_end;;"
+        converted_code = StructuralCommandParser.parse_structural_command_to_code(struct_command)
+        expected_code = "#include <stdio.h> int findMaximum(int [], int ); int findMaximum(int numbers[], int length){ int max = numbers[0]; int i; for (i = 1;i < length;i++){ if(numbers[i] > max) { max = numbers[i]; } } return max; }"
+
+        self.assertEqual(self.format_spaces(converted_code), self.format_spaces(expected_code))
+
+    def format_spaces(self, sentence):
+        return UtilityClass().format_spaces(sentence)
+
+class UtilityClass:
     def format_spaces(self, sentence):
         return ' '.join(sentence.split())
         
 
 if __name__ == '__main__':
-    unittest.main()
+    test_res = []
+    
+    ## Word Corrector ##
+    word_corrector_suite = unittest.TestLoader().loadTestsFromTestCase(TestWordCorrectorMethods)
+    test_res.append(unittest.TextTestRunner(verbosity=1).run(word_corrector_suite))
+
+    ## Word Similarity ##
+    word_similarity_suite = unittest.TestLoader().loadTestsFromTestCase(TestWordSimilarityMethods)
+    test_res.append(unittest.TextTestRunner(verbosity=1).run(word_similarity_suite))
+
+    ## Struct Cmd Parser ##
+    struct_cmd_parser_suite = unittest.TestLoader().loadTestsFromTestCase(TestStructuredCommandParserMethods)
+    test_res.append(unittest.TextTestRunner(verbosity=1).run(struct_cmd_parser_suite))
+
+    ## Word Parser ##
+    word_parser_suite = unittest.TestLoader().loadTestsFromTestCase(TestWordParserMethods)
+    test_res.append(unittest.TextTestRunner(verbosity=1).run(word_parser_suite))
+
+    print "============================================"
+    for test_result in test_res:
+        test_result.printErrors()
