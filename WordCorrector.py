@@ -13,6 +13,10 @@ class WordCorrector:
         self.space = ""
         self.var_types = ["integer", "short", "long", "float", "double", "boolean", "character", "string"]
         self.variables_list = var_list + StandardFunctions().get_std_functions()
+        kw = Keywords()
+        self.max_syllable = kw.get_max_num_syllable()
+        self.keyword_list = kw.get_keywords()
+        self.word_syllable_list = self.build_word_syllable_list(kw)
 
     def run_correct_words_multiple(self, prev_hash = ""):
         self.correct_words()
@@ -66,10 +70,6 @@ class WordCorrector:
                     self.words_list[i+1] = "i"
 
     def correct_words(self):
-        kw = Keywords()
-        max_syllable = kw.get_max_num_syllable()
-        keyword_list = kw.get_keywords()
-        word_syllable_list = self.build_word_syllable_list(kw)
         temp_words = ""
         word_to_add = ""
         self.is_correction_done = False
@@ -77,19 +77,17 @@ class WordCorrector:
 
         self.premature_correction()
 
+        # handle special cases first.
         if self.has_next_word():
             if self.query_next_word() == "declare":
                 # declaring variables does not trigger normal correction
                 self.get_next_word()
                 self.add_word_to_corrected("declare")
                 
-                declare_correction_list = []
-                for var_type in self.var_types:
-                    declare_correction_list.append(KeywordObj(var_type))
-                declare_correction_list.append(KeywordObj("declare"))
-                declare_correction_list.append(KeywordObj("equal"))
+                required_list = self.var_types + ["declare", "equal"]
+                declare_correction_list = self.build_custom_word_syllable_list(required_list)
                 
-                self.perform_correction(" ".join(self.words_list), declare_correction_list, max_syllable)
+                self.perform_correction(" ".join(self.words_list), declare_correction_list, self.max_syllable)
                 
                 return self.corrected
             elif len(self.words_list) >= 2 and self.words_list[0] == "create" and self.words_list[1] == "function":
@@ -97,18 +95,11 @@ class WordCorrector:
                 self.get_next_word()
                 self.get_next_word()
                 self.add_word_to_corrected("create function")
-
-                create_func_correction_list = []
-                for var_type in self.var_types:
-                    create_func_correction_list.append(KeywordObj(var_type))
-                create_func_correction_list.append(KeywordObj("function"))
-                create_func_correction_list.append(KeywordObj("with"))
-                create_func_correction_list.append(KeywordObj("return"))
-                create_func_correction_list.append(KeywordObj("type"))
-                create_func_correction_list.append(KeywordObj("parameter"))
-                create_func_correction_list.append(KeywordObj("begin"))
                 
-                self.perform_correction(" ".join(self.words_list), create_func_correction_list, max_syllable)
+                required_list = self.var_types + ["function", "with", "return", "type", "parameter", "begin"]
+                create_func_correction_list = self.build_custom_word_syllable_list(required_list)
+                
+                self.perform_correction(" ".join(self.words_list), create_func_correction_list, self.max_syllable)
                 
                 return self.corrected
         
@@ -133,7 +124,7 @@ class WordCorrector:
                 word_to_add = current_word
                 to_do_correction = True
                 is_char_encountered = True
-            elif (current_word in self.variables_list or current_word in keyword_list or current_word in w2n.american_number_system):
+            elif (current_word in self.variables_list or current_word in self.keyword_list or current_word in w2n.american_number_system):
                 # do not correct any variables or keywords (including numbers)
                 word_to_add = current_word
                 to_do_correction = True
@@ -143,7 +134,7 @@ class WordCorrector:
                 to_do_correction = False
                 
             if to_do_correction:
-                self.is_correction_done = self.perform_correction(temp_words, word_syllable_list, max_syllable)
+                self.is_correction_done = self.perform_correction(temp_words, self.word_syllable_list, self.max_syllable)
                 self.add_word_to_corrected(word_to_add)
                 word_to_add = ""
                 temp_words = ""
@@ -168,7 +159,7 @@ class WordCorrector:
                 self.add_word_to_corrected(" ".join(self.words_list))
                 return self.corrected
 
-        self.perform_correction(temp_words, word_syllable_list, max_syllable)
+        self.perform_correction(temp_words, self.word_syllable_list, self.max_syllable)
         self.add_word_to_corrected(word_to_add)
 
         return self.corrected
@@ -176,10 +167,19 @@ class WordCorrector:
     def build_word_syllable_list(self, keywords_library):
         temp_list = keywords_library.get_keywords_with_syllable()
         for variable in self.variables_list:
-            
             temp_list.append(KeywordObj(variable))
-        return temp_list
             
+        return temp_list
+
+
+    def build_custom_word_syllable_list(self, list_word_to_add):
+        temp_list = []
+        
+        for word in list_word_to_add:
+            temp_list.append(KeywordObj(word))
+
+        return temp_list
+   
 
     # Returns true if correction has been performed and return false if no correction is performed.
     def perform_correction(self, wrong_words, keyword_list_pair, max_syllable):
