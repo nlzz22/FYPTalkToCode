@@ -215,6 +215,14 @@ class TestParserMethods(unittest.TestCase):
 
         self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
 
+    def test_word_corrector_string_with_errors(self):
+        word = "call junction maximum width perimeter string hello world end string perimeter length end junction "
+        wc = WordCorrector(word, ["maximum", "length"])
+        corrected = wc.run_correct_words_multiple("")
+        expected = "call function maximum with parameter string hello world end string parameter length end function"
+
+        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
+
     # Test word similarity
 
     def test_word_similarity_1(self):
