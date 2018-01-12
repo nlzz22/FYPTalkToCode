@@ -17,6 +17,7 @@ class WordCorrector:
         self.max_syllable = kw.get_max_num_syllable()
         self.keyword_list = kw.get_keywords()
         self.word_syllable_list = self.build_word_syllable_list(kw)
+        self.correction_list = self.word_syllable_list
 
     def run_correct_words_multiple(self, prev_hash = ""):
         self.correct_words()
@@ -68,6 +69,10 @@ class WordCorrector:
             elif self.get_word(i) == "condition" and self.get_word(i+1) == "is" and self.get_word(i+2) == "equal":
                 if "i" in self.variables_list and "is" not in self.variables_list:
                     self.words_list[i+1] = "i"
+            # correct begin eve, begin is --> begin if
+            elif (self.get_word(i) == "begin" or self.get_word(i) == "end") and \
+                 (self.get_word(i+1) == "eve" or self.get_word(i+1) == "is" or self.get_word(i+1) == "east"):
+                self.words_list[i+1] = "if"
 
     def correct_words(self):
         temp_words = ""
@@ -84,12 +89,10 @@ class WordCorrector:
                 self.get_next_word()
                 self.add_word_to_corrected("declare")
                 
-                required_list = self.var_types + ["declare", "equal"]
+                required_list = self.var_types + ["declare", "equal", "index"]
                 declare_correction_list = self.build_custom_word_syllable_list(required_list)
                 
-                self.perform_correction(" ".join(self.words_list), declare_correction_list, self.max_syllable)
-                
-                return self.corrected
+                self.correction_list = declare_correction_list
             elif len(self.words_list) >= 2 and self.words_list[0] == "create" and self.words_list[1] == "function":
                 # create function does not trigger normal correction
                 self.get_next_word()
@@ -99,9 +102,7 @@ class WordCorrector:
                 required_list = self.var_types + ["function", "with", "return", "type", "parameter", "begin"]
                 create_func_correction_list = self.build_custom_word_syllable_list(required_list)
                 
-                self.perform_correction(" ".join(self.words_list), create_func_correction_list, self.max_syllable)
-                
-                return self.corrected
+                self.correction_list = create_func_correction_list
         
         # perform the correction        
         while (self.has_next_word()):
@@ -134,7 +135,7 @@ class WordCorrector:
                 to_do_correction = False
                 
             if to_do_correction:
-                self.is_correction_done = self.perform_correction(temp_words, self.word_syllable_list, self.max_syllable)
+                self.is_correction_done = self.perform_correction(temp_words, self.correction_list, self.max_syllable)
                 self.add_word_to_corrected(word_to_add)
                 word_to_add = ""
                 temp_words = ""
@@ -159,7 +160,7 @@ class WordCorrector:
                 self.add_word_to_corrected(" ".join(self.words_list))
                 return self.corrected
 
-        self.perform_correction(temp_words, self.word_syllable_list, self.max_syllable)
+        self.perform_correction(temp_words, self.correction_list, self.max_syllable)
         self.add_word_to_corrected(word_to_add)
 
         return self.corrected
@@ -199,13 +200,22 @@ class WordCorrector:
         max_sim = -1
         temp_wrong_word_index = -1
         temp_correct_word = ""
+        can_match_var_type = True
 
+        prev_word = self.query_latest_added_word()
+        if self.is_variable_type(prev_word):
+            can_match_var_type = False
+        
         is_same_word = False
         
         for keyword_pair in keyword_list_pair:
             keyword = keyword_pair.get_keyword()
             syllable = keyword_pair.get_syllable()
             num_part_query = min(syllable, len(parts))
+
+            if not can_match_var_type and self.is_variable_type(keyword):
+                # if keyword cannot be a variable type, skip this keyword.
+                continue
 
             # A word with j syllable can be matched with 1 to j wrong words.
             for j in range(0, num_part_query):
@@ -215,12 +225,14 @@ class WordCorrector:
                     is_same_word = True
                     break
                 
-                curr_sim = sounds_like_index(curr_wrong_word, keyword)
+                curr_sim = sounds_like_index(curr_wrong_word, keyword)          
 
                 if curr_sim > max_sim and curr_sim > 0.75:
-                    max_sim = curr_sim
-                    temp_wrong_word_index = j
-                    temp_correct_word = keyword
+                    # Example: Don't correct "length with parameter integer" --> "parameter" 
+                    if not self.is_part_of(curr_wrong_word, keyword):
+                        max_sim = curr_sim
+                        temp_wrong_word_index = j
+                        temp_correct_word = keyword
 
             if is_same_word:
                 break
@@ -238,6 +250,12 @@ class WordCorrector:
     def add_word_to_corrected(self, word):
         self.corrected += self.space + word
         self.space = " "
+
+    def is_part_of(self, wrong_words, keyword):
+        if keyword in wrong_words.split(" "):
+            return True
+        else:
+            return False
 
     def is_number(self, word):
         try:

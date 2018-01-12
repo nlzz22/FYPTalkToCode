@@ -223,6 +223,41 @@ class TestParserMethods(unittest.TestCase):
 
         self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
 
+    def test_word_corrector_dont_correct_double_var_types(self):
+        # integer length will be corrected to integer long , if we do not implement the blocking mechanism for
+        # consecutive variable types.
+        word = "create function find maximum with parameter integer length with parameter integer array numbers begin"
+        wc = WordCorrector(word, [])
+        corrected = wc.run_correct_words_multiple("")
+        expected = word
+
+        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
+
+    def test_word_corrector_declare_index(self):
+        word = "declare integer max equal numbers array index 0 end declare"
+        wc = WordCorrector(word, [])
+        corrected = wc.run_correct_words_multiple("")
+        expected = "declare integer max equal numbers array index zero end declare"
+
+        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
+
+    def test_word_corrector_begin_if(self):
+        word = "begin is numbers array index i greater dan mex then"
+        wc = WordCorrector(word, ["numbers", "max"])
+        corrected = wc.run_correct_words_multiple("")
+        expected = "begin if numbers array index i greater than max then"
+
+        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
+
+    def test_word_corrector_end_if(self):
+        word = "end eve"
+        wc = WordCorrector(word, [])
+        corrected = wc.run_correct_words_multiple("")
+        expected = "end if"
+
+        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))        
+        
+
     # Test word similarity
 
     def test_word_similarity_1(self):
