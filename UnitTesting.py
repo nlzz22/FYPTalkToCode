@@ -10,7 +10,7 @@ class TestParserMethods(unittest.TestCase):
         word = "eye equal one end equal "
         word += "next equal two end equal"
         wc = WordCorrector(word, ["max", "i"])
-        corrected = wc.run_correct_words_multiple("")
+        corrected = wc.run_correction()
         expected = "i equal one end equal max equal two end equal"
 
         self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
@@ -19,7 +19,7 @@ class TestParserMethods(unittest.TestCase):
     def test_word_corrector_variables_not_found(self):
         word = "height equal thirty end equal"
         wc = WordCorrector(word, ["max", "i"])
-        corrected = wc.run_correct_words_multiple("")
+        corrected = wc.run_correction()
         expected = word # no correction as "height" is not similar to either "max" or "i"
 
         self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
@@ -28,7 +28,7 @@ class TestParserMethods(unittest.TestCase):
     def test_word_corrector_variables_escape_words_declare(self):
         word = "declare integer eye end declare"
         wc = WordCorrector(word, ["max", "i"])
-        corrected = wc.run_correct_words_multiple("")
+        corrected = wc.run_correction()
         expected = word # no correction as word starts with escape word "declare"
 
         self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
@@ -36,7 +36,7 @@ class TestParserMethods(unittest.TestCase):
     def test_word_corrector_variables_escape_words_create_func(self):
         word = "create function find maximum with return type integer begin end function"
         wc = WordCorrector(word, ["max", "bind", "mind"])
-        corrected = wc.run_correct_words_multiple("")
+        corrected = wc.run_correction()
         expected = word # no correction as word starts with escape word "create function"
 
         self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
@@ -44,7 +44,7 @@ class TestParserMethods(unittest.TestCase):
     def test_word_corrector_variables_string_literal(self):
         word = "call function find parameter string next end string end function"
         wc = WordCorrector(word, ["max", "mind"])
-        corrected = wc.run_correct_words_multiple("")
+        corrected = wc.run_correction()
         expected = "call function mind parameter string next end string end function"
 
         self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
@@ -52,7 +52,7 @@ class TestParserMethods(unittest.TestCase):
     def test_word_corrector_variables_character_literal(self):
         word = "max equal character a end declare"
         wc = WordCorrector(word, ["max", "eh", "aa"])
-        corrected = wc.run_correct_words_multiple("")
+        corrected = wc.run_correction()
         expected = word
         
         self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
@@ -62,7 +62,7 @@ class TestParserMethods(unittest.TestCase):
          if numbers array index I greater than Max Den Max equal numbers array index I and equal and if and for Loop return Max \
          and function"
         wc = WordCorrector(word, ["max", "length", "i", "numbers"])
-        corrected = wc.run_correct_words_multiple("")
+        corrected = wc.run_correction()
         expected = "for loop condition i equal one condition i less than length condition i plus plus begin \
             if numbers array index i greater than max then max equal numbers array index i end equal \
             end if end for loop return max end function"
@@ -72,7 +72,7 @@ class TestParserMethods(unittest.TestCase):
     def test_word_corrector_num_to_alpha(self):
         word = "sequence array index 0 equal 1 end equal"
         wc = WordCorrector(word, ["sequence"])
-        corrected = wc.run_correct_words_multiple("")
+        corrected = wc.run_correction()
         expected = "sequence array index zero equal one end equal"
 
         self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
@@ -81,7 +81,7 @@ class TestParserMethods(unittest.TestCase):
     def test_word_corrector_call_func(self):
         word = "call function hello world width parameter string how are you end string end function"
         wc = WordCorrector(word, ["hello", "world"])
-        corrected = wc.run_correct_words_multiple("")
+        corrected = wc.run_correction()
         expected = "call function hello world with parameter string how are you end string end function"
 
         self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
@@ -89,7 +89,7 @@ class TestParserMethods(unittest.TestCase):
     def test_word_corrector_bug_with_four(self):
         word = "sequence array index three equal four end equal"
         wc = WordCorrector(word, ["sequence"])
-        corrected = wc.run_correct_words_multiple("")
+        corrected = wc.run_correction()
         expected = word
         
         self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
@@ -98,7 +98,7 @@ class TestParserMethods(unittest.TestCase):
     def test_word_corrector_bug_with_no_whole_word_replace(self):
         word = "for loop condition i equal one"
         wc = WordCorrector(word, ["eye"])
-        corrected = wc.run_correct_words_multiple("")
+        corrected = wc.run_correction()
         expected = "for loop condition eye equal one"
         
         self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
@@ -106,7 +106,7 @@ class TestParserMethods(unittest.TestCase):
     def test_word_corrector_correct_ii_to_i(self):
         word = "first equal II end equal"
         wc = WordCorrector(word, ["first", "i"])
-        corrected = wc.run_correct_words_multiple("")
+        corrected = wc.run_correction()
         expected = "first equal i end equal"
         
         self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
@@ -114,7 +114,7 @@ class TestParserMethods(unittest.TestCase):
     def test_word_corrector_correct_ii_to_second(self):
         word = "first equal II end equal"
         wc = WordCorrector(word, ["first", "second"])
-        corrected = wc.run_correct_words_multiple("")
+        corrected = wc.run_correction()
         expected = "first equal second end equal"
         
         self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
@@ -122,7 +122,7 @@ class TestParserMethods(unittest.TestCase):
     def test_word_corrector_correct_ii_to_none(self):
         word = "first equal II end equal"
         wc = WordCorrector(word, ["first"])
-        corrected = wc.run_correct_words_multiple("")
+        corrected = wc.run_correction()
         expected = word.lower()
         
         self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
@@ -130,7 +130,7 @@ class TestParserMethods(unittest.TestCase):
     def test_word_corrector_correct_equal_to(self):
         word = "declare integer second equal to end declare"
         wc = WordCorrector(word, [])
-        corrected = wc.run_correct_words_multiple("")
+        corrected = wc.run_correction()
         expected = "declare integer second equal two end declare"
         
         self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
@@ -138,7 +138,7 @@ class TestParserMethods(unittest.TestCase):
     def test_word_corrector_do_not_correct_equal_to(self):
         word = "declare integer second equal to end declare"
         wc = WordCorrector(word, ["to"])
-        corrected = wc.run_correct_words_multiple("")
+        corrected = wc.run_correction()
         expected = "declare integer second equal to end declare"
         
         self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
@@ -146,7 +146,7 @@ class TestParserMethods(unittest.TestCase):
     def test_word_corrector_bug_declare_var_to(self):
         word = "declare integer to end declare"
         wc = WordCorrector(word, [])
-        corrected = wc.run_correct_words_multiple("")
+        corrected = wc.run_correction()
         expected = word
         
         self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
@@ -154,15 +154,24 @@ class TestParserMethods(unittest.TestCase):
     def test_word_corrector_printf(self):
         word = "call function print f parameter string symbol percent d end string parameter print end function"
         wc = WordCorrector(word, ["print", "wink"])
-        corrected = wc.run_correct_words_multiple("")
+        corrected = wc.run_correction()
         expected = "call function printf parameter string symbol percent d end string parameter print end function"
         
+        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
+
+    def test_word_corrector_printf_bug(self):
+        word = "call function print F parameter string hello world end string and function"
+        wc = WordCorrector(word, [])
+        corrected = wc.run_correction()
+        
+        expected = "call function printf parameter string hello world end string end function"
+
         self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
 
     def test_word_corrector_scanf(self):
         word = "call function scan f parameter string symbol percent d end string parameter symbol ampersand print end function"
         wc = WordCorrector(word, ["print", "wink"])
-        corrected = wc.run_correct_words_multiple("")
+        corrected = wc.run_correction()
         expected = "call function scanf parameter string symbol percent d end string parameter symbol ampersand print end function"
 
         self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
@@ -170,7 +179,7 @@ class TestParserMethods(unittest.TestCase):
     def test_word_corrector_integer(self):
         word = "declare in detail max equal one end declare"
         wc = WordCorrector(word, [])
-        corrected = wc.run_correct_words_multiple("")
+        corrected = wc.run_correction()
         expected = "declare integer max equal one end declare"
 
         self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
@@ -178,7 +187,7 @@ class TestParserMethods(unittest.TestCase):
     def test_word_corrector_wrong_declare(self):
         word = "degree integer max equal one end declare"
         wc = WordCorrector(word, [])
-        corrected = wc.run_correct_words_multiple("")
+        corrected = wc.run_correction()
         expected = "declare integer max equal one end declare"
 
         self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
@@ -186,7 +195,7 @@ class TestParserMethods(unittest.TestCase):
     def test_word_corrector_end_declare(self):
         word = "declare integer max equal one end degree"
         wc = WordCorrector(word, [])
-        corrected = wc.run_correct_words_multiple("")
+        corrected = wc.run_correction()
         expected = "declare integer max equal one end declare"
 
         self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
@@ -194,7 +203,7 @@ class TestParserMethods(unittest.TestCase):
     def test_word_corrector_declare_many_errors(self):
         word = "degree integer max equal one end degree"
         wc = WordCorrector(word, [])
-        corrected = wc.run_correct_words_multiple("")
+        corrected = wc.run_correction()
         expected = "declare integer max equal one end declare"
 
         self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
@@ -202,7 +211,7 @@ class TestParserMethods(unittest.TestCase):
     def test_word_corrector_wrong_create_func(self):
         word = "crate junction find maximum with return type integer with parameter float array numbers begin"
         wc = WordCorrector(word, [])
-        corrected = wc.run_correct_words_multiple("")
+        corrected = wc.run_correction()
         expected = "create function find maximum with return type integer with parameter float array numbers begin"
 
         self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
@@ -210,7 +219,7 @@ class TestParserMethods(unittest.TestCase):
     def test_word_corrector_create_func_many_errors(self):
         word = "crate junction find maximum width written type in detail with perimeter float array numbers begin"
         wc = WordCorrector(word, [])
-        corrected = wc.run_correct_words_multiple("")
+        corrected = wc.run_correction()
         expected = "create function find maximum with return type integer with parameter float array numbers begin"
 
         self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
@@ -218,7 +227,7 @@ class TestParserMethods(unittest.TestCase):
     def test_word_corrector_string_with_errors(self):
         word = "call junction maximum width perimeter string hello world end string perimeter length end junction "
         wc = WordCorrector(word, ["maximum", "length"])
-        corrected = wc.run_correct_words_multiple("")
+        corrected = wc.run_correction()
         expected = "call function maximum with parameter string hello world end string parameter length end function"
 
         self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
@@ -228,7 +237,7 @@ class TestParserMethods(unittest.TestCase):
         # consecutive variable types.
         word = "create function find maximum with parameter integer length with parameter integer array numbers begin"
         wc = WordCorrector(word, [])
-        corrected = wc.run_correct_words_multiple("")
+        corrected = wc.run_correction()
         expected = word
 
         self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
@@ -236,7 +245,7 @@ class TestParserMethods(unittest.TestCase):
     def test_word_corrector_declare_index(self):
         word = "declare integer max equal numbers array index 0 end declare"
         wc = WordCorrector(word, [])
-        corrected = wc.run_correct_words_multiple("")
+        corrected = wc.run_correction()
         expected = "declare integer max equal numbers array index zero end declare"
 
         self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
@@ -244,7 +253,7 @@ class TestParserMethods(unittest.TestCase):
     def test_word_corrector_begin_if(self):
         word = "begin is numbers array index i greater dan mex then"
         wc = WordCorrector(word, ["numbers", "max"])
-        corrected = wc.run_correct_words_multiple("")
+        corrected = wc.run_correction()
         expected = "begin if numbers array index i greater than max then"
 
         self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
@@ -252,7 +261,7 @@ class TestParserMethods(unittest.TestCase):
     def test_word_corrector_end_if(self):
         word = "end eve"
         wc = WordCorrector(word, [])
-        corrected = wc.run_correct_words_multiple("")
+        corrected = wc.run_correction()
         expected = "end if"
 
         self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))        

@@ -19,6 +19,9 @@ class WordCorrector:
         self.word_syllable_list = self.build_word_syllable_list(kw)
         self.correction_list = self.word_syllable_list
 
+    def run_correction(self):
+        return self.run_correct_words_multiple("")
+
     def run_correct_words_multiple(self, prev_hash = ""):
         self.correct_words()
 
@@ -40,7 +43,7 @@ class WordCorrector:
 
     def get_word(self, index):
         if len(self.words_list) > index:
-            return self.words_list[index]
+            return self.words_list[index].lower()
         else:
             return ""
 
