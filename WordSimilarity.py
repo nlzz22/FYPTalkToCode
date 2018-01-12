@@ -21,7 +21,7 @@ def get_phonetic_encoding_from_pronouncing(word):
     else:
         return pronouncing.rhyming_part(phones[0])
 
-def sounds_like_index(word1, word2):
+def sounds_like_index(word1, word2, to_print=False):
     # convert from string to unicode
     word1encoded = unicode(word1)
     word2encoded = unicode(word2)
@@ -36,13 +36,15 @@ def sounds_like_index(word1, word2):
     phonetic1b = unicode(get_phonetic_encoding_from_pronouncing(word1encoded))
     phonetic2b = unicode(get_phonetic_encoding_from_pronouncing(word2encoded))
 
-    #print " jellyfish : " + str(phonetic1) + ", " + str(phonetic2)
-    #print " pronounce : " + str(phonetic1b) + ", " + str(phonetic2b)
-
     if phonetic1b == unicode(-1) or phonetic2b == unicode(-1):
         pronounce_sim = jelly_sim
     else:
         pronounce_sim = jellyfish.jaro_winkler(phonetic1b, phonetic2b)
+
+    if to_print:
+        print " jellyfish : " + str(phonetic1) + ", " + str(phonetic2)
+        print " pronounce : " + str(phonetic1b) + ", " + str(phonetic2b)
+        print " jellyfish : " + str(jelly_sim) + ", pro : " + str(pronounce_sim)
 
     # Return sim index
     if pronounce_sim >= MIN_WEIGHT_IGNORE_OTHER or jelly_sim >= MIN_WEIGHT_IGNORE_OTHER:
@@ -81,4 +83,4 @@ if __name__ == "__main__":
         print "Find the similarity index between 2 words!"
         first_word = raw_input("First word: ")
         second_word = raw_input("Second word: ")
-        print "Similarity index is : " + str(sounds_like_index(first_word, second_word))
+        print "Similarity index is : " + str(sounds_like_index(first_word, second_word, True))
