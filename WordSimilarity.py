@@ -36,8 +36,11 @@ def sounds_like_index(word1, word2):
     phonetic1b = unicode(get_phonetic_encoding_from_pronouncing(word1encoded))
     phonetic2b = unicode(get_phonetic_encoding_from_pronouncing(word2encoded))
 
+    #print " jellyfish : " + str(phonetic1) + ", " + str(phonetic2)
+    #print " pronounce : " + str(phonetic1b) + ", " + str(phonetic2b)
+
     if phonetic1b == unicode(-1) or phonetic2b == unicode(-1):
-        pronounce_sim = 0
+        pronounce_sim = jelly_sim
     else:
         pronounce_sim = jellyfish.jaro_winkler(phonetic1b, phonetic2b)
 

@@ -167,6 +167,53 @@ class TestParserMethods(unittest.TestCase):
 
         self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
 
+    def test_word_corrector_integer(self):
+        word = "declare in detail max equal one end declare"
+        wc = WordCorrector(word, [])
+        corrected = wc.run_correct_words_multiple("")
+        expected = "declare integer max equal one end declare"
+
+        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
+
+    def test_word_corrector_wrong_declare(self):
+        word = "degree integer max equal one end declare"
+        wc = WordCorrector(word, [])
+        corrected = wc.run_correct_words_multiple("")
+        expected = "declare integer max equal one end declare"
+
+        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
+
+    def test_word_corrector_end_declare(self):
+        word = "declare integer max equal one end degree"
+        wc = WordCorrector(word, [])
+        corrected = wc.run_correct_words_multiple("")
+        expected = "declare integer max equal one end declare"
+
+        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
+
+    def test_word_corrector_declare_many_errors(self):
+        word = "degree integer max equal one end degree"
+        wc = WordCorrector(word, [])
+        corrected = wc.run_correct_words_multiple("")
+        expected = "declare integer max equal one end declare"
+
+        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
+
+    def test_word_corrector_wrong_create_func(self):
+        word = "crate junction find maximum with return type integer with parameter float array numbers begin"
+        wc = WordCorrector(word, [])
+        corrected = wc.run_correct_words_multiple("")
+        expected = "create function find maximum with return type integer with parameter float array numbers begin"
+
+        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
+
+    def test_word_corrector_create_func_many_errors(self):
+        word = "crate junction find maximum width written type in detail with perimeter float array numbers begin"
+        wc = WordCorrector(word, [])
+        corrected = wc.run_correct_words_multiple("")
+        expected = "create function find maximum with return type integer with parameter float array numbers begin"
+
+        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
 
     # Test word similarity
 
