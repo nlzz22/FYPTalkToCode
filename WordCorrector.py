@@ -1,7 +1,6 @@
 from num2words import num2words
 from word2number import w2n
 import hashlib
-import re
 from Keywords import Keywords, Keyword as KeywordObj
 from StandardFunctions import StandardFunctions
 from WordSimilarity import get_most_similar_word, sounds_like_index, get_num_syllable
