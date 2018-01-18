@@ -912,9 +912,6 @@ class TestWordCorrectorMethods(unittest.TestCase):
 
         self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
 
-    def test_fail(self):
-        self.assertEqual(1, 2)
-
     def format_spaces(self, sentence):
         return UtilityClass().format_spaces(sentence)
 
