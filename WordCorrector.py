@@ -206,7 +206,9 @@ class WordCorrector:
         can_match_var_type = True
 
         prev_word = self.query_latest_added_word()
-        if self.is_variable_type(prev_word):
+        prev_2_words = self.query_latest_added_word(2)
+        # This is done to ensure that newly declared variables are not corrected.
+        if self.is_variable_type(prev_word) or prev_2_words == "create function":
             can_match_var_type = False
         
         is_same_word = False
@@ -287,7 +289,14 @@ class WordCorrector:
         if (self.has_next_word()):
             return self.words_list[0].lower()
 
-    def query_latest_added_word(self):
+    def query_latest_added_word(self, num_words=1):
+        word = ""
+        separator = ""
         if (self.corrected != ""):
             parts = self.corrected.split(" ")
-            return parts[len(parts) - 1]
+            for i in range(len(parts) - num_words, len(parts)):
+                if i >= 0 and i < len(parts):
+                    word += separator + parts[i]
+                    separator = " "
+            return word
+                    

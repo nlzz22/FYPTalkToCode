@@ -888,6 +888,16 @@ class TestWordCorrectorMethods(unittest.TestCase):
 
         self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
 
+    def test_word_corrector_dont_correct_create_func_var(self):
+        # length will be corrected to long , if we do not implement the blocking mechanism for
+        # create function.
+        word = "create function length with parameter integer length with parameter integer array numbers begin"
+        wc = WordCorrector(word, [])
+        corrected = wc.run_correction()
+        expected = word
+
+        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
+
     def test_word_corrector_declare_index(self):
         word = "declare integer max equal numbers array index 0 end declare"
         wc = WordCorrector(word, [])
