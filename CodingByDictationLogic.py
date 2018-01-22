@@ -43,7 +43,6 @@ class CodingByDictationLogic:
         self.accepted_indices = []
         self.current_index = 0
         self.std_funcs = StandardFunctions().get_std_functions()
-        self.allowed_auto_end_constructs = ["end declare", "end equal"]
 
         self.logger = Logger()
 
@@ -247,15 +246,6 @@ class CodingByDictationLogic:
                 self.accepted_indices.append(self.current_index)
            
             sample_code = scParser.parse_structural_command_to_code(parsed)
-
-            # Autocomplete if it is allowed.
-            if potential_missing.strip() in self.allowed_auto_end_constructs:
-                corrected += potential_missing
-                to_add_corrected = False
-                self.variables_stack.pop()
-                self.variables_stack.push(wordParser.get_variables())
-                self.accepted_indices.append(self.current_index)
-                error_message = "" # remove error message, as it is auto corrected.
 
             # Feedback to user
             if error_message != "":

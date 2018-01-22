@@ -544,7 +544,8 @@ class WordParser:
         
         # Define all keywords here
         keyword_equal = Suppress("equal")
-        keyword_end_equal = Suppress("end equal").setName("\"end equal\"").setFailAction(self.handle_fail_parse)
+        #keyword_end_equal = Suppress("end equal").setName("\"end equal\"").setFailAction(self.handle_fail_parse)
+        keyword_end_equal = Optional(Suppress("end equal"))
         keyword_array = Suppress("array")
         keyword_array_index = Suppress("array index")
         keyword_if = Suppress("begin if")
@@ -587,7 +588,8 @@ class WordParser:
         keyword_ns_character = Keyword("character")
         keyword_character = Suppress("character")
         keyword_string = Suppress("string")
-        keyword_end_declare = Suppress("end declare").setName("\"end declare\"").setFailAction(self.handle_fail_parse)
+        #keyword_end_declare = Suppress("end declare").setName("\"end declare\"").setFailAction(self.handle_fail_parse)
+        keyword_end_declare = Optional(Suppress("end declare"))
         keyword_with = Suppress("with")
         keyword_size = Suppress("size")
         keyword_return = Suppress("return")
