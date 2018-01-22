@@ -26,6 +26,8 @@ def compile_java(java_file):
     subprocess.check_call(['javac', java_file])
 
 def execute_java(java_dir, java_file, stdin):
+    CREATE_NO_WINDOW = 0x08000000
+    
     current_dir = os.getcwd()
 
     # switch directory
@@ -33,7 +35,7 @@ def execute_java(java_dir, java_file, stdin):
 
     # run the java program
     cmd = ['java ', java_file]
-    proc = subprocess.Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=STDOUT)
+    proc = subprocess.Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=STDOUT, creationflags=CREATE_NO_WINDOW)
     
     # pass input to java program
     stdout,stderr = proc.communicate(stdin)
