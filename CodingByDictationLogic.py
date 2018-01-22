@@ -6,6 +6,7 @@ from NewWordParser import WordParser as newWordParser
 from NewWordParser import Stack
 import StructuralCommandParser as scParser
 from TextFileReader import TextFileReader
+from Logger import Logger
 from StandardFunctions import StandardFunctions
 import time
 import threading
@@ -42,6 +43,8 @@ class CodingByDictationLogic:
         self.accepted_indices = []
         self.current_index = 0
         self.std_funcs = StandardFunctions().get_std_functions()
+
+        self.logger = Logger()
 
         self.voice_lock = threading.Lock()
 
@@ -259,6 +262,7 @@ class CodingByDictationLogic:
             # printlines for debug
             print "Audio read by Speech Recognizer : " + read_words
             print "Processed text after correction : " + corrected
+            self.logger.log(read_words + " --> " + corrected)
 
             self.print_feedback_two("Read: " + corrected, uiThread)
 
