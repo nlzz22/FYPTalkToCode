@@ -55,6 +55,8 @@ class CodeByDictUI(wx.Frame):
     SPACE_SIDE_OF_BUTTONS = 10
     SPACE_VERTICAL_BUTTONS = 7
     FONT_SIZE_FEEDBACK = 12
+    FONT_SIZE_CODE = 10
+    FONT_FAMILY_CODE = wx.FONTFAMILY_MODERN # a fixed pitch font
     
     def __init__(self, parent, title):
         wx.Frame.__init__(self, parent, title=title)
@@ -78,6 +80,7 @@ class CodeByDictUI(wx.Frame):
         self.bodyCode = wx.TextCtrl(self, style=wx.TE_READONLY | wx.TE_MULTILINE) # add text box widget , style= (wx.TE_MULTILINE) for with multiple lines text.
         self.bodyCode.AppendText("No code has been generated yet.")
         self.bodyCode.SetBackgroundColour(CustomColor.LIGHT_GRAY)
+        self.SetFont(self.bodyCode, CodeByDictUI.FONT_SIZE_CODE, CodeByDictUI.FONT_FAMILY_CODE)
 
         self.bodyHistory = wx.TextCtrl(self, style=wx.TE_READONLY | wx.TE_MULTILINE)
         self.bodyHistory.AppendText("There is no history.")
