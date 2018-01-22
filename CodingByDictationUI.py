@@ -2,6 +2,7 @@ import os
 import wx
 import threading
 from threading import Thread
+from CodeFormatter import CodeFormatter
 from CodingByDictationLogic import CodingByDictationLogic as ProgramLogic
 
 class CustomColor:
@@ -182,6 +183,7 @@ class CodeByDictUI(wx.Frame):
         self.recognition.start()
 
         self.dirname = ''
+        self.code_formatter = CodeFormatter()
 
     def SetFont(self, textControl, fontSize, family=wx.DEFAULT, style=wx.NORMAL, weight=wx.NORMAL):
         font = wx.Font(fontSize, family, style, weight)
@@ -214,7 +216,8 @@ class CodeByDictUI(wx.Frame):
     def UpdateCodeBody(self, code):
         if code.strip() == "":
             code = "No code has been generated yet."
-        self.bodyCode.SetValue(code)
+        formatted_code = self.code_formatter.format_code(code)
+        self.bodyCode.SetValue(formatted_code)
         self.RefreshSizer()
 
     def UpdateHistoryBody(self, hist):
