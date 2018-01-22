@@ -10,7 +10,7 @@ class WordCorrector:
         self.words_list = words.split(" ")
         self.corrected = ""
         self.space = ""
-        self.var_types = ["integer", "short", "long", "float", "double", "boolean", "character", "string"]
+        self.var_types = ["integer", "short", "long", "float", "double", "boolean", "character", "string", "void"]
         self.variables_list = var_list + StandardFunctions().get_std_functions()
         kw = Keywords()
         self.max_syllable = kw.get_max_num_syllable()
@@ -75,6 +75,10 @@ class WordCorrector:
             elif (self.get_word(i) == "begin" or self.get_word(i) == "end") and \
                  (self.get_word(i+1) == "eve" or self.get_word(i+1) == "is" or self.get_word(i+1) == "east"):
                 self.words_list[i+1] = "if"
+            # correct reef --> with
+            elif self.get_word(i) == "reef":
+                if "reef" not in self.variables_list:
+                    self.words_list[i] = "with"
 
     def correct_words(self):
         temp_words = ""
@@ -186,6 +190,8 @@ class WordCorrector:
 
     # Returns true if correction has been performed and return false if no correction is performed.
     def perform_correction(self, wrong_words, keyword_list_pair, max_syllable):
+        min_match = 0.75
+        
         if wrong_words == "":
             return False
         
@@ -203,12 +209,17 @@ class WordCorrector:
         temp_wrong_word_index = -1
         temp_correct_word = ""
         can_match_var_type = True
+        must_match_var_type = False
 
         prev_word = self.query_latest_added_word()
         prev_2_words = self.query_latest_added_word(2)
         # This is done to ensure that newly declared variables are not corrected.
         if self.is_variable_type(prev_word) or prev_2_words == "create function":
             can_match_var_type = False
+        # This is done to ensure that variable type is matched here.
+        if prev_2_words == "return type" or prev_word == "declare":
+            must_match_var_type = True
+            min_match = 0.50
         
         is_same_word = False
         
@@ -221,6 +232,10 @@ class WordCorrector:
                 # if keyword cannot be a variable type, skip this keyword.
                 continue
 
+            if must_match_var_type and not self.is_variable_type(keyword):
+                # if keyword must be a variable type and it is not, skip this keyword.
+                continue
+
             # A word with j syllable can be matched with 1 to j wrong words.
             for j in range(0, num_part_query):
                 curr_wrong_word = part_word[j]
@@ -228,10 +243,13 @@ class WordCorrector:
                 if curr_wrong_word == keyword:
                     is_same_word = True
                     break
-                
-                curr_sim = sounds_like_index(curr_wrong_word, keyword)          
 
-                if curr_sim > max_sim and curr_sim > 0.75:
+                if must_match_var_type:
+                    curr_sim = sounds_like_index(curr_wrong_word, keyword, must_match=True)
+                else:
+                    curr_sim = sounds_like_index(curr_wrong_word, keyword)          
+
+                if curr_sim > max_sim and curr_sim > min_match:
                     # Example: Don't correct "length with parameter integer" --> "parameter" 
                     if not self.is_part_of(curr_wrong_word, keyword):
                         max_sim = curr_sim

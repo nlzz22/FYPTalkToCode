@@ -2,8 +2,8 @@ import jellyfish
 import pronouncing
 from StandardFunctions import StandardFunctions
 
-WEIGHT_JELLYFISH = 0.3
-WEIGHT_PRONOUNCING = 0.7
+WEIGHT_JELLYFISH = 0.35
+WEIGHT_PRONOUNCING = 0.65
 MIN_WEIGHT_SIM = 0.67
 MIN_WEIGHT_IGNORE_OTHER = 0.9
 
@@ -21,7 +21,7 @@ def get_phonetic_encoding_from_pronouncing(word):
     else:
         return pronouncing.rhyming_part(phones[0])
 
-def sounds_like_index(word1, word2, to_print=False):
+def sounds_like_index(word1, word2, to_print=False, must_match=False):
     # convert from string to unicode
     word1encoded = unicode(word1)
     word2encoded = unicode(word2)
@@ -49,7 +49,7 @@ def sounds_like_index(word1, word2, to_print=False):
     # Return sim index
     if pronounce_sim >= MIN_WEIGHT_IGNORE_OTHER or jelly_sim >= MIN_WEIGHT_IGNORE_OTHER:
         return max(pronounce_sim, jelly_sim)
-    elif pronounce_sim < MIN_WEIGHT_SIM or jelly_sim < MIN_WEIGHT_SIM:
+    elif not must_match and (pronounce_sim < MIN_WEIGHT_SIM or jelly_sim < MIN_WEIGHT_SIM):
         return 0
     else:
         return WEIGHT_JELLYFISH * jelly_sim + WEIGHT_PRONOUNCING * pronounce_sim

@@ -922,6 +922,39 @@ class TestWordCorrectorMethods(unittest.TestCase):
 
         self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
 
+    def test_word_corrector_var_type_after_return_type(self):
+        word = "create function main with return type voice begin end function"
+        wc = WordCorrector(word, [])
+        corrected = wc.run_correction()
+        expected = "create function main with return type void begin end function"
+
+        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
+
+    def test_word_corrector_var_type_after_declare(self):
+        word = "declare coat max equal one end declare"
+        wc = WordCorrector(word, [])
+        corrected = wc.run_correction()
+        expected = "declare float max equal one end declare"
+
+        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
+
+    def test_word_corrector_correct_reef(self):
+        word = "create function main reef return type void begin end function"
+        wc = WordCorrector(word, [])
+        corrected = wc.run_correction()
+        expected = "create function main with return type void begin end function"
+
+        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
+
+    def test_word_corrector_dont_correct_reef(self):
+        word = "create function main reef return type void begin end function"
+        wc = WordCorrector(word, ["reef"])
+        corrected = wc.run_correction()
+        expected = word
+
+        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
+        
+
     def format_spaces(self, sentence):
         return UtilityClass().format_spaces(sentence)
 
