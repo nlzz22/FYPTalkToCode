@@ -8,4 +8,4 @@ SpeechRecognition-8e50e15b5266.json
 *.ipynb
 log.txt
 /AStyle
-temp.c
+CF*.c
