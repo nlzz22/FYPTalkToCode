@@ -149,7 +149,12 @@ class WordCorrector:
             if is_string_encountered:
                 is_string_encountered = False
                 words_yet_to_add = " ".join(self.words_list)
-                index_end_string = words_yet_to_add.index("end string")
+                index_end_string = -1
+                try:
+                    index_end_string = words_yet_to_add.index("end string")
+                except ValueError:
+                    pass
+                
                 if index_end_string == -1: # no end string found.
                     self.add_word_to_corrected(words_yet_to_add)
                     break
@@ -270,8 +275,9 @@ class WordCorrector:
             return self.perform_correction(" ".join(remaining_wrong_words), keyword_list_pair, max_syllable) or False      
 
     def add_word_to_corrected(self, word):
-        self.corrected += self.space + word
-        self.space = " "
+        if word.strip() != "":
+            self.corrected += self.space + word
+            self.space = " "
 
     def is_part_of(self, wrong_words, keyword):
         if keyword in wrong_words.split(" "):
