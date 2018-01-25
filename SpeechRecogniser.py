@@ -7,7 +7,18 @@ from credentials import APICredentials
 
 class SpeechRecognitionModule:
         def __init__(self):
-            pass
+            self.recognizer = sr.Recognizer()
+            self.has_adjusted_for_voice = False
+            credential_object = APICredentials()
+            self.google_cloud_json = credential_object.get_google_json_file()
+            self.preferred_phrases = ["equal", "if", "then", "else", "end", "declare integer", "integer", "boolean", \
+                                 "declare boolean", "declare string", "declare float", "declare double", "declare character", \
+                                 "string", "float", "double", "character", "size", "index", "create function", \
+                                 "function", "return", "return type", "parameter", "call function", "for", "plus", "plus plus", \
+                                 "minus", "minus minus", "times", "divide", "while", "switch", "case", "dot", "end if", \
+                                 "end switch", "end declare", "for loop", "end equal", "for loop condition i", "end while", \
+                                 "end string", "undo", "default", "break", "and", "or", "symbol", "ampersand", \
+                                 "percent", "dollar", "backslash", "colon", "print f", "scan f", "continue"]
 
         def print_feedback_one(self, feedback, uiThread):
             uiThread.UpdateFeedbackOne(feedback)
@@ -81,8 +92,6 @@ class SpeechRecognitionModule:
                 else:
                         print "Error: input_user is not 1 nor 2"
                         return None # terminate the program
-                                                                              
-                r = sr.Recognizer()
 
                 try:
                         input_method = int(input_method)
@@ -92,10 +101,10 @@ class SpeechRecognitionModule:
                         
                 if (input_method == 1):
                         # record from voice
-                        audio = self.read_from_microphone(r, uiThread)
+                        audio = self.read_from_microphone(uiThread)
                 elif (input_method == 2):
                         # read from audio file
-                        audio = self.read_from_audio_file(r, uiThread)
+                        audio = self.read_from_audio_file(self.recognizer, uiThread)
                 else:
                         print "Error: input_method is not 1 nor 2"
                         return None # terminate the program
@@ -107,25 +116,17 @@ class SpeechRecognitionModule:
                 try:
                         if (enableGoogle):
                                 # recognize speech using Google Speech Recognition
-                                read_words = r.recognize_google(audio)
+                                read_words = self.recognizer.recognize_google(audio)
                                 self.print_feedback_three("Google finished deciphering !", uiThread)
                                 return read_words
 
                         if (enableGoogleCloud):
                                 # recognize speech using Google Cloud Speech Recognition
-                                credential_object = APICredentials()
-                                google_cloud_json = credential_object.get_google_json_file()
-                                preferred_phrases = ["equal", "if", "then", "else", "end", "declare integer", "integer", "boolean", \
-                                                     "declare boolean", "declare string", "declare float", "declare double", "declare character", \
-                                                     "string", "float", "double", "character", "size", "index", "create function", \
-                                                     "function", "return", "return type", "parameter", "call function", "for", "plus", "plus plus", \
-                                                     "minus", "minus minus", "times", "divide", "while", "switch", "case", "dot", "end if", \
-                                                     "end switch", "end declare", "for loop", "end equal", "for loop condition i", "end while", \
-                                                     "end string", "undo", "default", "break", "and", "or", "symbol", "ampersand", \
-                                                     "percent", "dollar", "backslash", "colon", "print f", "scan f", "continue"]
-                                preferred_phrases += variables_list
+                                current_preferred_phrases = self.preferred_phrases + variables_list
                                 
-                                read_words_google = RecognizerGA().recognize_google_cloud(audio, google_cloud_json, "en-US", preferred_phrases, False)
+                                read_words_google = RecognizerGA().recognize_google_cloud( \
+                                        audio, self.google_cloud_json, "en-US", current_preferred_phrases, False)
+                                
                                 self.print_feedback_three("Google Cloud finished deciphering !", uiThread)
                                 return read_words_google
 
@@ -134,7 +135,7 @@ class SpeechRecognitionModule:
                                 credential_object = APICredentials()
                                 bing_key = credential_object.get_bing_key()
 
-                                read_words_bing = r.recognize_bing(audio, bing_key, "en-US", False)
+                                read_words_bing = self.recognizer.recognize_bing(audio, bing_key, "en-US", False)
                                 print("Microsoft Bing : " + read_words_bing + "\n\n")
 
                 except sr.UnknownValueError:
@@ -142,14 +143,18 @@ class SpeechRecognitionModule:
                 except sr.RequestError as e:
                         self.print_feedback_one("Could not request results; {0}".format(e), uiThread)
 
-        def read_from_microphone(self, r, uiThread):
-                self.print_feedback_three("Please wait while we adjust for environment ambient noise ...", uiThread)
-                with sr.Microphone() as source: r.adjust_for_ambient_noise(source)
+        def read_from_microphone(self, uiThread):
+                if not self.has_adjusted_for_voice:
+                        self.print_feedback_three("Please wait while we adjust for environment ambient noise ...", uiThread)
+                        with sr.Microphone() as source: self.recognizer.adjust_for_ambient_noise(source)
+                        string_to_show = "Minimum energy threshold to {}, Please start speaking now ... ".format(self.recognizer.energy_threshold)
+                        self.print_feedback_three(string_to_show, uiThread)
+                        self.has_adjusted_for_voice = True
+                else:
+                        self.print_feedback_three("Please start speaking now...", uiThread)
 
                 with sr.Microphone() as source:
-                        string_to_show = "Minimum energy threshold to {}, Please start speaking now ... ".format(r.energy_threshold)
-                        self.print_feedback_three(string_to_show, uiThread)
-                        audio = r.listen(source)
+                        audio = self.recognizer.listen(source)
                         return audio
 
 
