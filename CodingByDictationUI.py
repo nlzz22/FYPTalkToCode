@@ -209,6 +209,12 @@ class CodeByDictUI(wx.Frame):
     def UpdateCodeBody(self, code):
         if code.strip() == "":
             code = "No code has been generated yet."
+        # Update UI with non-formatted code first. (fast update)
+        self.bodyCode.SetValue(code)
+        self.RefreshSizer()
+
+        # As formatting code is an expensive process, we will update
+        # it when it is ready.
         formatted_code = self.code_formatter.format_code(code)
         self.bodyCode.SetValue(formatted_code)
         self.RefreshSizer()
