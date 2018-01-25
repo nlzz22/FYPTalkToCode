@@ -275,7 +275,7 @@ class WordCorrector:
             return self.perform_correction(" ".join(remaining_wrong_words), keyword_list_pair, max_syllable) or False      
 
     def add_word_to_corrected(self, word):
-        if word.strip() != "":
+        if word is not None and word.strip() != "":
             self.corrected += self.space + word
             self.space = " "
 

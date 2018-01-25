@@ -961,6 +961,14 @@ class TestWordCorrectorMethods(unittest.TestCase):
         expected = word
 
         self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
+
+    def test_word_corrector_character_nonetype_error(self):
+        word = "character"
+        wc = WordCorrector(word, [])
+        corrected = wc.run_correction()
+        expected = word
+
+        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
         
 
     def format_spaces(self, sentence):
