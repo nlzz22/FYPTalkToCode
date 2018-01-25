@@ -1,6 +1,6 @@
 import os
 import wx
-from speechrecogniser import SpeechRecognitionModule as SpeechReader
+from SpeechRecogniser import SpeechRecognitionModule as SpeechReader
 from WordCorrector import WordCorrector
 from NewWordParser import WordParser as newWordParser
 from NewWordParser import Stack
