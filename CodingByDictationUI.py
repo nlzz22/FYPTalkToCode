@@ -134,15 +134,10 @@ class CodeByDictUI(wx.Frame):
         self.recordStatus.SetBackgroundColour(CustomColor.LIGHT_GRAY)
         self.recordStatus.SetForegroundColour(CustomColor.GREEN)
         self.SetFont(self.recordStatus, CodeByDictUI.FONT_SIZE_FEEDBACK)
-        self.recordButton = wx.Button(self, -1, "Start Recording")
-        self.recordButton.Disable()
-
-        self.Bind(wx.EVT_BUTTON, self.OnRecord, self.recordButton)
 
         # Recording Bar sizer
         self.recordSizer = wx.BoxSizer(wx.HORIZONTAL)
-        self.recordSizer.Add(self.recordStatus, 1, wx.EXPAND)
-        self.recordSizer.Add(self.recordButton, 1, wx.EXPAND)        
+        self.recordSizer.Add(self.recordStatus, 1, wx.EXPAND)        
                                        
         # Status Bar
         self.CreateStatusBar() # A status bar in the bottom of the window
@@ -205,13 +200,11 @@ class CodeByDictUI(wx.Frame):
         self.recordStatus.SetLabel("Recording mode is ON")
         self.recordStatus.SetForegroundColour(CustomColor.GREEN)
         self.RefreshSizer()
-        self.recordButton.Disable()
 
     def OffRecordingMode(self):
         self.recordStatus.SetLabel("Recording mode is OFF")
         self.recordStatus.SetForegroundColour(CustomColor.RED)
         self.RefreshSizer()
-        self.recordButton.Enable()
 
     def UpdateCodeBody(self, code):
         if code.strip() == "":
@@ -266,9 +259,6 @@ class CodeByDictUI(wx.Frame):
         dlg = wx.MessageDialog(self, aboutMessage, "About Coding by Dictation", wx.OK) # we can omit the id (last param)
         dlg.ShowModal()
         dlg.Destroy() # finally destroy it when finished.
-
-    def OnRecord(self, event):
-        self.recognition.startRecording()
 
     def OnExit(self, event):
         self.Close(True) # close the frame

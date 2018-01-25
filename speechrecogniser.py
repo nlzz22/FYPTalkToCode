@@ -18,6 +18,47 @@ class SpeechRecognitionModule:
         def print_feedback_three(self, feedback, uiThread):
             uiThread.UpdateFeedbackThree(feedback)
 
+        def wait_for_hotword(self, uiThread):
+                self.error_counter = 0
+                
+                self.is_hotword_found = False
+                def recognize_keyword(recognizer, audio):
+                    try:
+                        text = recognizer.recognize_google(audio) # use normal google recognition.
+                        if text.lower() == "record":
+                                self.is_hotword_found = True
+                        else:
+                                print ("Debug: wait_for_hotword found " + text)
+                    except sr.UnknownValueError:
+                        self.error_counter += 1
+                    except sr.RequestError as e:
+                        self.error_counter += 1
+                    finally:
+                        if self.error_counter >= 10:
+                                self.error_counter = 0
+                                print ("Unknown values read by the recognizer")
+
+                r = sr.Recognizer()
+                m = sr.Microphone()
+                
+                with m as source:
+                    r.adjust_for_ambient_noise(source)  # we only need to calibrate once, before we start listening
+
+                uiThread.UpdateFeedbackTwo("")
+                uiThread.UpdateFeedbackThree("Waiting for hotword `record` before we resume recording...")
+
+                # start listening in the background
+                stop_listening = r.listen_in_background(m, recognize_keyword, phrase_time_limit=1)
+                # `stop_listening` is now a function that, when called, stops background listening
+
+                # repeatedly wait for hotword
+                while (True):
+                        if self.is_hotword_found:
+                                break
+
+                # calling this function requests that the background listener stop listening
+                stop_listening(wait_for_stop=False)
+
         # variables_list is list of string of variables
         # input_user: 1 for Google, 2 for Google Cloud
         # input_method: 1 for voice, 2 for audio file

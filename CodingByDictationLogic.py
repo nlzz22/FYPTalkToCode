@@ -1,6 +1,6 @@
 import os
 import wx
-from SpeechRecogniser import SpeechRecognitionModule as SpeechReader
+from speechrecogniser import SpeechRecognitionModule as SpeechReader
 from WordCorrector import WordCorrector
 from NewWordParser import WordParser as newWordParser
 from NewWordParser import Stack
@@ -10,31 +10,45 @@ from Logger import Logger
 from StandardFunctions import StandardFunctions
 import time
 import threading
+from threading import Thread
 
-class CodingByDictationLogic:    
+class HotwordRecognition(Thread):
+    def __init__(self, ui):
+        Thread.__init__(self)
+        self.ui = ui
+
+    def run(self):
+        self.speechReader = SpeechReader()
+        self.speechReader.wait_for_hotword(self.ui) # blocks till hotword found.
+
+        self.ui.startRecording()
+
+        
+
+class CodingByDictationLogic:
+    ##########################################
+    ###### DO NOT TOUCH THESE CONSTANTS ######
+    # read from constants
+    READ_FROM_SPEECH = 1
+    READ_FROM_AUDIO_FILE = 2
+    READ_FROM_TYPING = 3
+    READ_FROM_TEXT_FILE = 4
+
+    # api used constants
+    GOOGLE = 1
+    GOOGLE_CLOUD = 2
+
+    # constants in-built
+    VOICE = 1
+    AUDIO_FILE = 2
+    ##########################################
+    ##########################################
+    
     def __init__(self):
-        ##########################################
-        ###### DO NOT TOUCH THESE CONSTANTS ######
-        # read from constants
-        self.READ_FROM_SPEECH = 1
-        self.READ_FROM_AUDIO_FILE = 2
-        self.READ_FROM_TYPING = 3
-        self.READ_FROM_TEXT_FILE = 4
-
-        # api used constants
-        self.GOOGLE = 1
-        self.GOOGLE_CLOUD = 2
-
-        # constants in-built
-        self.VOICE = 1
-        self.AUDIO_FILE = 2
-        ##########################################
-        ##########################################
-
         # EDIT THIS ONLY.
         # User defined: Method of reading here.
-        self.read_from = self.READ_FROM_SPEECH
-        self.api_used = self.GOOGLE_CLOUD
+        self.read_from = CodingByDictationLogic.READ_FROM_SPEECH
+        self.api_used = CodingByDictationLogic.GOOGLE_CLOUD
         self.text_filename = "FindMaximum.txt" # default is "FindMaximum.txt"
 
         self.variables_stack = Stack()
@@ -156,6 +170,9 @@ class CodingByDictationLogic:
 
     def lock_voice(self, uiThread):
         uiThread.OffRecordingMode()
+        # run program to wait for hotword
+        hotwordRecognizer = HotwordRecognition(ui=uiThread)
+        hotwordRecognizer.start()
         
     def unlock_voice(self, uiThread):
         uiThread.OnRecordingMode()
@@ -180,13 +197,13 @@ class CodingByDictationLogic:
             variables_list = self.build_var_list_from_stack(self.variables_stack)
             
             # Speech to text
-            if self.read_from == self.READ_FROM_SPEECH:
-                read_words = speechReader.get_voice_input(variables_list, self.api_used, self.VOICE, uiThread)
-            elif self.read_from == self.READ_FROM_AUDIO_FILE:
-                read_words = speechReader.get_voice_input(variables_list, self.api_used, self.AUDIO_FILE, uiThread)
-            elif self.read_from == self.READ_FROM_TYPING:
+            if self.read_from == CodingByDictationLogic.READ_FROM_SPEECH:
+                read_words = speechReader.get_voice_input(variables_list, self.api_used, CodingByDictationLogic.VOICE, uiThread)
+            elif self.read_from == CodingByDictationLogic.READ_FROM_AUDIO_FILE:
+                read_words = speechReader.get_voice_input(variables_list, self.api_used, CodingByDictationLogic.AUDIO_FILE, uiThread)
+            elif self.read_from == CodingByDictationLogic.READ_FROM_TYPING:
                 read_words = raw_input("Type in speech : ")
-            elif self.read_from == self.READ_FROM_TEXT_FILE:
+            elif self.read_from == CodingByDictationLogic.READ_FROM_TEXT_FILE:
                 read_words = fileReader.read_line()
                 if read_words == "": # EOF
                     to_continue_reading = False
@@ -266,7 +283,7 @@ class CodingByDictationLogic:
 
             self.print_feedback_two("Read: " + corrected, uiThread)
 
-            if self.read_from == self.READ_FROM_TEXT_FILE:
+            if self.read_from == CodingByDictationLogic.READ_FROM_TEXT_FILE:
                 if to_continue_reading == True:
                     input_continue = "y"
                 else:
