@@ -877,7 +877,7 @@ class WordParser:
         elif start_word == "call function":
             result = self.parse_check_call_function_statement(sentence)
         # Check variable assignment statement
-        elif "equal" in sentence:
+        elif "equal" in sentence or "plus" in sentence or "minus" in sentence:
             result = self.parse_check_variable_assignment(sentence)
         # Else, raise an exception.
         else:
