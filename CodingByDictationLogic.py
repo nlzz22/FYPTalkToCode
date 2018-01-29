@@ -249,19 +249,6 @@ class CodingByDictationLogic:
             variables_list = self.build_var_list_from_stack(self.variables_stack)
             
             # Speech to text
-
-            '''
-            elif self.read_from == CodingByDictationLogic.READ_FROM_TYPING:
-                read_words = raw_input("Type in speech : ")
-            elif self.read_from == CodingByDictationLogic.READ_FROM_TEXT_FILE:
-                read_words = fileReader.read_line()
-                if read_words == "": # EOF
-                    to_continue_reading = False
-                    
-            else:
-                self.print_feedback_one("Error: unknown read_from detected", uiThread)
-                return None # terminate the program
-            '''
             read_audio = ""
             read_words = ""
 
@@ -290,7 +277,18 @@ class CodingByDictationLogic:
             elif self.read_from == CodingByDictationLogic.READ_FROM_AUDIO_FILE:
                 read_audio = speechReader.read_from_audio_file(uiThread)
                 read_words = speechReader.decipher_audio_with_api(read_audio, variables_list, uiThread, self.api_used)
-
+            # Read from typing
+            elif self.read_from == CodingByDictationLogic.READ_FROM_TYPING:
+                read_words = raw_input("Type in speech : ")
+            # Read from text file
+            elif self.read_from == CodingByDictationLogic.READ_FROM_TEXT_FILE:
+                read_words = fileReader.read_line()
+                if read_words == "": # EOF
+                    to_continue_reading = False
+                    return
+            else:
+                print ("Error read_from in logic.py")
+                return
                 
             if read_words is None:
                 # could not understand audio / user stop speaking.
@@ -319,8 +317,6 @@ class CodingByDictationLogic:
                 self.print_feedback_four("Unable to understand : " + str(corrected), uiThread)
                 self.lock_voice(uiThread)
                 continue
-
-            #self.release_voice_lock()
 
             to_add_corrected = False
             if structured_command == "": # cannot parse
@@ -361,6 +357,7 @@ class CodingByDictationLogic:
             print "Processed text after correction : " + corrected
             self.logger.log(read_words + " --> " + corrected)
 
+            self.print_feedback_one("", uiThread)
             self.print_feedback_four("Read: " + corrected, uiThread)
 
             if self.read_from == CodingByDictationLogic.READ_FROM_TEXT_FILE:
