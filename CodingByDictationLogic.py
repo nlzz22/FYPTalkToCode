@@ -251,10 +251,6 @@ class CodingByDictationLogic:
             # Speech to text
 
             '''
-            if self.read_from == CodingByDictationLogic.READ_FROM_SPEECH:
-                read_words = speechReader.get_voice_input(variables_list, self.api_used, CodingByDictationLogic.VOICE, uiThread)
-            elif self.read_from == CodingByDictationLogic.READ_FROM_AUDIO_FILE:
-                read_words = speechReader.get_voice_input(variables_list, self.api_used, CodingByDictationLogic.AUDIO_FILE, uiThread)
             elif self.read_from == CodingByDictationLogic.READ_FROM_TYPING:
                 read_words = raw_input("Type in speech : ")
             elif self.read_from == CodingByDictationLogic.READ_FROM_TEXT_FILE:
@@ -268,27 +264,34 @@ class CodingByDictationLogic:
             '''
             read_audio = ""
             read_words = ""
-            
-            while True:
-                self.buffer_semaphore.acquire()
-                if len(self.buffer) == 0:
-                    read_audio = ""
-                else:
-                    read_audio = self.buffer.pop(0)
-                try:
-                    self.buffer_semaphore.release()
-                except:
-                    self.logger.log("buffer semaphore released without acquire @ main")
 
-                # if listener program has not populate audio to buffer.
-                if (read_audio is ""):
-                    pass
-                # something is read.
-                else:
-                    read_words = speechReader.decipher_audio_with_google_cloud(read_audio, variables_list, uiThread)
-                    
-                    break
+            # Read from speech (voice)
+            if self.read_from == CodingByDictationLogic.READ_FROM_SPEECH:
+                while True:
+                    self.buffer_semaphore.acquire()
+                    if len(self.buffer) == 0:
+                        read_audio = ""
+                    else:
+                        read_audio = self.buffer.pop(0)
+                    try:
+                        self.buffer_semaphore.release()
+                    except:
+                        self.logger.log("buffer semaphore released without acquire @ main")
 
+                    # if listener program has not populate audio to buffer.
+                    if (read_audio is ""):
+                        pass
+                    # something is read.
+                    else:
+                        read_words = speechReader.decipher_audio_with_api(read_audio, variables_list, uiThread, \
+                                                                          self.api_used)
+                        break
+            # Read from audio file (pre-recorded file)
+            elif self.read_from == CodingByDictationLogic.READ_FROM_AUDIO_FILE:
+                read_audio = speechReader.read_from_audio_file(uiThread)
+                read_words = speechReader.decipher_audio_with_api(read_audio, variables_list, uiThread, self.api_used)
+
+                
             if read_words is None:
                 # could not understand audio / user stop speaking.
                 self.lock_voice(uiThread)
