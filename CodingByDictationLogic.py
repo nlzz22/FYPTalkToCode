@@ -207,7 +207,7 @@ class CodingByDictationLogic:
         while True:
             self.voice_lock.acquire()
             self.release_voice_lock()
-            audio = speechReader.read_from_microphone(uiThread, timeout=2)
+            audio = speechReader.read_from_microphone(uiThread, timeout=2, phrase_time_limit=None)
 
             if audio is None:
                 continue

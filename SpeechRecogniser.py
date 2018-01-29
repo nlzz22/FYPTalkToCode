@@ -169,7 +169,7 @@ class SpeechRecognitionModule:
                         self.print_feedback_one("Could not request results; {0}".format(e), uiThread)
                 
 
-        def read_from_microphone(self, uiThread, timeout=None):
+        def read_from_microphone(self, uiThread, timeout=None, phrase_time_limit=None):
                 if not self.has_adjusted_for_voice:
                         self.print_feedback_two("Please wait while we detect environment noise ...", uiThread)
                         with sr.Microphone() as source: self.recognizer.adjust_for_ambient_noise(source)
@@ -182,7 +182,7 @@ class SpeechRecognitionModule:
                 with sr.Microphone() as source:
                         audio = None
                         try:
-                                audio = self.recognizer.listen(source, timeout=timeout)
+                                audio = self.recognizer.listen(source, timeout=timeout, phrase_time_limit=phrase_time_limit)
                         except WaitTimeoutError:
                                 audio = None
                         return audio
