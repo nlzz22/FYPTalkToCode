@@ -9,6 +9,7 @@ class CodeFormatter:
         self.temp_write_file = tempwritefilename
         
     def format_code(self, code):
+        self.code = code
         self.copy_code_to_file(code)
         self.format_code_with_astyle()
 
@@ -37,15 +38,18 @@ class CodeFormatter:
         proc.communicate() # blocks until the subprocess completes.
 
     def get_formatted_code(self):
-        with open(self.temp_write_file, "r") as fileobject:
-            lines = fileobject.readlines()
-        complete_code = ""
+        try:
+            with open(self.temp_write_file, "r") as fileobject:
+                lines = fileobject.readlines()
+            complete_code = ""
 
-        for line in lines:
-            if line.strip() != "":
-                complete_code += line
+            for line in lines:
+                if line.strip() != "":
+                    complete_code += line
 
-        return complete_code
+            return complete_code
+        except:
+            return self.code
 
 if __name__ == "__main__":
     # For testing.
