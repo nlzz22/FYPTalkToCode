@@ -37,6 +37,12 @@ class CodingByDictRecognition(Thread):
     def UpdateFeedbackThree(self, feedback):
         wx.CallAfter(self.ui.UpdateFeedbackThree, feedback)
 
+    def UpdateFeedbackFour(self, feedback):
+        wx.CallAfter(self.ui.UpdateFeedbackFour, feedback)
+
+    def UpdateFeedbackFive(self, feedback):
+        wx.CallAfter(self.ui.UpdateFeedbackFive, feedback)
+
     def UpdateCodeBody(self, feedback):
         wx.CallAfter(self.ui.UpdateCodeBody, feedback)
 
@@ -92,23 +98,38 @@ class CodeByDictUI(wx.Frame):
         self.bodySizer.Add(self.bodyCode, 1, wx.EXPAND)
         self.bodySizer.Add(self.bodyHistory, 1, wx.EXPAND)
 
-        # Create the 3 lines of feedback
+        # Create the lines of feedback
         self.feedbackOne = wx.StaticText(self, label=" ", style=wx.ALIGN_CENTER | wx.BORDER)
         self.feedbackOne.SetBackgroundColour(CustomColor.PALE_GRAY)
         self.feedbackOne.SetForegroundColour(CustomColor.RED)
         self.SetFont(self.feedbackOne, CodeByDictUI.FONT_SIZE_FEEDBACK)
+        
         self.feedbackTwo = wx.StaticText(self, label=" ", style=wx.ALIGN_CENTER | wx.BORDER)
         self.feedbackTwo.SetBackgroundColour(CustomColor.LIGHT_GRAY)
         self.SetFont(self.feedbackTwo, CodeByDictUI.FONT_SIZE_FEEDBACK)
+        
         self.feedbackThree = wx.StaticText(self, label=" ", style=wx.ALIGN_CENTER | wx.BORDER)
-        self.feedbackThree.SetBackgroundColour(CustomColor.PALE_GRAY)
+        self.feedbackThree.SetBackgroundColour(CustomColor.LIGHT_GRAY)
         self.SetFont(self.feedbackThree, CodeByDictUI.FONT_SIZE_FEEDBACK)
+        
+        self.feedbackFour = wx.StaticText(self, label=" ", style=wx.ALIGN_CENTER | wx.BORDER)
+        self.feedbackFour.SetBackgroundColour(CustomColor.DARK_GRAY)
+        self.SetFont(self.feedbackFour, CodeByDictUI.FONT_SIZE_FEEDBACK)
+        
+        self.feedbackFive = wx.StaticText(self, label=" ", style=wx.ALIGN_CENTER | wx.BORDER)
+        self.feedbackFive.SetBackgroundColour(CustomColor.LIGHT_GRAY)
+        self.SetFont(self.feedbackFive, CodeByDictUI.FONT_SIZE_FEEDBACK)
 
         # Feedback Sizer
         self.feedbackSizer = wx.BoxSizer(wx.VERTICAL)
+        self.midFeedbackSizer = wx.BoxSizer(wx.HORIZONTAL)
+        self.midFeedbackSizer.Add(self.feedbackTwo, 1, wx.FIXED_MINSIZE)
+        self.midFeedbackSizer.Add(self.feedbackThree, 1, wx.FIXED_MINSIZE)
+        
         self.feedbackSizer.Add(self.feedbackOne, 1, wx.EXPAND)
-        self.feedbackSizer.Add(self.feedbackTwo, 1, wx.EXPAND)
-        self.feedbackSizer.Add(self.feedbackThree, 1, wx.EXPAND)
+        self.feedbackSizer.Add(self.midFeedbackSizer, 1, wx.EXPAND)
+        self.feedbackSizer.Add(self.feedbackFour, 1, wx.EXPAND)
+        self.feedbackSizer.Add(self.feedbackFive, 1, wx.EXPAND)
 
         # Create the buttons
         self.buttonUndo = wx.Button(self, -1, "Undo")
@@ -194,6 +215,14 @@ class CodeByDictUI(wx.Frame):
 
     def UpdateFeedbackThree(self, feedback):
         self.feedbackThree.SetLabel(feedback)
+        self.RefreshSizer()
+
+    def UpdateFeedbackFour(self, feedback):
+        self.feedbackFour.SetLabel(feedback)
+        self.RefreshSizer()
+
+    def UpdateFeedbackFive(self, feedback):
+        self.feedbackFive.SetLabel(feedback)
         self.RefreshSizer()
 
     def OnRecordingMode(self):

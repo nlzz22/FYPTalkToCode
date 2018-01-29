@@ -29,6 +29,12 @@ class SpeechRecognitionModule:
         def print_feedback_three(self, feedback, uiThread):
             uiThread.UpdateFeedbackThree(feedback)
 
+        def print_feedback_four(self, feedback, uiThread):
+            uiThread.UpdateFeedbackFour(feedback)
+
+        def print_feedback_five(self, feedback, uiThread):
+            uiThread.UpdateFeedbackFive(feedback)
+
         def wait_for_hotword(self, uiThread):
                 self.error_counter = 0
                 
@@ -36,7 +42,8 @@ class SpeechRecognitionModule:
                 def recognize_keyword(recognizer, audio):
                     try:
                         text = recognizer.recognize_google(audio) # use normal google recognition.
-                        if text.lower() == "record":
+                        lower_text = text.lower()
+                        if "record" in lower_text or "caught" in lower_text: # recognizing `record` and its misrecognized words.
                                 self.is_hotword_found = True
                         else:
                                 print ("Debug: wait_for_hotword found " + text)
@@ -55,8 +62,9 @@ class SpeechRecognitionModule:
                 with m as source:
                     r.adjust_for_ambient_noise(source)  # we only need to calibrate once, before we start listening
 
-                uiThread.UpdateFeedbackTwo("")
-                uiThread.UpdateFeedbackThree("Waiting for hotword `record` before we resume recording...")
+                self.print_feedback_two("Waiting for hotword `record` before we resume recording...", uiThread)
+                self.print_feedback_one("", uiThread)
+                self.print_feedback_five("", uiThread)
 
                 # start listening in the background
                 stop_listening = r.listen_in_background(m, recognize_keyword, phrase_time_limit=1)
@@ -143,18 +151,40 @@ class SpeechRecognitionModule:
                 except sr.RequestError as e:
                         self.print_feedback_one("Could not request results; {0}".format(e), uiThread)
 
-        def read_from_microphone(self, uiThread):
+        def decipher_audio_with_google_cloud(self, audio, variables_list, uiThread):
+                # Recognize the speech         
+                try:
+                        # recognize speech using Google Cloud Speech Recognition
+                        current_preferred_phrases = self.preferred_phrases + variables_list
+                        
+                        read_words_google = RecognizerGA().recognize_google_cloud( \
+                                audio, self.google_cloud_json, "en-US", current_preferred_phrases, False)
+                        
+                        self.print_feedback_five("Google Cloud finished deciphering !", uiThread)
+                        return read_words_google
+
+                except sr.UnknownValueError:
+                        self.print_feedback_one("Could not understand audio", uiThread)
+                except sr.RequestError as e:
+                        self.print_feedback_one("Could not request results; {0}".format(e), uiThread)
+                
+
+        def read_from_microphone(self, uiThread, timeout=None):
                 if not self.has_adjusted_for_voice:
-                        self.print_feedback_three("Please wait while we adjust for environment ambient noise ...", uiThread)
+                        self.print_feedback_two("Please wait while we detect environment noise ...", uiThread)
                         with sr.Microphone() as source: self.recognizer.adjust_for_ambient_noise(source)
-                        string_to_show = "Minimum energy threshold to {}, Please start speaking now ... ".format(self.recognizer.energy_threshold)
-                        self.print_feedback_three(string_to_show, uiThread)
+                        string_to_show = "Environment energy is {}, Start speaking ... ".format(int(self.recognizer.energy_threshold))
+                        self.print_feedback_two(string_to_show, uiThread)
                         self.has_adjusted_for_voice = True
                 else:
-                        self.print_feedback_three("Please start speaking now...", uiThread)
+                        self.print_feedback_two("Please continue speaking...", uiThread)
 
                 with sr.Microphone() as source:
-                        audio = self.recognizer.listen(source)
+                        audio = None
+                        try:
+                                audio = self.recognizer.listen(source, timeout=timeout)
+                        except WaitTimeoutError:
+                                audio = None
                         return audio
 
 

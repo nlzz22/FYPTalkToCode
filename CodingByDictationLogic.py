@@ -61,6 +61,11 @@ class CodingByDictationLogic:
         self.logger = Logger()
 
         self.voice_lock = threading.Lock()
+        self.buffer_semaphore = threading.Lock()
+        self.audio_count = 0
+
+        self.buffer = []
+        self.hotwordRecognizer = None
 
     def print_history_text(self, uiThread):
         hist_text = ""
@@ -110,6 +115,12 @@ class CodingByDictationLogic:
 
     def print_feedback_three(self, feedback, uiThread):
         uiThread.UpdateFeedbackThree(feedback)
+
+    def print_feedback_four(self, feedback, uiThread):
+        uiThread.UpdateFeedbackFour(feedback)
+
+    def print_feedback_five(self, feedback, uiThread):
+        uiThread.UpdateFeedbackFive(feedback)
 
     def get_struct_command_from_text_list(self, wordParser, text_list):
         struct_command_list = []
@@ -164,15 +175,23 @@ class CodingByDictationLogic:
             self.current_index -= 1
             self.print_history_text(self.uiThread)
             self.print_latest_code(self.uiThread)
-            self.print_feedback_one("Your undo is registered for " + str(undo_text), self.uiThread)
+            self.print_feedback_four("Your undo is registered for " + str(undo_text), self.uiThread)
         else:
-            self.print_feedback_one("There is nothing to undo.", self.uiThread)
+            self.print_feedback_four("There is nothing to undo.", self.uiThread)
 
     def lock_voice(self, uiThread):
+        self.voice_lock.acquire()
         uiThread.OffRecordingMode()
+        self.buffer_semaphore.acquire()
+        self.buffer = []
+        try:
+            self.buffer_semaphore.release()
+        except:
+            self.logger.log("buffer semaphore released without acquire @ lock_voice")
+         
         # run program to wait for hotword
-        hotwordRecognizer = HotwordRecognition(ui=uiThread)
-        hotwordRecognizer.start()
+        self.hotwordRecognizer = HotwordRecognition(ui=uiThread)
+        self.hotwordRecognizer.start()
         
     def unlock_voice(self, uiThread):
         uiThread.OnRecordingMode()
@@ -184,6 +203,34 @@ class CodingByDictationLogic:
         except:
             pass
 
+    def repeat_recording(self, speechReader, uiThread):
+        while True:
+            self.voice_lock.acquire()
+            self.release_voice_lock()
+            audio = speechReader.read_from_microphone(uiThread, timeout=2)
+
+            if audio is None:
+                continue
+
+            # don't do the rest when locked.
+            if self.hotwordRecognizer is not None and self.hotwordRecognizer.isAlive():
+                continue
+            
+            self.print_feedback_two("", uiThread)
+            
+
+            self.print_feedback_three("Audio #" + str(self.audio_count) + " has been read.", uiThread)
+            self.audio_count += 1
+
+            self.buffer_semaphore.acquire()
+            self.buffer.append(audio)
+            try:
+                self.buffer_semaphore.release()
+            except:
+                self.logger.log("buffer semaphore released without acquire @ repeat_recording")
+            
+        
+
     def main(self, uiThread):
         to_continue_reading = True
         self.uiThread = uiThread
@@ -191,12 +238,19 @@ class CodingByDictationLogic:
         speechReader = SpeechReader()
         wordParser = newWordParser()
         fileReader = TextFileReader(self.text_filename)
+
+        if self.read_from == CodingByDictationLogic.READ_FROM_SPEECH:
+            # Repeatedly records voice on another thread.
+            recording_thread = Thread(target = self.repeat_recording, args = (speechReader, uiThread,))
+            recording_thread.start()
         
         while to_continue_reading:
-            self.voice_lock.acquire()
+            
             variables_list = self.build_var_list_from_stack(self.variables_stack)
             
             # Speech to text
+
+            '''
             if self.read_from == CodingByDictationLogic.READ_FROM_SPEECH:
                 read_words = speechReader.get_voice_input(variables_list, self.api_used, CodingByDictationLogic.VOICE, uiThread)
             elif self.read_from == CodingByDictationLogic.READ_FROM_AUDIO_FILE:
@@ -211,12 +265,35 @@ class CodingByDictationLogic:
             else:
                 self.print_feedback_one("Error: unknown read_from detected", uiThread)
                 return None # terminate the program
+            '''
+            read_audio = ""
+            read_words = ""
+            
+            while True:
+                self.buffer_semaphore.acquire()
+                if len(self.buffer) == 0:
+                    read_audio = ""
+                else:
+                    read_audio = self.buffer.pop(0)
+                try:
+                    self.buffer_semaphore.release()
+                except:
+                    self.logger.log("buffer semaphore released without acquire @ main")
 
-            if (read_words is None):
-                self.print_feedback_one("Invalid input when reading", uiThread)
-                # time.sleep(2)
+                # if listener program has not populate audio to buffer.
+                if (read_audio is ""):
+                    pass
+                # something is read.
+                else:
+                    read_words = speechReader.decipher_audio_with_google_cloud(read_audio, variables_list, uiThread)
+                    
+                    break
+
+            if read_words is None:
+                # could not understand audio / user stop speaking.
                 self.lock_voice(uiThread)
                 continue
+                    
 
             # text to processed_text
             wordCorrector = WordCorrector(read_words, variables_list)
@@ -236,11 +313,11 @@ class CodingByDictationLogic:
             try:
                 structured_command = wordParser.parse(text_to_parse, True)
             except Exception as ex:
-                self.print_feedback_one("Unable to understand : " + str(corrected), uiThread)
+                self.print_feedback_four("Unable to understand : " + str(corrected), uiThread)
                 self.lock_voice(uiThread)
                 continue
 
-            self.release_voice_lock()
+            #self.release_voice_lock()
 
             to_add_corrected = False
             if structured_command == "": # cannot parse
@@ -281,7 +358,7 @@ class CodingByDictationLogic:
             print "Processed text after correction : " + corrected
             self.logger.log(read_words + " --> " + corrected)
 
-            self.print_feedback_two("Read: " + corrected, uiThread)
+            self.print_feedback_four("Read: " + corrected, uiThread)
 
             if self.read_from == CodingByDictationLogic.READ_FROM_TEXT_FILE:
                 if to_continue_reading == True:
