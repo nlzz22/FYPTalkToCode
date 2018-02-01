@@ -852,11 +852,15 @@ class WordParser:
             raise Exception('Invalid statement.')
 
         words = sentence.split()
+        first_word = ""
+        start_word = ""
+        
         if len(words) < 2:
-            raise Exception('Invalid statement.')
-
-        first_word = words[0]
-        start_word = words[0] + " " + words[1]
+            first_word = words[0]
+            start_word = words[0]
+        else:
+            first_word = words[0]
+            start_word = words[0] + " " + words[1]
 
         # Check selection statements
         if start_word == "begin if" or first_word == "switch":
