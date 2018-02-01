@@ -10,7 +10,7 @@ class WordCorrector:
         self.words_list = words.split(" ")
         self.corrected = ""
         self.space = ""
-        self.var_types = ["integer", "short", "long", "float", "double", "boolean", "character", "string", "void"]
+        self.var_types = ["integer", "long", "float", "double", "boolean", "character", "string", "void"]
         self.variables_list = var_list + StandardFunctions().get_std_functions()
         kw = Keywords()
         self.max_syllable = kw.get_max_num_syllable()
