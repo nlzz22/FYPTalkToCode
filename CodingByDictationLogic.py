@@ -1,5 +1,3 @@
-import os
-import wx
 from SpeechRecogniser import SpeechRecognitionModule as SpeechReader
 from WordCorrector import WordCorrector
 from NewWordParser import WordParser as newWordParser
