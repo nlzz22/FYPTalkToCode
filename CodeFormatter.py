@@ -10,10 +10,14 @@ class CodeFormatter:
         
     def format_code(self, code):
         self.code = code
-        self.copy_code_to_file(code)
-        self.format_code_with_astyle()
+        try:
+            self.copy_code_to_file(code)
+            self.format_code_with_astyle()
+            formatted_code = self.get_formatted_code()
+        except:
+            formatted_code = self.code
 
-        return self.get_formatted_code()
+        return formatted_code
 
     def copy_code_to_file(self, code):
         with open(self.temp_read_file, "w") as fileobject:
