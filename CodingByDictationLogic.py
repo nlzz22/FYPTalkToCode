@@ -11,6 +11,7 @@ from StandardFunctions import StandardFunctions
 import time
 import threading
 from threading import Thread
+import copy
 
 class HotwordRecognition(Thread):
     def __init__(self, ui):
@@ -79,7 +80,7 @@ class CodingByDictationLogic:
         
         uiThread.UpdateHistoryBody(hist_text)
 
-    def print_code(self, to_add_corrected, parsed_sc, wordParser, scParser, uiThread):
+    def print_code(self, to_add_corrected, parsed_sc, wordParser, uiThread):
         accepted_text_list = []
         curr_text = ""
         curr_index = 0
@@ -126,7 +127,8 @@ class CodingByDictationLogic:
         struct_command_list = []
         
         for text in text_list:
-            structured_command = wordParser.parse(text, False)
+            res = wordParser.parse(text)
+            structured_command = res["parsed"][0]
             struct_command_list.append(structured_command)
         return " ".join(struct_command_list)
 
@@ -312,36 +314,49 @@ class CodingByDictationLogic:
             structured_command = ""
 
             try:
-                structured_command = wordParser.parse(text_to_parse, True)
+                temp_parse_struct = wordParser.parse(text_to_parse, True)
             except Exception as ex:
                 self.print_feedback_four("Unable to understand : " + str(corrected), uiThread)
                 self.lock_voice(uiThread)
                 continue
 
-            to_add_corrected = False
-            if structured_command == "": # cannot parse
-                result_struct = wordParser.parse_with_correction(text_to_parse)
+            # Deep copy object over, else it will be overwritten (this is some weird bug.)
+            result_structure = copy.deepcopy(temp_parse_struct)
 
-                if "expected" in result_struct.keys():
-                    error_message = result_struct["expected"]
-                if "potential_missing" in result_struct.keys():
-                    potential_missing = result_struct["potential_missing"]
-                if "variables" in result_struct.keys() and len(result_struct["variables"]) != 0:
-                    self.variables_stack.push(result_struct["variables"])
-                else:
-                    self.variables_stack.push([])
+            for i in range(0, len(result_structure["sentence_status"])):                
+                if result_structure["sentence_status"][i]: # sentence can be parsed.
+                    variable_current = result_structure["variables"][i]
+                    parsed = result_structure["parsed"][i]
 
-                to_add_corrected = True
-                parsed = result_struct["parsed"]
-            else: # can parse
-                parsed = structured_command
-                self.variables_stack.push(wordParser.get_variables())
-                self.accepted_indices.append(self.current_index)
-           
-            sample_code = scParser.parse_structural_command_to_code(parsed)
+                    self.variables_stack.push(variable_current)
+
+                    if len(result_structure["text"][i]) < len(str(corrected)):
+                        self.text_history_stack.push(result_structure["text"][i])
+                    else:
+                        self.text_history_stack.push(str(corrected))
+
+                    self.accepted_indices.append(self.current_index)
+                    self.print_code(False, parsed, wordParser, uiThread)
+
+                    self.current_index += 1
+                else: # sentence cannot be parsed.                    
+                    error_message = result_structure["expected"]
+                    potential_missing = result_structure["potential_missing"]
+                    variable_current = result_structure["variables"][i]
+                    parsed = result_structure["parsed"][i]
+                    
+                    self.variables_stack.push(variable_current)
+                    
+                    if len(result_structure["text"][i]) < len(str(corrected)):
+                        self.text_history_stack.push(result_structure["text"][i])
+                    else:
+                        self.text_history_stack.push(str(corrected))
+                    self.print_code(True, parsed, wordParser, uiThread)
+
+                    self.current_index += 1
 
             # Feedback to user
-            if error_message != "":
+            if error_message != "": # there is error message
                 if potential_missing != "":
                     self.print_feedback_one("Expected  : " + potential_missing, uiThread)
                 else:
@@ -357,32 +372,8 @@ class CodingByDictationLogic:
             print "Processed text after correction : " + corrected
             self.logger.log(read_words + " --> " + corrected)
 
-            self.print_feedback_one("", uiThread)
             self.print_feedback_four("Read: " + corrected, uiThread)
-
-            if self.read_from == CodingByDictationLogic.READ_FROM_TEXT_FILE:
-                if to_continue_reading == True:
-                    input_continue = "y"
-                else:
-                    input_continue = "d"
-            else:
-                input_continue = "y"
             
-            if input_continue.lower() == "y":
-                # Accept and continue
-                to_continue_reading = True
-                self.current_index += 1
-
-                self.text_history_stack.push(str(corrected))
-            elif input_continue.lower() == "d":
-                # Accept and stop
-                to_continue_reading = False
-
-                self.text_history_stack.push(str(corrected))
-            else:
-                to_continue_reading = False # else reject and stop
-
             self.print_history_text(uiThread)
-            self.print_code(to_add_corrected, parsed, wordParser, scParser, uiThread)
             # self.print_all_var() # for debug only.
 

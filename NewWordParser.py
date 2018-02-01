@@ -507,6 +507,10 @@ class WordParser:
         # no tokens here.
         return "continue;;"
 
+    def parse_rest_of_line(self, tokens):
+        self.rest_of_line = tokens[1]
+        return tokens[0]
+
     def handle_fail_parse(self, string, loc, expr, err):
         if self.error_message != "":
             self.error_message += " or " + str(expr)
@@ -778,26 +782,39 @@ class WordParser:
                                 keyword_end_function
         function_call_statement.setParseAction(self.parse_function_call_statement)
 
-        # Constructs parsable
-        self.assignment_statement = variable_assignment_statement
+        # Constructs parsable (temp_ prefixed is required so as to parse nested statements)
+        self.assignment_statement = variable_assignment_statement + restOfLine
+        temp_assignment_statement = variable_assignment_statement
+        self.assignment_statement.setParseAction(self.parse_rest_of_line)
 
-        self.selection_statement = if_statement | if_else_statement | switch_statement
+        self.selection_statement = (if_statement | if_else_statement | switch_statement) + restOfLine
+        temp_selection_statement = if_statement | if_else_statement | switch_statement
+        self.selection_statement.setParseAction(self.parse_rest_of_line)
 
-        self.declaration_statement = declare_variable_statement | declare_array_statement
+        self.declaration_statement = (declare_variable_statement | declare_array_statement) + restOfLine
+        temp_declaration_statement = declare_variable_statement | declare_array_statement
+        self.declaration_statement.setParseAction(self.parse_rest_of_line)
 
-        self.iteration_statement = for_loop_statement | while_loop_statement
+        self.iteration_statement = (for_loop_statement | while_loop_statement) + restOfLine
+        temp_iteration_statement = for_loop_statement | while_loop_statement
+        self.iteration_statement.setParseAction(self.parse_rest_of_line)
 
-        self.jump_statement = return_statement | break_statement | continue_statement
+        self.jump_statement = (return_statement | break_statement | continue_statement) + restOfLine
+        temp_jump_statement = return_statement | break_statement | continue_statement
+        self.jump_statement.setParseAction(self.parse_rest_of_line)
 
-        self.call_function_statement = function_call_statement
+        self.call_function_statement = function_call_statement + restOfLine
+        temp_call_function_statement = function_call_statement
+        self.call_function_statement.setParseAction(self.parse_rest_of_line)
 
-        statement << (self.assignment_statement | self.selection_statement | self.declaration_statement | \
-                  self.iteration_statement | self.jump_statement | self.call_function_statement)
+        statement << (temp_assignment_statement | temp_selection_statement | temp_declaration_statement | \
+                  temp_iteration_statement | temp_jump_statement | temp_call_function_statement)
 
-        self.function_declaration = function_declaration_line
+        self.function_declaration = function_declaration_line + restOfLine
+        self.function_declaration.setParseAction(self.parse_rest_of_line)
 
     # This function attempts to parse repeatedly with corrections applied wherever possible.
-    def parse_with_correction(self, sentence, is_initial_run = True, counter = 0, prev_exp = ""):
+    def parse_with_correction(self, sentence, is_initial_run = True, counter = 0):
         result_struct = {}
 
         result_struct["parsed"] = ""
@@ -805,7 +822,20 @@ class WordParser:
         if counter > 5:
             return result_struct
 
-        result = self.parse(sentence)
+        try:
+            temp_res = self.match_construct(sentence)
+            if temp_res["has_match"]:
+                result = temp_res["struct_cmd"]
+            else:
+                result = ""
+        except:
+            if is_initial_run:
+                result_struct["expected"] = self.get_error_message()
+                result_struct["variables"] = self.get_variables()
+            result_struct["parsed"] = ""
+
+            return result_struct
+            
         if result == "": # error message
             if is_initial_run:
                 # record first expected message only
@@ -813,15 +843,11 @@ class WordParser:
                 result_struct["variables"] = self.get_variables()
 
             error = self.get_error_message()
+            
             if error == "":
                 result_struct["parsed"] = "" # cannot finish parsing
             else:
                 error = error.replace("Expected", "")
-
-                if error == prev_exp:
-                    # reject if no improvement
-                    result_struct["parsed"] = ""
-                    return result_struct
                 
                 parts = error.split(" or ")
                 new_list = []
@@ -831,7 +857,7 @@ class WordParser:
                 for attempt in new_list:
                     word = attempt.replace("\"", "")
 
-                    attempt_res = self.parse_with_correction(sentence + " " + word, False, counter + 1, error)
+                    attempt_res = self.parse_with_correction(sentence + " " + word, False, counter + 1)
                     if attempt_res["parsed"] != "":
                         result_struct["parsed"] = attempt_res["parsed"]
                         result_struct["potential_missing"] = word
@@ -840,14 +866,9 @@ class WordParser:
             result_struct["parsed"] = result
 
         return result_struct
-        
- 
-    def parse(self, sentence, new_instance = True):
-        sentence = str(sentence).lower()
-        self.error_message = ""
-        if new_instance:
-            self.variables = []
-        
+
+
+    def match_construct(self, sentence):
         if sentence == "":
             raise Exception('Invalid statement.')
 
@@ -861,7 +882,7 @@ class WordParser:
         else:
             first_word = words[0]
             start_word = words[0] + " " + words[1]
-
+            
         # Check selection statements
         if start_word == "begin if" or first_word == "switch":
             result = self.parse_check_selection_statement(sentence)
@@ -887,11 +908,72 @@ class WordParser:
         else:
             raise Exception('Invalid statement.')
 
+        return result
+        
+ 
+    def parse(self, sentence, new_instance = True, result_struct = {}):
+        # Result_structure returned contains the following:
+        # sentence_status  : True / False depending on whether sentence can be parsed or not. Array.
+        # variables        : var_list . Array
+        # parsed           : struct command (completed) . Array
+        # text             : raw text (only those parse-able) without correction. Array
+        # expected         : expected "end declare" for example. Single element
+        # potential_missing: one missing construct like "end for loop" for example. Single element.
+
+        sentence = str(sentence).lower().strip()
+        self.error_message = ""
+        self.rest_of_line = ""
+        self.variables = []
+
+        result = self.match_construct(sentence)
+
+        if new_instance:
+            result_struct["sentence_status"] = [] # True / False depending on whether sentence can be parsed or not.
+            result_struct["variables"] = [] # var_list
+            result_struct["parsed"] = [] # struct command (completed)
+            result_struct["text"] = [] # raw text (only those parse-able) without correction
+            result_struct["expected"] = "" # expected "end declare" for example.
+            result_struct["potential_missing"] = "" # one missing construct like "end for loop" for example.
+
         if result["has_match"]:
-            return self.trim_all_spaces(result["struct_cmd"])
+            result_struct["sentence_status"].append(True)
+            result_struct["variables"].append(self.get_variables())
+            result_struct["parsed"].append(self.trim_all_spaces(result["struct_cmd"]))
+
+            parsed_text, rest_text = self.split_parsed_and_rest(sentence, self.rest_of_line)
+            result_struct["text"].append(parsed_text)
+
+            if str(rest_text).strip() != "":
+                result_struct = self.parse(rest_text, new_instance = False, result_struct = result_struct)
+            
+            return result_struct
         else:
             # no matches
-            return ""
+            temp_result = self.parse_with_correction(sentence)
+
+            result_struct["sentence_status"].append(False)
+            result_struct["variables"].append(temp_result["variables"])
+            result_struct["parsed"].append(temp_result["parsed"])
+            result_struct["text"].append(sentence)
+            result_struct["expected"] = temp_result["expected"]
+
+            if "potential_missing" in temp_result.keys():
+                result_struct["potential_missing"] = temp_result["potential_missing"]
+            else:
+                result_struct["potential_missing"] = ""
+
+            return result_struct
+
+    def split_parsed_and_rest(self, input_sentence, rest_of_line):
+        if rest_of_line.strip() == "":
+            return self.trim_all_spaces(input_sentence.strip()), ""
+            
+        start_index = input_sentence.index(rest_of_line)
+        parsed_part = input_sentence[0:start_index]
+        processed_parsed_part = self.trim_all_spaces(parsed_part.strip())
+        processed_rest_part = self.trim_all_spaces(rest_of_line.strip())
+        
+        return processed_parsed_part, processed_rest_part
         
 
     def parse_check_variable_assignment(self, sentence):

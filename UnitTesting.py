@@ -563,6 +563,11 @@ class TestWordParserMethods(unittest.TestCase):
         struct = "if #condition #variable x < #variable y #if_branch_start #assign #variable max #with #value 2;; #if_branch_end;;"
         self.wordparser_compare_correction(speech, struct)
 
+    def test_word_parser_multiple_ifs(self):
+        speech = "begin if i less than one then begin if i less than two then"
+        struct = "if #condition #variable i < #value 1 #if_branch_start if #condition #variable i < #value 2 #if_branch_start #if_branch_end;; #if_branch_end;;"
+        self.wordparser_compare_correction(speech, struct)
+
     # Test Word Parser added variables
     def test_word_parser_added_variables_func_declare(self):
         speech = "create function find the tree with return type void with parameter integer wei he with parameter integer because begin end function"
@@ -613,7 +618,64 @@ class TestWordParserMethods(unittest.TestCase):
         
         self.wordparser_compare_added_variables(speech, expected)
 
+    # Test Word Parser - multiple parts
+
+    def test_word_parser_partial(self):
+        speech = "max equal"
+        expected_parsed = [""]
+        expected_text = ["max equal"]
+        expected_sent_status = [False]
+        self.wordparser_compare_parts(speech, expected_parsed, expected_text, expected_sent_status)
+
+    def test_word_parser_full(self):
+        speech = "counter plus plus end equal"
+        expected_parsed = ["#post #variable counter ++;;"]
+        expected_text = ["counter plus plus end equal"]
+        expected_sent_status = [True]
+        self.wordparser_compare_parts(speech, expected_parsed, expected_text, expected_sent_status) 
+
+    def test_word_parser_full_then_partial(self):
+        speech = "declare integer max end declare declare integer"
+        expected_parsed = ["#create int #variable max #dec_end;;", ""]
+        expected_text = ["declare integer max end declare", "declare integer"]
+        expected_sent_status = [True, False]
+        self.wordparser_compare_parts(speech, expected_parsed, expected_text, expected_sent_status)
+
+    def test_word_parser_full_then_full(self):
+        speech = "declare integer max end declare declare integer min"
+        expected_parsed = ["#create int #variable max #dec_end;;", "#create int #variable min #dec_end;;"]
+        expected_text = ["declare integer max end declare", "declare integer min"]
+        expected_sent_status = [True, True]
+        self.wordparser_compare_parts(speech, expected_parsed, expected_text, expected_sent_status)
+
+    def test_word_parser_full_twice_partial(self):
+        speech = "declare integer max end declare declare integer min end declare declare integer"
+        expected_parsed = ["#create int #variable max #dec_end;;", "#create int #variable min #dec_end;;", ""]
+        expected_text = ["declare integer max end declare", "declare integer min end declare", "declare integer"]
+        expected_sent_status = [True, True, False]
+        self.wordparser_compare_parts(speech, expected_parsed, expected_text, expected_sent_status)
+
+    def test_word_parser_full_thrice(self):
+        speech = "declare integer max end declare declare integer min end declare declare integer first end declare"
+        expected_parsed = ["#create int #variable max #dec_end;;", "#create int #variable min #dec_end;;", \
+                           "#create int #variable first #dec_end;;"]
+        expected_text = ["declare integer max end declare", "declare integer min end declare", \
+                         "declare integer first end declare"]
+        expected_sent_status = [True, True, True]
+        self.wordparser_compare_parts(speech, expected_parsed, expected_text, expected_sent_status)
+
     # Utility functions below.
+
+    def wordparser_compare_parts(self, raw_text, expected_parsed, expected_text, expected_sent_status):
+        wordParser = WordParser()
+        struct = wordParser.parse(raw_text)
+        actual_parsed = struct["parsed"]
+        actual_text = struct["text"]
+        actual_status = struct["sentence_status"]
+        self.assertEqual(expected_parsed, actual_parsed)
+        self.assertEqual(expected_text, actual_text)
+        self.assertEqual(expected_sent_status, actual_status)
+        
 
     def wordparser_compare_added_variables(self, raw_text, expected):
         wordParser = WordParser()
@@ -630,7 +692,7 @@ class TestWordParserMethods(unittest.TestCase):
 
     def wordparser_compare(self, raw_text, expected):
         wordParser = WordParser()
-        parsed = self.trim_all_spaces(wordParser.parse(raw_text))
+        parsed = self.trim_all_spaces(wordParser.parse(raw_text)["parsed"][0])
         expected = self.trim_all_spaces(expected)        
         self.assertEqual(parsed, expected)
 
