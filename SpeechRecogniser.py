@@ -41,7 +41,8 @@ class SpeechRecognitionModule:
                 self.is_hotword_found = False
                 def recognize_keyword(recognizer, audio):
                     try:
-                        text = recognizer.recognize_google(audio) # use normal google recognition.
+                        keyword_entries = [["record", 1e-5]] 
+                        text = recognizer.recognize_sphinx(audio, keyword_entries=keyword_entries) # use offline sphinx recognition.
                         lower_text = text.lower()
                         if "record" in lower_text or "caught" in lower_text: # recognizing `record` and its misrecognized words.
                                 self.is_hotword_found = True
