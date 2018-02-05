@@ -1,59 +1,43 @@
 import subprocess
 from subprocess import STDOUT,PIPE
 import os
-import time
 
 class CodeFormatter:
-    def __init__(self, tempreadfilename="CFtemp.c", tempwritefilename="CFtemp2.c"):
-        self.temp_read_file = tempreadfilename
-        self.temp_write_file = tempwritefilename
+    def __init__(self):
+        self.language = "C"
+        self.config_file = "uncrustify/cfg/defaults.cfg"
+        self.exe_file = "uncrustify/uncrustify.exe"
         
     def format_code(self, code):
         self.code = code
         try:
-            self.copy_code_to_file(code)
-            self.format_code_with_astyle()
-            formatted_code = self.get_formatted_code()
+            formatted_code = self.format_code_with_uncrustify(code)
+            formatted_code = self.process_code(formatted_code)
         except:
             formatted_code = self.code
 
         return formatted_code
 
-    def copy_code_to_file(self, code):
-        with open(self.temp_read_file, "w") as fileobject:
-            fileobject.write(code)
-
-    ## This function runs AStyle C code formatting on the @param: tempreadfilename file.
-    ## The resulting formatted code will be found at the @param: tempwritefilename file.
-    def format_code_with_astyle(self):
+    def format_code_with_uncrustify(self, code):
         CREATE_NO_WINDOW = 0x08000000
 
-        # run the AStyle C program
-        cmd = ['./AStyle.exe ']
+        cmd = [self.exe_file, '-l', self.language, '-c', self.config_file]
+        proc = subprocess.Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=STDOUT, creationflags=CREATE_NO_WINDOW)
+        formatted_code, err = proc.communicate(code + "\n")
 
-        read_fileobject = open(self.temp_read_file, "r")
-        write_fileobject = open(self.temp_write_file, "w")
+        return formatted_code
 
-        proc = subprocess.Popen(cmd, stdin=read_fileobject, stdout=write_fileobject, stderr=STDOUT, creationflags=CREATE_NO_WINDOW)
+    def process_code(self, code):
+        result = ""
+        parts = code.split("\n")
+        parts = parts[:-2] # Remove additional output from uncrustify which is not part of the program
 
-        read_fileobject.close()
-        write_fileobject.close()
-
-        proc.communicate() # blocks until the subprocess completes.
-
-    def get_formatted_code(self):
-        try:
-            with open(self.temp_write_file, "r") as fileobject:
-                lines = fileobject.readlines()
-            complete_code = ""
-
-            for line in lines:
-                if line.strip() != "":
-                    complete_code += line
-
-            return complete_code
-        except:
-            return self.code
+        for part in parts:
+            if part.strip() == "":
+                continue
+            result += part + "\n"
+        return result
+            
 
 if __name__ == "__main__":
     # For testing.
