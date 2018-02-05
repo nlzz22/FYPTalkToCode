@@ -7,5 +7,4 @@ SpeechRecognition-8e50e15b5266.json
 .ipynb_checkpoints/
 *.ipynb
 log.txt
-/AStyle
-CF*.c
+/uncrustify
