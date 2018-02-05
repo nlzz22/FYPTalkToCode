@@ -1,6 +1,9 @@
 import speech_recognition as sr
 from speech_recognition import * 
 from os import path
+import threading
+from threading import Thread
+import time
 
 # import from user-defined class
 from credentials import APICredentials
@@ -35,20 +38,36 @@ class SpeechRecognitionModule:
         def print_feedback_five(self, feedback, uiThread):
             uiThread.UpdateFeedbackFive(feedback)
 
-        def wait_for_hotword(self, uiThread):
-                self.error_counter = 0
-                
-                self.is_hotword_found = False
-                def recognize_keyword(recognizer, audio):
+        def persistent_listen(self, mic, rec, timeout=None, phrase_time_limit=None):
+                rec.energy_threshold = 2000
+                while not self.is_hotword_found:
+                        with mic as source:
+                                audio = None
+                                try:
+                                        audio = rec.listen(source, timeout=timeout, phrase_time_limit=phrase_time_limit)
+                                except WaitTimeoutError:
+                                        audio = None
+                                if audio is not None:
+                                        self.record_buffer_lock.acquire()
+                                        self.record_buffer.append(audio)
+                                        self.record_buffer_lock.release()
+        
+        def recognize_keyword(self, recognizer):
+            while not self.is_hotword_found:
+                    self.record_buffer_lock.acquire()
+                    if len(self.record_buffer) > 0:
+                            audio = self.record_buffer.pop(0)
+                            self.record_buffer_lock.release()
+                    else:
+                            self.record_buffer_lock.release()
+                            continue
                     try:
-                        keyword_entries = [["record", 1e-5]] 
+                        keyword_entries = [["start recording", 1e-50], ["stop", 1e-49], ["run", 1e-49]]
                         text = recognizer.recognize_sphinx(audio, keyword_entries=keyword_entries) # use offline sphinx recognition.
                         lower_text = text.lower()
-                        if "record" in lower_text or "caught" in lower_text: # recognizing `record` and its misrecognized words.
+                        if "start recording" in lower_text: # recognizing hotword
                                 self.is_hotword_found = True
-                        else:
-                                print ("Debug: wait_for_hotword found " + text)
-                    except sr.UnknownValueError:
+                    except sr.UnknownValueError as f:
                         self.error_counter += 1
                     except sr.RequestError as e:
                         self.error_counter += 1
@@ -57,27 +76,32 @@ class SpeechRecognitionModule:
                                 self.error_counter = 0
                                 print ("Unknown values read by the recognizer")
 
+        def wait_for_hotword(self, uiThread):
+                self.record_buffer = []
+                self.record_buffer_lock = threading.Lock()
+                self.error_counter = 0
+                self.is_hotword_found = False
+
                 r = sr.Recognizer()
                 m = sr.Microphone()
-                
-                with m as source:
-                    r.adjust_for_ambient_noise(source)  # we only need to calibrate once, before we start listening
 
-                self.print_feedback_two("Waiting for hotword `record` before we resume recording...", uiThread)
+                recording_thread = Thread(target=self.persistent_listen, args = (m, r, None, None))
+                recording_thread.start()
+
+                self.print_feedback_two("Waiting for hotword `start recording` before we resume recording...", uiThread)
                 self.print_feedback_one("", uiThread)
                 self.print_feedback_five("", uiThread)
 
-                # start listening in the background
-                stop_listening = r.listen_in_background(m, recognize_keyword, phrase_time_limit=1)
-                # `stop_listening` is now a function that, when called, stops background listening
+                recognize_threads = [1,2]
+                for i in range(2):
+                        recognize_threads[i] = Thread(target=self.recognize_keyword, args = (r,))
+                        recognize_threads[i].start()
 
                 # repeatedly wait for hotword
                 while (True):
                         if self.is_hotword_found:
                                 break
-
-                # calling this function requests that the background listener stop listening
-                stop_listening(wait_for_stop=False)
+                
 
         # api: 1 for Google, 2 for Google Cloud
         def decipher_audio_with_api(self, audio, variables_list, uiThread, api):
