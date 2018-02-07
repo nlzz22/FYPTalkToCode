@@ -4,6 +4,7 @@ from os import path
 import threading
 from threading import Thread
 import time
+import audioop
 
 # import from user-defined class
 from credentials import APICredentials
@@ -11,6 +12,7 @@ from credentials import APICredentials
 class SpeechRecognitionModule:
         def __init__(self):
             self.recognizer = sr.Recognizer()
+            self.mic = sr.Microphone()
             self.has_adjusted_for_voice = False
             credential_object = APICredentials()
             self.google_cloud_json = credential_object.get_google_json_file()
@@ -101,6 +103,14 @@ class SpeechRecognitionModule:
                 while (True):
                         if self.is_hotword_found:
                                 break
+
+        def get_sound_energy(self, mic, queue):
+                while True:
+                        with mic as source:
+                                buffer = source.stream.read(source.CHUNK)
+                                energy = audioop.rms(buffer, source.SAMPLE_WIDTH)
+                        queue.put(energy)
+                        
                 
 
         # api: 1 for Google, 2 for Google Cloud
@@ -133,17 +143,19 @@ class SpeechRecognitionModule:
         def read_from_microphone(self, uiThread, timeout=None, phrase_time_limit=None):
                 if not self.has_adjusted_for_voice:
                         self.print_feedback_two("Please wait while we detect environment noise ...", uiThread)
-                        with sr.Microphone() as source: self.recognizer.adjust_for_ambient_noise(source)
+                        with self.mic as source: self.recognizer.adjust_for_ambient_noise(source)
                         string_to_show = "Environment energy is {}, Start speaking ... ".format(int(self.recognizer.energy_threshold))
                         self.print_feedback_two(string_to_show, uiThread)
                         self.has_adjusted_for_voice = True
                 else:
                         self.print_feedback_two("Please continue speaking...", uiThread)
 
-                with sr.Microphone() as source:
+                with self.mic as source:
                         audio = None
                         try:
+                                uiThread.ShowVisualizer(True)
                                 audio = self.recognizer.listen(source, timeout=timeout, phrase_time_limit=phrase_time_limit)
+                                uiThread.ShowVisualizer(False)
                         except WaitTimeoutError:
                                 audio = None
                         return audio

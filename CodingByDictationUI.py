@@ -1,9 +1,11 @@
 import os
 import wx
+import wx.lib.agw.peakmeter as PM
 import threading
 from threading import Thread
 from CodeFormatter import CodeFormatter
 from CodingByDictationLogic import CodingByDictationLogic as ProgramLogic
+import Queue
 
 class CustomColor:
     DARK_GRAY = (111,111,116)
@@ -19,7 +21,7 @@ class CodingByDictRecognition(Thread):
         self.ui = ui
 
     def run(self):
-        self.programLogic = ProgramLogic()
+        self.programLogic = ProgramLogic(self.ui)
         self.programLogic.main(self)
 
     def undo(self):
@@ -55,6 +57,12 @@ class CodingByDictRecognition(Thread):
     def OffRecordingMode(self):
         wx.CallAfter(self.ui.OffRecordingMode)
 
+    def PassSoundEnergyValues(self, value):
+        wx.CallAfter(self.ui.PassSoundEnergyValue, value)
+
+    def ShowVisualizer(self, to_show):
+        wx.CallAfter(self.ui.ShowVisualizer, to_show)
+
 
 ''' We derive a new class of Frame. '''
 class CodeByDictUI(wx.Frame):
@@ -64,8 +72,17 @@ class CodeByDictUI(wx.Frame):
     FONT_SIZE_FEEDBACK = 12
     FONT_SIZE_CODE = 10
     FONT_FAMILY_CODE = wx.FONTFAMILY_MODERN # a fixed pitch font
+    VISUALIZER_NUM_BAND = 2
+    VISUALIZER_LED_PER_BAND = 15
+    VISUALIZER_FRAME_PER_SECOND = 18
+    VISUALIZER_TIMER_UPDATE_PER_SECOND = 50
+    STRING_ON_RECORD = "\n\n\nRecording mode is ON"
+    STRING_OFF_RECORD = "\n\n\nRecording mode is OFF"
     
     def __init__(self, parent, title):
+        self.queue_buffer = Queue.Queue()
+        self.show_visualizer = False
+        
         wx.Frame.__init__(self, parent, title=title)
 
         # Create the titles.
@@ -151,14 +168,24 @@ class CodeByDictUI(wx.Frame):
         self.buttonSizer.AddSpacer(CodeByDictUI.SPACE_SIDE_OF_BUTTONS)
 
         # Recording Bar
-        self.recordStatus = wx.StaticText(self, label="Recording mode is ON", style=wx.ALIGN_CENTER)
+        self.recordStatus = wx.StaticText(self, label=CodeByDictUI.STRING_ON_RECORD, style=wx.ALIGN_CENTER)
         self.recordStatus.SetBackgroundColour(CustomColor.LIGHT_GRAY)
         self.recordStatus.SetForegroundColour(CustomColor.GREEN)
         self.SetFont(self.recordStatus, CodeByDictUI.FONT_SIZE_FEEDBACK)
 
+        # Recording Visualizer
+        self.vertPeak = PM.PeakMeterCtrl(self, -1, style=wx.SIMPLE_BORDER, agwStyle=PM.PM_VERTICAL)   
+        self.vertPeak.SetMeterBands(CodeByDictUI.VISUALIZER_NUM_BAND, CodeByDictUI.VISUALIZER_LED_PER_BAND)
+        self.vertPeak.SetRangeValue(800, 3500, 8000)
+        self.timer = wx.Timer(self)
+        self.Bind(wx.EVT_TIMER, self.OnTimer)
+        self.ShowVisualizer(False)
+        wx.CallLater(500, self.visualizer_start)
+
         # Recording Bar sizer
         self.recordSizer = wx.BoxSizer(wx.HORIZONTAL)
-        self.recordSizer.Add(self.recordStatus, 1, wx.EXPAND)        
+        self.recordSizer.Add(self.recordStatus, 2, wx.EXPAND)
+        self.recordSizer.Add(self.vertPeak, 1, wx.EXPAND|wx.ALL)
                                        
         # Status Bar
         self.CreateStatusBar() # A status bar in the bottom of the window
@@ -201,6 +228,30 @@ class CodeByDictUI(wx.Frame):
         self.dirname = ''
         self.code_formatter = CodeFormatter()
 
+    def OnTimer(self, event):
+        # Retrieve data for the meter
+        temp_num_elem = min(self.queue_buffer.qsize(), 5)
+        if temp_num_elem > 0:
+            energy_values = []
+
+            for i in xrange(temp_num_elem):
+                data = self.queue_buffer.get()
+                energy_values.append(data)
+                energy_values.append(data + 100) # populate more data to create smoother effect
+
+            if self.show_visualizer:
+                self.vertPeak.SetData(energy_values, 0, len(energy_values))
+            else:
+                self.vertPeak.SetData([0, 0, 0], 0, 3)
+            
+
+    def visualizer_start(self):
+        self.timer.Start(1000 / CodeByDictUI.VISUALIZER_TIMER_UPDATE_PER_SECOND)
+        self.vertPeak.Start(1000 / CodeByDictUI.VISUALIZER_FRAME_PER_SECOND)
+
+    def PassSoundEnergyValue(self, energy):
+        self.queue_buffer.put(energy)
+
     def SetFont(self, textControl, fontSize, family=wx.DEFAULT, style=wx.NORMAL, weight=wx.NORMAL):
         font = wx.Font(fontSize, family, style, weight)
         textControl.SetFont(font)
@@ -226,14 +277,17 @@ class CodeByDictUI(wx.Frame):
         self.RefreshSizer()
 
     def OnRecordingMode(self):
-        self.recordStatus.SetLabel("Recording mode is ON")
+        self.recordStatus.SetLabel(CodeByDictUI.STRING_ON_RECORD)
         self.recordStatus.SetForegroundColour(CustomColor.GREEN)
         self.RefreshSizer()
 
     def OffRecordingMode(self):
-        self.recordStatus.SetLabel("Recording mode is OFF")
+        self.recordStatus.SetLabel(CodeByDictUI.STRING_OFF_RECORD)
         self.recordStatus.SetForegroundColour(CustomColor.RED)
         self.RefreshSizer()
+
+    def ShowVisualizer(self, to_show):
+        self.show_visualizer = to_show
 
     def UpdateCodeBody(self, code):
         if code.strip() == "":

@@ -10,6 +10,7 @@ import time
 import threading
 from threading import Thread
 import copy
+import Queue
 
 class HotwordRecognition(Thread):
     def __init__(self, ui):
@@ -18,11 +19,36 @@ class HotwordRecognition(Thread):
 
     def run(self):
         self.speechReader = SpeechReader()
+        self.ui.ShowVisualizer(False)
         self.speechReader.wait_for_hotword(self.ui) # blocks till hotword found.
 
         self.ui.startRecording()
 
-        
+class SoundEnergyReader(Thread):
+    def __init__(self, ui):
+        Thread.__init__(self)
+        self.energy_reader = SpeechReader() 
+        self.queue_buffer = Queue.Queue()
+        self.ui = ui
+
+    def run(self):
+        retriever_thread = Thread(target=self.energy_reader.get_sound_energy, args=(self.energy_reader.mic, self.queue_buffer,))
+        passer_thread = Thread(target=self.pass_energy)
+        retriever_thread.start()
+        passer_thread.start()
+
+    def pass_energy(self):
+        counter = 0
+        sum_en = 0
+        while True:
+            sum_en += self.queue_buffer.get()
+            counter += 1
+            if counter > 2:
+                counter = 0
+                self.ui.PassSoundEnergyValue(sum_en / 3)
+                sum_en = 0
+
+
 
 class CodingByDictationLogic:
     ##########################################
@@ -43,7 +69,7 @@ class CodingByDictationLogic:
     ##########################################
     ##########################################
     
-    def __init__(self):
+    def __init__(self, uiThread):
         # EDIT THIS ONLY.
         # User defined: Method of reading here.
         self.read_from = CodingByDictationLogic.READ_FROM_SPEECH
@@ -65,6 +91,9 @@ class CodingByDictationLogic:
 
         self.buffer = []
         self.hotwordRecognizer = None
+
+        self.soundEnergyReader = SoundEnergyReader(ui=uiThread)
+        self.soundEnergyReader.start()
 
     def print_history_text(self, uiThread):
         hist_text = ""
