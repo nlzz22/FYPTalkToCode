@@ -213,18 +213,19 @@ class WordCorrector:
         max_sim = -1
         temp_wrong_word_index = -1
         temp_correct_word = ""
-        can_match_var_type = True
+        can_match_var_type = False
         must_match_var_type = False
 
         prev_word = self.query_latest_added_word()
         prev_2_words = self.query_latest_added_word(2)
-        # This is done to ensure that newly declared variables are not corrected.
-        if self.is_variable_type(prev_word) or prev_2_words == "create function":
-            can_match_var_type = False
+        
         # This is done to ensure that variable type is matched here.
         if prev_2_words == "return type" or (prev_word == "declare" and prev_2_words != "end declare"):
             must_match_var_type = True
+            can_match_var_type = True
             min_match = 0.50
+        if prev_word == "parameter":
+            can_match_var_type = True
         
         is_same_word = False
         
