@@ -222,7 +222,7 @@ class WordCorrector:
         if self.is_variable_type(prev_word) or prev_2_words == "create function":
             can_match_var_type = False
         # This is done to ensure that variable type is matched here.
-        if prev_2_words == "return type" or prev_word == "declare":
+        if prev_2_words == "return type" or (prev_word == "declare" and prev_2_words != "end declare"):
             must_match_var_type = True
             min_match = 0.50
         

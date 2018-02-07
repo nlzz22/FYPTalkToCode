@@ -1031,6 +1031,22 @@ class TestWordCorrectorMethods(unittest.TestCase):
         expected = word
 
         self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
+
+    def test_word_corrector_multiple_sentences_same(self):
+        word = "declare integer max equal one end declare declare in detail min"
+        wc = WordCorrector(word, [])
+        corrected = wc.run_correction()
+        expected = "declare integer max equal one end declare declare integer min"
+
+        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
+
+    def test_word_corrector_multiple_sentences_diff(self):
+        word = "declare integer max equal one and declare declare in detail min and declare max equal one"
+        wc = WordCorrector(word, [])
+        corrected = wc.run_correction()
+        expected = "declare integer max equal one end declare declare integer min end declare max equal one"
+
+        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
         
 
     def format_spaces(self, sentence):
