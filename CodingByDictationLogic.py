@@ -344,8 +344,11 @@ class CodingByDictationLogic:
             wordCorrector = WordCorrector(read_words, variables_list)
             corrected = wordCorrector.run_correction()
 
-            if corrected.strip() == "undo":
-                self.undo(True)
+            num_undo = corrected.strip().count("undo")
+
+            if num_undo > 0:
+                for i in range(num_undo):
+                    self.undo(True)
                 continue
 
             # processed_text to structured_command / code and display to user.
