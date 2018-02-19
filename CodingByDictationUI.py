@@ -45,6 +45,9 @@ class CodingByDictRecognition(Thread):
     def UpdateFeedbackFive(self, feedback):
         wx.CallAfter(self.ui.UpdateFeedbackFive, feedback)
 
+    def UpdateSpeakNow(self, feedback):
+        wx.CallAfter(self.ui.UpdateSpeakNow, feedback)
+
     def UpdateCodeBody(self, feedback):
         wx.CallAfter(self.ui.UpdateCodeBody, feedback)
 
@@ -71,6 +74,7 @@ class CodeByDictUI(wx.Frame):
     SPACE_VERTICAL_BUTTONS = 7
     FONT_SIZE_FEEDBACK = 12
     FONT_SIZE_CODE = 10
+    FONT_SIZE_SPEAK_NOW = 36
     FONT_FAMILY_CODE = wx.FONTFAMILY_MODERN # a fixed pitch font
     VISUALIZER_NUM_BAND = 2
     VISUALIZER_LED_PER_BAND = 15
@@ -184,8 +188,17 @@ class CodeByDictUI(wx.Frame):
 
         # Recording Bar sizer
         self.recordSizer = wx.BoxSizer(wx.HORIZONTAL)
-        self.recordSizer.Add(self.recordStatus, 2, wx.EXPAND)
-        self.recordSizer.Add(self.vertPeak, 1, wx.EXPAND|wx.ALL)
+        self.recordSizer.Add(self.recordStatus, 1, wx.EXPAND)
+        
+        self.speakNow = wx.StaticText(self, label=" ", style=wx.ALIGN_CENTER | wx.BORDER)
+        self.speakNow.SetBackgroundColour(CustomColor.LIGHT_GRAY)
+        self.speakNow.SetForegroundColour(CustomColor.GREEN)
+        self.SetFont(self.speakNow, CodeByDictUI.FONT_SIZE_SPEAK_NOW)
+        self.volumeSizer = wx.BoxSizer(wx.VERTICAL)
+        self.volumeSizer.Add(self.speakNow, 1, wx.EXPAND)
+        self.volumeSizer.Add(self.vertPeak, 2, wx.EXPAND|wx.ALL)
+
+        self.recordSizer.Add(self.volumeSizer, 2, wx.EXPAND|wx.ALL)
                                        
         # Status Bar
         self.CreateStatusBar() # A status bar in the bottom of the window
@@ -274,6 +287,10 @@ class CodeByDictUI(wx.Frame):
 
     def UpdateFeedbackFive(self, feedback):
         self.feedbackFive.SetLabel(feedback)
+        self.RefreshSizer()
+
+    def UpdateSpeakNow(self, feedback):
+        self.speakNow.SetLabel(feedback)
         self.RefreshSizer()
 
     def OnRecordingMode(self):

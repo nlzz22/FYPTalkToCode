@@ -40,6 +40,9 @@ class SpeechRecognitionModule:
         def print_feedback_five(self, feedback, uiThread):
             uiThread.UpdateFeedbackFive(feedback)
 
+        def print_speak_now(self, feedback, uiThread):
+            uiThread.UpdateSpeakNow(feedback)
+
         def persistent_listen(self, mic, rec, timeout=None, phrase_time_limit=None):
                 rec.energy_threshold = 2000
                 while not self.is_hotword_found:
@@ -91,6 +94,7 @@ class SpeechRecognitionModule:
                 recording_thread.start()
 
                 self.print_feedback_two("Waiting for hotword `start recording` before we resume recording...", uiThread)
+                self.print_speak_now("SAY 'start recording'", uiThread)
                 self.print_feedback_one("", uiThread)
                 self.print_feedback_five("", uiThread)
 
@@ -144,11 +148,14 @@ class SpeechRecognitionModule:
                 if not self.has_adjusted_for_voice:
                         self.print_feedback_two("Please wait while we detect environment noise ...", uiThread)
                         with self.mic as source: self.recognizer.adjust_for_ambient_noise(source)
-                        string_to_show = "Environment energy is {}, Start speaking ... ".format(int(self.recognizer.energy_threshold))
+                        string_to_show = "Environment energy is {}".format(int(self.recognizer.energy_threshold))
                         self.print_feedback_two(string_to_show, uiThread)
+                        self.print_speak_now("SPEAK NOW", uiThread)
                         self.has_adjusted_for_voice = True
                 else:
-                        self.print_feedback_two("Please continue speaking...", uiThread)
+                        string_to_show = "Environment energy is {}".format(int(self.recognizer.energy_threshold))
+                        self.print_feedback_two(string_to_show, uiThread)
+                        self.print_speak_now("SPEAK NOW", uiThread)
 
                 with self.mic as source:
                         audio = None

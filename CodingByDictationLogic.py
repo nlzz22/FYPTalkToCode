@@ -88,6 +88,7 @@ class CodingByDictationLogic:
         self.voice_lock = threading.Lock()
         self.buffer_semaphore = threading.Lock()
         self.audio_count = 0
+        self.audio_count_semaphore = threading.Lock()
 
         self.buffer = []
         self.hotwordRecognizer = None
@@ -150,6 +151,9 @@ class CodingByDictationLogic:
     def print_feedback_five(self, feedback, uiThread):
         uiThread.UpdateFeedbackFive(feedback)
 
+    def print_speak_now(self, feedback, uiThread):
+        uiThread.UpdateSpeakNow(feedback)
+
     def get_struct_command_from_text_list(self, wordParser, text_list):
         struct_command_list = []
         
@@ -211,6 +215,11 @@ class CodingByDictationLogic:
     def lock_voice(self, uiThread):
         self.voice_lock.acquire()
         uiThread.OffRecordingMode()
+        self.audio_count_semaphore.acquire()
+        self.audio_count = 0
+        self.print_feedback_three("Audio waiting for processing : 0", uiThread)
+        self.audio_count_semaphore.release()
+        
         self.buffer_semaphore.acquire()
         self.buffer = []
         try:
@@ -247,9 +256,10 @@ class CodingByDictationLogic:
             
             self.print_feedback_two("", uiThread)
             
-
-            self.print_feedback_three("Audio #" + str(self.audio_count) + " has been read.", uiThread)
+            self.audio_count_semaphore.acquire()
             self.audio_count += 1
+            self.print_feedback_three("Audio waiting for processing : " + str(self.audio_count), uiThread)
+            self.audio_count_semaphore.release()
 
             self.buffer_semaphore.acquire()
             self.buffer.append(audio)
@@ -323,7 +333,12 @@ class CodingByDictationLogic:
                 # could not understand audio / user stop speaking.
                 self.lock_voice(uiThread)
                 continue
-                    
+
+            if self.read_from == CodingByDictationLogic.READ_FROM_SPEECH:
+                self.audio_count_semaphore.acquire()
+                self.audio_count -= 1
+                self.print_feedback_three("Audio waiting for processing : " + str(self.audio_count), uiThread)
+                self.audio_count_semaphore.release()          
 
             # text to processed_text
             wordCorrector = WordCorrector(read_words, variables_list)
