@@ -124,9 +124,14 @@ class CodingByDictationLogic:
             else:
                 curr_text += self.text_history_stack.stack[i] + " "
 
-        structured_command = self.get_struct_command_from_text_list(wordParser, accepted_text_list)
-        if to_add_corrected:
-            structured_command += " " + parsed_sc
+        structured_command = ""
+        try:
+            structured_command = self.get_struct_command_from_text_list(wordParser, accepted_text_list)
+            if to_add_corrected:
+                structured_command += " " + parsed_sc
+        except:
+            structured_command = ""
+        
         code = scParser.parse_structural_command_to_code(structured_command)
       
         uiThread.UpdateCodeBody(code)
