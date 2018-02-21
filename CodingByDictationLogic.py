@@ -75,6 +75,7 @@ class CodingByDictationLogic:
         self.read_from = CodingByDictationLogic.READ_FROM_SPEECH
         self.api_used = CodingByDictationLogic.GOOGLE_CLOUD
         self.text_filename = "FindMaximum.txt" # default is "FindMaximum.txt"
+        self.to_show_time = False
 
         self.variables_stack = Stack()
         self.text_history_stack = Stack()
@@ -338,11 +339,18 @@ class CodingByDictationLogic:
                 self.audio_count_semaphore.acquire()
                 self.audio_count -= 1
                 self.print_feedback_three("Audio waiting for processing : " + str(self.audio_count), uiThread)
-                self.audio_count_semaphore.release()          
+                self.audio_count_semaphore.release()
+
+            if self.to_show_time:
+                start_time = time.time()
 
             # text to processed_text
             wordCorrector = WordCorrector(read_words, variables_list)
             corrected = wordCorrector.run_correction()
+
+            if self.to_show_time:
+                checkpoint1 = time.time()
+                print ("Time to word correction = " + str(checkpoint1 - start_time))
 
             num_undo = corrected.strip().count("undo")
 
@@ -368,8 +376,16 @@ class CodingByDictationLogic:
                 self.lock_voice(uiThread)
                 continue
 
+            if self.to_show_time:
+                checkpoint2 = time.time()
+                print ("Time to parse word = " + str(checkpoint2 - checkpoint1))
+
             # Deep copy object over, else it will be overwritten (this is some weird bug.)
             result_structure = copy.deepcopy(temp_parse_struct)
+
+            if self.to_show_time:
+                checkpoint3 = time.time()
+                print ("Time to deep copy structure = " + str(checkpoint3- checkpoint2))
 
             for i in range(0, len(result_structure["sentence_status"])):                
                 if result_structure["sentence_status"][i]: # sentence can be parsed.
@@ -403,6 +419,10 @@ class CodingByDictationLogic:
 
                     self.current_index += 1
 
+            if self.to_show_time:
+                checkpoint4 = time.time()
+                print ("Time to iterate sentences in structure = " + str(checkpoint4 - checkpoint3))
+
             # Feedback to user
             if error_message != "": # there is error message
                 if potential_missing != "":
@@ -415,13 +435,25 @@ class CodingByDictationLogic:
             else:
                 self.print_feedback_one(" ", uiThread)
 
+            if self.to_show_time:
+                checkpoint5 = time.time()
+                print ("Time to parse word = " + str(checkpoint5 - checkpoint4))
+
             # printlines for debug
             print "Audio read by Speech Recognizer : " + read_words
             print "Processed text after correction : " + corrected
             self.logger.log(read_words + " --> " + corrected)
 
+            if self.to_show_time:
+                checkpoint6 = time.time()
+                print ("Time to print console and log = " + str(checkpoint6 - checkpoint5))
+
             self.print_feedback_four("Read: " + corrected, uiThread)
             
             self.print_history_text(uiThread)
             # self.print_all_var() # for debug only.
+
+            if self.to_show_time:
+                checkpoint7 = time.time()
+                print ("Time to update UI = " + str(checkpoint7 - checkpoint6))
 
