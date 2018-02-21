@@ -1,3 +1,5 @@
+#!/usr/bin/env python2
+
 import speech_recognition as sr
 from speech_recognition import * 
 from os import path

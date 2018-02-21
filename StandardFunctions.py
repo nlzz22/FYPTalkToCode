@@ -1,3 +1,5 @@
+#!/usr/bin/env python2
+
 class StandardFunctions:
     def __init__(self):
         list_std_func = ["printf", "scanf"]

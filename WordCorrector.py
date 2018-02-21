@@ -1,3 +1,5 @@
+#!/usr/bin/env python2
+
 from num2words import num2words
 from word2number import w2n
 import hashlib

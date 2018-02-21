@@ -1,3 +1,5 @@
+#!/usr/bin/env python2
+
 class Logger:
     def __init__(self, filename="log.txt"):
         self.filename = filename

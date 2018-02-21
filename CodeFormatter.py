@@ -1,3 +1,5 @@
+#!/usr/bin/env python2
+
 import subprocess
 from subprocess import STDOUT,PIPE
 import os

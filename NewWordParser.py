@@ -1,3 +1,5 @@
+#!/usr/bin/env python2
+
 import re
 from word2number import w2n # External library to parse words to numbers
 from pyparsing import * # External parser library

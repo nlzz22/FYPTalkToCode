@@ -1,3 +1,5 @@
+#!/usr/bin/env python2
+
 from SpeechRecogniser import SpeechRecognitionModule as SpeechReader
 from WordCorrector import WordCorrector
 from NewWordParser import WordParser as newWordParser

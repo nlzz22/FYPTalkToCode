@@ -1,3 +1,5 @@
+#!/usr/bin/env python2
+
 import unittest
 from NewWordParser import WordParser
 from WordCorrector import WordCorrector

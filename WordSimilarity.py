@@ -1,3 +1,5 @@
+#!/usr/bin/env python2
+
 import jellyfish
 import pronouncing
 from StandardFunctions import StandardFunctions

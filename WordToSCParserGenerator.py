@@ -1,3 +1,5 @@
+#!/usr/bin/env python2
+
 with open("NewWordParser.py", "r") as readfile:
     get_next = False
     data = readfile.readlines()

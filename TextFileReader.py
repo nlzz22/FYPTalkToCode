@@ -1,3 +1,5 @@
+#!/usr/bin/env python2
+
 class TextFileReader:
     def __init__(self, filename):
         self.filename = filename
