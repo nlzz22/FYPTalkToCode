@@ -149,11 +149,13 @@ class SpeechRecognitionModule:
                         self.print_feedback_two("Please wait while we detect environment noise ...", uiThread)
                         with self.mic as source: self.recognizer.adjust_for_ambient_noise(source)
                         string_to_show = "Environment energy is {}".format(int(self.recognizer.energy_threshold))
+                        self.recog_thresh = self.recognizer.energy_threshold
                         self.print_feedback_two(string_to_show, uiThread)
                         self.print_speak_now("SPEAK NOW", uiThread)
                         self.has_adjusted_for_voice = True
                 else:
-                        string_to_show = "Environment energy is {}".format(int(self.recognizer.energy_threshold))
+                        self.recognizer.energy_threshold = self.recog_thresh
+                        string_to_show = "Environment energy is {}".format(int(self.recog_thresh))
                         self.print_feedback_two(string_to_show, uiThread)
                         self.print_speak_now("SPEAK NOW", uiThread)
 
