@@ -21,7 +21,7 @@ Lam Zhen Zong, Nicholas
 
 ## Credits
 
-Ooi Wei Tsang (for supervising and mentoring this project)
+Ooi Wei Tsang (for supervising and mentoring this project) <br />
 Gao Risheng (for the component to convert structured command to code)
 
 ## License
