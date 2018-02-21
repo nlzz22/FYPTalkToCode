@@ -93,7 +93,7 @@ class SpeechRecognitionModule:
                 recording_thread = Thread(target=self.persistent_listen, args = (m, r, 1, 2)) # timeout, phrase limit
                 recording_thread.start()
 
-                
+                uiThread.ShowVisualizer(False)
 
                 self.print_feedback_two("Waiting for hotword `start recording` before we resume recording...", uiThread)
                 self.print_speak_now("SAY 'start recording'", uiThread)
