@@ -67,7 +67,7 @@ class SpeechRecognitionModule:
                             self.record_buffer_lock.release()
                             continue
                     try:
-                        keyword_entries = [["start recording", 1e-50], ["stop", 1e-49], ["run", 1e-49]]
+                        keyword_entries = [["start recording", 1e-48], ["stop", 1e-49], ["run", 1e-49], [" ", 1e-48]]
                         text = recognizer.recognize_sphinx(audio, keyword_entries=keyword_entries) # use offline sphinx recognition.
                         lower_text = text.lower()
                         if "start recording" in lower_text: # recognizing hotword
@@ -90,16 +90,18 @@ class SpeechRecognitionModule:
                 r = sr.Recognizer()
                 m = sr.Microphone()
 
-                recording_thread = Thread(target=self.persistent_listen, args = (m, r, None, None))
+                recording_thread = Thread(target=self.persistent_listen, args = (m, r, 1, 2)) # timeout, phrase limit
                 recording_thread.start()
+
+                
 
                 self.print_feedback_two("Waiting for hotword `start recording` before we resume recording...", uiThread)
                 self.print_speak_now("SAY 'start recording'", uiThread)
                 self.print_feedback_one("", uiThread)
                 self.print_feedback_five("", uiThread)
 
-                recognize_threads = [1,2]
-                for i in range(2):
+                recognize_threads = [1,2,3]
+                for i in range(3):
                         recognize_threads[i] = Thread(target=self.recognize_keyword, args = (r,))
                         recognize_threads[i].start()
 
