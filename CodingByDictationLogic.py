@@ -351,6 +351,9 @@ class CodingByDictationLogic:
                     self.undo(True)
                 continue
 
+            if "not recording" in corrected or "start recording" in read_words:
+                continue
+
             # processed_text to structured_command / code and display to user.
             text_to_parse = self.build_string_from_stack(self.text_history_stack, self.accepted_indices) + " " + str(corrected)
 
