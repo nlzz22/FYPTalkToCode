@@ -19,6 +19,11 @@ by the program.
 
 Lam Zhen Zong, Nicholas
 
+## Credits
+
+Ooi Wei Tsang (for supervising and mentoring this project)
+Gao Risheng (for the component to convert structured command to code)
+
 ## License
 
 School of Computing, National University of Singapore
