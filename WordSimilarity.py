@@ -23,16 +23,25 @@ def get_phonetic_encoding_from_pronouncing(word):
     else:
         return pronouncing.rhyming_part(phones[0])
 
+def get_sim_index(encoding_function, str_compare_function, word1, word2):
+    # get phonetic encoding
+    phonetic1 = unicode(encoding_function(word1))
+    phonetic2 = unicode(encoding_function(word2))
+
+    # print str(encoding_function) + " " + str(phonetic1) + ", " + str(phonetic2)
+    
+    # get similarity index
+    sim_index = str_compare_function(phonetic1, phonetic2)
+
+    return sim_index
+
 def sounds_like_index(word1, word2, to_print=False, must_match=False):
     # convert from string to unicode
     word1encoded = unicode(word1)
     word2encoded = unicode(word2)
     
-    # get phonetic encoding with jellyfish
-    phonetic1 = unicode(jellyfish.metaphone(word1encoded))
-    phonetic2 = unicode(jellyfish.metaphone(word2encoded))
-
-    jelly_sim = jellyfish.jaro_winkler(phonetic1, phonetic2)
+    # jellyfish metaphone similarity
+    jelly_sim = get_sim_index(jellyfish.metaphone, jellyfish.jaro_winkler, word1encoded, word2encoded)
 
     # get phonetic encoding with pronouncing
     phonetic1b = unicode(get_phonetic_encoding_from_pronouncing(word1encoded))
