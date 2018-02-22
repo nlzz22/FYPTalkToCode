@@ -4,8 +4,9 @@ import jellyfish
 import pronouncing
 from StandardFunctions import StandardFunctions
 
-WEIGHT_JELLYFISH = 0.35
-WEIGHT_PRONOUNCING = 0.65
+WEIGHT_METAPHONE = 0.35
+WEIGHT_PRONOUNCING = 0.55
+WEIGHT_SOUNDEX = 0.1
 MIN_WEIGHT_SIM = 0.67
 MIN_WEIGHT_IGNORE_OTHER = 0.9
 
@@ -27,8 +28,6 @@ def get_sim_index(encoding_function, str_compare_function, word1, word2):
     # get phonetic encoding
     phonetic1 = unicode(encoding_function(word1))
     phonetic2 = unicode(encoding_function(word2))
-
-    # print str(encoding_function) + " " + str(phonetic1) + ", " + str(phonetic2)
     
     # get similarity index
     sim_index = str_compare_function(phonetic1, phonetic2)
@@ -41,29 +40,32 @@ def sounds_like_index(word1, word2, to_print=False, must_match=False):
     word2encoded = unicode(word2)
     
     # jellyfish metaphone similarity
-    jelly_sim = get_sim_index(jellyfish.metaphone, jellyfish.jaro_winkler, word1encoded, word2encoded)
+    metaphone_sim = get_sim_index(jellyfish.metaphone, jellyfish.jaro_winkler, word1encoded, word2encoded)
+
+    # jellyfish soundex similarity
+    soundex_sim = get_sim_index(jellyfish.soundex, jellyfish.jaro_winkler, word1encoded, word2encoded)
 
     # get phonetic encoding with pronouncing
     phonetic1b = unicode(get_phonetic_encoding_from_pronouncing(word1encoded))
     phonetic2b = unicode(get_phonetic_encoding_from_pronouncing(word2encoded))
 
+    # pronouncing similarity
     if phonetic1b == unicode(-1) or phonetic2b == unicode(-1):
-        pronounce_sim = jelly_sim
+        pronounce_sim = metaphone_sim
     else:
         pronounce_sim = jellyfish.jaro_winkler(phonetic1b, phonetic2b)
 
     if to_print:
-        print " jellyfish : " + str(phonetic1) + ", " + str(phonetic2)
-        print " pronounce : " + str(phonetic1b) + ", " + str(phonetic2b)
-        print " jellyfish : " + str(jelly_sim) + ", pro : " + str(pronounce_sim)
+        print " metaphone : " + str(metaphone_sim) + ", pro : " + str(pronounce_sim) + ", soundex : " + str(soundex_sim)
 
     # Return sim index
-    if pronounce_sim >= MIN_WEIGHT_IGNORE_OTHER or jelly_sim >= MIN_WEIGHT_IGNORE_OTHER:
-        return max(pronounce_sim, jelly_sim)
-    elif not must_match and (pronounce_sim < MIN_WEIGHT_SIM or jelly_sim < MIN_WEIGHT_SIM):
+    max_sim = max(max(metaphone_sim, pronounce_sim), soundex_sim)
+    if max_sim >= MIN_WEIGHT_IGNORE_OTHER:
+        return max_sim
+    elif not must_match and (pronounce_sim < MIN_WEIGHT_SIM or metaphone_sim < MIN_WEIGHT_SIM): # soundex is not used here.
         return 0
     else:
-        return WEIGHT_JELLYFISH * jelly_sim + WEIGHT_PRONOUNCING * pronounce_sim
+        return WEIGHT_METAPHONE * metaphone_sim + WEIGHT_PRONOUNCING * pronounce_sim + WEIGHT_SOUNDEX * soundex_sim
 
 # Gets the most similar word in pronounciation to the given word from given word_list
 # Example use: get_most_similar_word("eye", ["i", "numbers", "max", "length"]) returns "i"

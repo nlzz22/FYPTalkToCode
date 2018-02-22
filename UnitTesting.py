@@ -1049,6 +1049,14 @@ class TestWordCorrectorMethods(unittest.TestCase):
         expected = "declare integer max equal one end declare declare integer min end declare max equal one"
 
         self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
+
+    def test_word_corrector_mine_is_to_minus(self):
+        word = "energy mine is mine is"
+        wc = WordCorrector(word, ["energy"])
+        corrected = wc.run_correction()
+        expected = "energy minus minus"
+
+        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
         
 
     def format_spaces(self, sentence):

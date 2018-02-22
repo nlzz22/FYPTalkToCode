@@ -234,6 +234,9 @@ class WordCorrector:
         for keyword_pair in keyword_list_pair:
             keyword = keyword_pair.get_keyword()
             syllable = keyword_pair.get_syllable()
+            # some keywords are not so common, they need a min sim index to allow the correction.
+            # Normally, this value is 0 to signify this is not a special case.
+            keyword_min_correction_value = keyword_pair.get_min_correct()
             num_part_query = min(syllable, len(parts))
 
             if not can_match_var_type and self.is_variable_type(keyword):
@@ -257,7 +260,7 @@ class WordCorrector:
                 else:
                     curr_sim = sounds_like_index(curr_wrong_word, keyword)          
 
-                if curr_sim > max_sim and curr_sim > min_match:
+                if curr_sim > max_sim and curr_sim > min_match and curr_sim > keyword_min_correction_value:
                     # Example: Don't correct "length with parameter integer" --> "parameter" 
                     if not self.is_part_of(curr_wrong_word, keyword):
                         max_sim = curr_sim
