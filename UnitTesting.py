@@ -1057,7 +1057,16 @@ class TestWordCorrectorMethods(unittest.TestCase):
         expected = "energy minus minus"
 
         self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
-        
+
+    def test_word_corrector_sequent_to_equal(self):
+        word = "Max sequent Energy"
+        wc = WordCorrector(word, ["energy", "max"])
+        corrected = wc.run_correction()
+        expected = "max equal energy"
+
+        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
+
+    
 
     def format_spaces(self, sentence):
         return UtilityClass().format_spaces(sentence)
