@@ -1066,6 +1066,48 @@ class TestWordCorrectorMethods(unittest.TestCase):
 
         self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
 
+    def test_word_corrector_correct_than_to_then(self):
+        # special case, "than" is only correct if "greater" or "less" comes before it.
+        word = "begin if numbers array index i greater than Max than"
+        wc = WordCorrector(word, ["numbers", "i", "max"])
+        corrected = wc.run_correction()
+        expected = "begin if numbers array index i greater than max then"
+
+        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
+
+    def test_word_corrector_correct_then_to_than(self):
+        # corrects "greater then" to "greater than"
+        word = "begin if numbers array index i greater then Max then"
+        wc = WordCorrector(word, ["numbers", "i", "max"])
+        corrected = wc.run_correction()
+        expected = "begin if numbers array index i greater than max then"
+
+        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
+
+    def test_word_corrector_than_then_dilemma(self):
+        # A combination of both test cases.
+        word = "begin if numbers array index i greater then Max than"
+        wc = WordCorrector(word, ["numbers", "i", "max"])
+        corrected = wc.run_correction()
+        expected = "begin if numbers array index i greater than max then"
+
+        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
+
+    def test_word_corrector_end_this_to_end_if(self):
+        word = "end this"
+        wc = WordCorrector(word, [])
+        corrected = wc.run_correction()
+        expected = "end if"
+
+        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
+
+    def test_word_corrector_begin_this_possible_east(self):
+        word = "create function main with return type void begin east equal one end function"
+        wc = WordCorrector(word, ["east"])
+        corrected = wc.run_correction()
+        expected = word
+
+        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
     
 
     def format_spaces(self, sentence):

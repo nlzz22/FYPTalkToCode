@@ -75,8 +75,9 @@ class WordCorrector:
                     self.words_list[i+1] = "i"
             # correct begin eve, begin is --> begin if
             elif (self.get_word(i) == "begin" or self.get_word(i) == "end") and \
-                 (self.get_word(i+1) == "eve" or self.get_word(i+1) == "is" or self.get_word(i+1) == "east"):
-                self.words_list[i+1] = "if"
+                 (self.get_word(i+1) == "eve" or self.get_word(i+1) == "is" or self.get_word(i+1) == "east" or self.get_word(i+1) == "this"):
+                if self.words_list[i+1] not in self.variables_list:
+                    self.words_list[i+1] = "if"
             # correct reef --> with
             elif self.get_word(i) == "reef":
                 if "reef" not in self.variables_list:
@@ -135,6 +136,13 @@ class WordCorrector:
                 is_char_encountered = True
             elif (current_word in self.variables_list or current_word in self.keyword_list or current_word in w2n.american_number_system):
                 # do not correct any variables or keywords (including numbers)
+
+                # Handle special cases:
+                prev_word = self.query_latest_added_word()
+                if current_word == "than" and prev_word != "greater" and prev_word != "less":
+                    current_word = "then"
+                elif current_word == "then" and (prev_word == "greater" or prev_word == "less"):
+                    current_word = "than"                    
                 word_to_add = current_word
                 to_do_correction = True
             else:
