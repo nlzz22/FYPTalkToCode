@@ -7,8 +7,8 @@ import os
 class CodeFormatter:
     def __init__(self):
         self.language = "C"
-        self.config_file = "uncrustify/cfg/defaults.cfg"
-        self.exe_file = "uncrustify/uncrustify.exe"
+        self.config_file = os.path.join("uncrustify", "cfg", "defaults.cfg")
+        self.exe_file = os.path.join("uncrustify", "uncrustify.exe")
         
     def format_code(self, code):
         self.code = code

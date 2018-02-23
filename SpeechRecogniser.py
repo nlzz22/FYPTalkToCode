@@ -3,6 +3,7 @@
 import speech_recognition as sr
 from speech_recognition import * 
 from os import path
+from os import sep
 import threading
 from threading import Thread
 import time
@@ -176,10 +177,12 @@ class SpeechRecognitionModule:
 
         def read_from_audio_file(self, uiThread):
                 self.print_feedback_two("Reading from audio file selected! ", uiThread)
-                input_filename = raw_input('Please enter the filename (Work\\...\\filenamewithoutwav) : \n')
+                input_filename = raw_input('Please enter the filename (Work/.../filenamewithoutwav) : \n')
+                parts = input_filename.split("/")
+                input_filename = sep.join(parts)
                 
                 self.print_feedback_two("Reading from audio file, please wait...", uiThread)
-                AUDIO_FILE = path.join(path.dirname(path.realpath(__file__)), "TestSamples\\" + input_filename + ".wav")
+                AUDIO_FILE = path.join(path.dirname(path.realpath(__file__)), "TestSamples", input_filename + ".wav")
 
                 with sr.AudioFile(AUDIO_FILE) as source:
                         audio = self.recognizer.record(source)  # read the entire audio file
