@@ -3,6 +3,7 @@
 import subprocess
 from subprocess import STDOUT,PIPE
 import os
+from PlatformChecker import *
 
 class CodeFormatter:
     def __init__(self):
@@ -24,7 +25,15 @@ class CodeFormatter:
         CREATE_NO_WINDOW = 0x08000000
 
         cmd = [self.exe_file, '-l', self.language, '-c', self.config_file]
-        proc = subprocess.Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=STDOUT, creationflags=CREATE_NO_WINDOW)
+        proc = ""
+
+        if is_windows_os():
+            # Windows specific command
+            proc = subprocess.Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=STDOUT, creationflags=CREATE_NO_WINDOW)
+        else:
+            # Other os's command
+            proc = subprocess.Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=STDOUT)
+            
         formatted_code, err = proc.communicate(code + "\n")
 
         return formatted_code

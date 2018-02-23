@@ -2,6 +2,7 @@
 
 import os.path,subprocess
 from subprocess import STDOUT,PIPE
+from PlatformChecker import *
 
 def parse_structural_command_to_code(structural_command):
     defaultProgramHeader = "#c_program SampleProgram\n"
@@ -38,7 +39,15 @@ def execute_java(java_dir, java_file, stdin):
 
     # run the java program
     cmd = ['java ', java_file]
-    proc = subprocess.Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=STDOUT, creationflags=CREATE_NO_WINDOW)
+    proc = ""
+
+    if is_windows_os():
+        # Windows specific command
+        proc = subprocess.Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=STDOUT, creationflags=CREATE_NO_WINDOW)
+    else:
+        # Other os's command
+        proc = subprocess.Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=STDOUT)
+        
     
     # pass input to java program
     stdout,stderr = proc.communicate(stdin)
