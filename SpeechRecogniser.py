@@ -46,21 +46,32 @@ class SpeechRecognitionModule:
         def print_speak_now(self, feedback, uiThread):
             uiThread.UpdateSpeakNow(feedback)
 
-        def persistent_listen(self, mic, rec, timeout=None, phrase_time_limit=None):
-                rec.energy_threshold = 2000
+        def persistent_listen(self, timeout=None, phrase_time_limit=None):
+                r = sr.Recognizer()
+                r.energy_threshold = 1000
+                m = sr.Microphone()
+
                 while not self.is_hotword_found:
-                        with mic as source:
+                        with m as source:
                                 audio = None
                                 try:
-                                        audio = rec.listen(source, timeout=timeout, phrase_time_limit=phrase_time_limit)
+                                        self.persist_listen_lock.acquire()
+                                        audio = r.listen(source, timeout=timeout, phrase_time_limit=phrase_time_limit)
+                                        self.persist_listen_lock.release()
                                 except WaitTimeoutError:
                                         audio = None
+                                        try:
+                                                self.persist_listen_lock.release()
+                                        except:
+                                                pass
                                 if audio is not None:
                                         self.record_buffer_lock.acquire()
                                         self.record_buffer.append(audio)
                                         self.record_buffer_lock.release()
         
         def recognize_keyword(self, recognizer):
+            keyword_entries = [["start recording", 1e-48], ["stop", 1e-49], ["run", 1e-49], [" ", 1e-48]]
+
             while not self.is_hotword_found:
                     self.record_buffer_lock.acquire()
                     if len(self.record_buffer) > 0:
@@ -70,7 +81,6 @@ class SpeechRecognitionModule:
                             self.record_buffer_lock.release()
                             continue
                     try:
-                        keyword_entries = [["start recording", 1e-48], ["stop", 1e-49], ["run", 1e-49], [" ", 1e-48]]
                         text = recognizer.recognize_sphinx(audio, keyword_entries=keyword_entries) # use offline sphinx recognition.
                         lower_text = text.lower()
                         if "start recording" in lower_text: # recognizing hotword
@@ -87,21 +97,27 @@ class SpeechRecognitionModule:
         def wait_for_hotword(self, uiThread):
                 self.record_buffer = []
                 self.record_buffer_lock = threading.Lock()
+                self.persist_listen_lock = threading.Lock()
                 self.error_counter = 0
                 self.is_hotword_found = False
 
                 r = sr.Recognizer()
-                m = sr.Microphone()
 
-                recording_thread = Thread(target=self.persistent_listen, args = (m, r, 1, 2)) # timeout, phrase limit
+                RECORD_THREAD_TIMEOUT = 0.5
+                RECORD_THREAD_PHRASE_LIMIT = 3
+                recording_thread = Thread(target=self.persistent_listen, \
+                                          args = (RECORD_THREAD_TIMEOUT, RECORD_THREAD_PHRASE_LIMIT))
+                recording_thread2 = Thread(target=self.persistent_listen, \
+                                          args = (RECORD_THREAD_TIMEOUT, RECORD_THREAD_PHRASE_LIMIT))
                 recording_thread.start()
+                recording_thread2.start()
 
                 uiThread.ShowVisualizer(False)
 
                 self.print_feedback_two("Waiting for hotword `start recording` before we resume recording...", uiThread)
                 self.print_speak_now("SAY 'start recording'", uiThread)
                 self.print_feedback_one("", uiThread)
-                self.print_feedback_five("", uiThread)
+                self.print_feedback_five("Please keep quiet for 1 second before saying 'start recording'", uiThread)
 
                 recognize_threads = [1,2,3]
                 for i in range(3):
@@ -111,6 +127,7 @@ class SpeechRecognitionModule:
                 # repeatedly wait for hotword
                 while (True):
                         if self.is_hotword_found:
+                                self.print_feedback_five("", uiThread)
                                 break
 
         def get_sound_energy(self, mic, queue):
