@@ -13,6 +13,8 @@ import audioop
 from credentials import APICredentials
 
 class SpeechRecognitionModule:
+        MIN_REQUIRED_ENERGY = 500
+        
         def __init__(self):
             self.recognizer = sr.Recognizer()
             self.mic = sr.Microphone()
@@ -170,6 +172,11 @@ class SpeechRecognitionModule:
                 if not self.has_adjusted_for_voice:
                         self.print_feedback_two("Please wait while we detect environment noise ...", uiThread)
                         with self.mic as source: self.recognizer.adjust_for_ambient_noise(source)
+
+                        # Adjusts the energy threshold level.
+                        self.recognizer.energy_threshold = max( \
+                                self.recognizer.energy_threshold, SpeechRecognitionModule.MIN_REQUIRED_ENERGY)
+                        
                         string_to_show = "Environment energy is {}".format(int(self.recognizer.energy_threshold))
                         self.recog_thresh = self.recognizer.energy_threshold
                         self.print_feedback_two(string_to_show, uiThread)
