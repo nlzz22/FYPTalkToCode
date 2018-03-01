@@ -14,7 +14,7 @@ while True:
 
     # recognize speech using Sphinx
     keyword_entries = [["start recording", 1e-3], ["ah", 1e-49], ["start rack cording", 1e-4], ["stuck recording", 1e-4] ,\
-                       ["stop right", 1e-5]]
+                       ["stott reporting", 1e-5], ["saw ray clothing", 1e-5]]
 
     try:
         a =  r.recognize_sphinx(audio, keyword_entries=keyword_entries)

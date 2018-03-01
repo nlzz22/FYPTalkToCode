@@ -73,7 +73,7 @@ class SpeechRecognitionModule:
         
         def recognize_keyword(self, recognizer):
             keyword_entries = [["start recording", 1e-3], ["ah", 1e-49], ["start rack cording", 1e-4], ["stuck recording", 1e-4] ,\
-                       ["stop right", 1e-5]]
+                       ["stott reporting", 1e-5], ["saw ray clothing", 1e-5]]
             #[["start recording", 1e-48], ["stop", 1e-49], ["run", 1e-49], [" ", 1e-48]]
 
             while not self.is_hotword_found:
