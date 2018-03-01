@@ -72,7 +72,8 @@ class SpeechRecognitionModule:
                                         self.record_buffer_lock.release()
         
         def recognize_keyword(self, recognizer):
-            keyword_entries = [["start recording", 1e-48], ["stop", 1e-49], ["run", 1e-49], [" ", 1e-48]]
+            keyword_entries = [["start recording", 1e-3], ["ah", 1e-49]]
+            #[["start recording", 1e-48], ["stop", 1e-49], ["run", 1e-49], [" ", 1e-48]]
 
             while not self.is_hotword_found:
                     self.record_buffer_lock.acquire()
