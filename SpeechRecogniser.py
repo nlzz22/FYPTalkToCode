@@ -72,7 +72,8 @@ class SpeechRecognitionModule:
                                         self.record_buffer_lock.release()
         
         def recognize_keyword(self, recognizer):
-            keyword_entries = [["start recording", 1e-3], ["ah", 1e-49]]
+            keyword_entries = [["start recording", 1e-3], ["ah", 1e-49], ["start rack cording", 1e-4], ["stuck recording", 1e-4] ,\
+                       ["stop right", 1e-5]]
             #[["start recording", 1e-48], ["stop", 1e-49], ["run", 1e-49], [" ", 1e-48]]
 
             while not self.is_hotword_found:
@@ -85,8 +86,10 @@ class SpeechRecognitionModule:
                             continue
                     try:
                         text = recognizer.recognize_sphinx(audio, keyword_entries=keyword_entries) # use offline sphinx recognition.
-                        lower_text = text.lower()
-                        if "start recording" in lower_text: # recognizing hotword
+                        lower_text = text.lower().replace("ah", "").strip()
+                        # recognizing hotword: if there exists some words, except for the word `ah`
+                        # it means that there is some hotword found which sounds like `start recording`
+                        if len(lower_text) > 0:
                                 self.is_hotword_found = True
                     except sr.UnknownValueError as f:
                         self.error_counter += 1
