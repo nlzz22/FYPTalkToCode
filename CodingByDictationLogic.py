@@ -294,6 +294,8 @@ class CodingByDictationLogic:
         while to_continue_reading:
             
             variables_list = self.build_var_list_from_stack(self.variables_stack)
+            if "x" in variables_list:
+                self.print_feedback_one("Error : 'x' is not an allowed variable, please undo.", uiThread)
             
             # Speech to text
             read_audio = ""
