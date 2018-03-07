@@ -5,14 +5,18 @@ import WordSimilarity
 class Keywords:
     def __init__(self):
         list_keywords = []
+        list_keywords.append(Keyword("ampersand", 3))
         list_keywords.append(Keyword("array", 2))
+        list_keywords.append(Keyword("backslash", 2))
         list_keywords.append(Keyword("begin", 2))
         list_keywords.append(Keyword("call", 1))
         list_keywords.append(Keyword("character", 3))
+        list_keywords.append(Keyword("colon", 2))
         list_keywords.append(Keyword("condition", 3))
         list_keywords.append(Keyword("create", 2))
         list_keywords.append(Keyword("declare", 2))
-        list_keywords.append(Keyword("divide", 2))
+        list_keywords.append(Keyword("divide", 2, 0.9))
+        list_keywords.append(Keyword("dollar", 2))
         list_keywords.append(Keyword("double", 2))
         list_keywords.append(Keyword("else", 1))
         list_keywords.append(Keyword("end", 1))
@@ -30,7 +34,8 @@ class Keywords:
         list_keywords.append(Keyword("minus", 2))
         list_keywords.append(Keyword("modulo", 3))
         list_keywords.append(Keyword("not", 1))
-        list_keywords.append(Keyword("parameter", 4))
+        list_keywords.append(Keyword("parameter", 4, 0.8))
+        list_keywords.append(Keyword("percent", 2))
         list_keywords.append(Keyword("plus", 1))
         list_keywords.append(Keyword("return", 2))
         list_keywords.append(Keyword("size", 1))
@@ -72,6 +77,14 @@ class Keywords:
 
     def get_max_num_syllable(self):
         return self.max_syllable
+
+    def get_keyword_object(self, word):
+        if word in self.keywords:
+            for keyword_obj in self.keyword_syllable_triple:
+                if keyword_obj.get_keyword() == word:
+                    return keyword_obj
+
+        return Keyword(word)
 
 
 class Keyword:

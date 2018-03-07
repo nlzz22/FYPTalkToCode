@@ -14,10 +14,10 @@ class WordCorrector:
         self.space = ""
         self.var_types = ["integer", "long", "float", "double", "boolean", "character", "string", "void"]
         self.variables_list = var_list + StandardFunctions().get_std_functions()
-        kw = Keywords()
-        self.max_syllable = kw.get_max_num_syllable()
-        self.keyword_list = kw.get_keywords()
-        self.word_syllable_list = self.build_word_syllable_list(kw)
+        self.kw = Keywords()
+        self.max_syllable = self.kw.get_max_num_syllable()
+        self.keyword_list = self.kw.get_keywords()
+        self.word_syllable_list = self.build_word_syllable_list(self.kw)
         self.correction_list = self.word_syllable_list
 
     def run_correction(self):
@@ -191,21 +191,21 @@ class WordCorrector:
         for variable in self.variables_list:
             temp_list.append(KeywordObj(variable))
             
-        return temp_list
+        return list(reversed(temp_list)) # this prioritises variables to keywords
 
 
     def build_custom_word_syllable_list(self, list_word_to_add):
         temp_list = []
         
         for word in list_word_to_add:
-            temp_list.append(KeywordObj(word))
+            temp_list.append(self.kw.get_keyword_object(word))
 
         return temp_list
    
 
     # Returns true if correction has been performed and return false if no correction is performed.
     def perform_correction(self, wrong_words, keyword_list_pair, max_syllable):
-        min_match = 0.75
+        min_match = 0.78
         
         if wrong_words == "":
             return False
@@ -242,10 +242,15 @@ class WordCorrector:
         for keyword_pair in keyword_list_pair:
             keyword = keyword_pair.get_keyword()
             syllable = keyword_pair.get_syllable()
-            # some keywords are not so common, they need a min sim index to allow the correction.
+            # some keywords are not so common, or not so easily mispronounced,
+            # they need a min sim index to allow the correction.
             # Normally, this value is 0 to signify this is not a special case.
             keyword_min_correction_value = keyword_pair.get_min_correct()
             num_part_query = min(syllable, len(parts))
+
+            '''
+                This part handles some special cases.
+            '''
 
             if not can_match_var_type and self.is_variable_type(keyword):
                 # if keyword cannot be a variable type, skip this keyword.
@@ -255,8 +260,25 @@ class WordCorrector:
                 # if keyword must be a variable type and it is not, skip this keyword.
                 continue
 
+            if keyword == "function" and prev_word != "create" and prev_word != "call" and prev_word != "end":
+                # 'function' must be preceeded with 'create' or 'call' or 'end' keyword
+                continue
+
+            if keyword == "type" and prev_word != "return":
+                # 'type' must be preceeded with 'return'
+                continue
+
+            if (keyword == "less" or keyword == "greater") and prev_word in self.keyword_list and prev_2_words != "end function":
+                # 'less' or 'greater' can only come after variable/literal/end function
+                continue
+
+            '''
+                End of special cases, start matching.
+            '''
+
             # A word with j syllable can be matched with 1 to j wrong words.
-            for j in range(0, num_part_query):
+            # Higher j is prioritised, thus the use of reversed here.
+            for j in list(reversed(range(0, num_part_query))):
                 curr_wrong_word = part_word[j]
 
                 if curr_wrong_word == keyword:
