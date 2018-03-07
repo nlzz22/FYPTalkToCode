@@ -1099,6 +1099,38 @@ class TestWordCorrectorMethods(unittest.TestCase):
         expected = word
 
         self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
+
+    def test_word_corrector_symbol_add(self):
+        word = "declare integer first equal 1 + 2"
+        wc = WordCorrector(word, [])
+        corrected = wc.run_correction()
+        expected = "declare integer first equal one plus two"
+
+        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
+
+    def test_word_corrector_symbol_divide(self):
+        word = "declare integer first equal 1/2"
+        wc = WordCorrector(word, [])
+        corrected = wc.run_correction()
+        expected = "declare integer first equal one divide two"
+
+        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
+
+    def test_word_corrector_symbol_minus(self):
+        word = "declare integer first equal 1 - 2"
+        wc = WordCorrector(word, [])
+        corrected = wc.run_correction()
+        expected = "declare integer first equal one minus two"
+
+        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
+
+    def test_word_corrector_symbol_minus(self):
+        word = "declare integer first equal 1 x 2"
+        wc = WordCorrector(word, [])
+        corrected = wc.run_correction()
+        expected = "declare integer first equal one times two"
+
+        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
     
 
     def format_spaces(self, sentence):

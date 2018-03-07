@@ -9,7 +9,7 @@ from WordSimilarity import get_most_similar_word, sounds_like_index, get_num_syl
 
 class WordCorrector:
     def __init__(self, words, var_list):
-        self.words_list = words.split(" ")
+        self.words_list = self.replace_symbols(words).split(" ")
         self.corrected = ""
         self.space = ""
         self.var_types = ["integer", "long", "float", "double", "boolean", "character", "string", "void"]
@@ -19,6 +19,15 @@ class WordCorrector:
         self.keyword_list = self.kw.get_keywords()
         self.word_syllable_list = self.build_word_syllable_list(self.kw)
         self.correction_list = self.word_syllable_list
+
+    def replace_symbols(self, words):
+        words_without_plus = words.replace("+", "plus")
+        words_without_minus = words_without_plus.replace("-", "minus")
+        words_without_times = words_without_minus.replace(" x ", " times ")
+        words_without_divide = words_without_times.replace("/", " divide ")
+
+        return words_without_divide
+        
 
     def run_correction(self):
         return self.run_correct_words_multiple("")
