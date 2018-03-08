@@ -198,6 +198,10 @@ class WordParser:
             return "\\"
         elif tokens.col != "": # colon
             return ":"
+        elif tokens.equ != "": # equal
+            return "="
+        elif tokens.dot != "": # dot
+            return "."
         else:
             # Code should not reach here
             return " unknown "
@@ -622,6 +626,8 @@ class WordParser:
         symbol_percent = Keyword("percent")
         symbol_backslash = Keyword("backslash")
         symbol_colon = Keyword("colon")
+        symbol_dot = Keyword("dot")
+        symbol_equal = Keyword("equal")
 
         # The list of required keywords
         keywords = Keywords()
@@ -632,14 +638,15 @@ class WordParser:
         not_all_keywords = self.build_not_all_keywords(self.list_keywords)
 
         symbol_expression = keyword_symbol + space + ( symbol_ampersand("amp") | symbol_dollar("dol") | symbol_percent("per") | \
-                                               symbol_backslash("bac") | symbol_colon("col") )
+                                               symbol_backslash("bac") | symbol_colon("col") | symbol_dot("dot") | \
+                                                symbol_equal("equ") )
         symbol_expression.setParseAction(self.update_symbol_expr)
          
         variable_name = Combine(OneOrMore(not_all_keywords + Word(alphas) + Optional(space)))
         character_literal = keyword_character + Word( alphas, max=1 )
         string_literal = keyword_string + Combine(OneOrMore(~keyword_end_string + \
                                                             (symbol_expression + ZeroOrMore(suppress_space) | \
-                                                             Word(alphas) + Optional(space)))) + keyword_end_string
+                                                             Word(alphanums) + Optional(space)))) + keyword_end_string
         literal_name = Combine(OneOrMore(Optional(" ") + self.literal)) | character_literal("charlit") | string_literal("strlit")
         literal_name.setParseAction(self.parse_literal)
         

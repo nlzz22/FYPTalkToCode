@@ -544,6 +544,11 @@ class TestWordParserMethods(unittest.TestCase):
         struct = "#function printf(#parameter #value \"enter two numbers :\");;"
         self.wordparser_compare(speech, struct)
 
+    def test_word_parser_symbol_equal_dot_with_alphanum_in_string(self):
+        speech = "call function printf parameter string product symbol equal symbol percent symbol dot 2lf end string"
+        struct = "#function printf(#parameter #value \"product =%.2lf\");;"
+        self.wordparser_compare(speech, struct)
+
     # Word Parser - Test partial code
     def test_word_parser_partial_declare_var(self):
         speech = "declare integer abc "

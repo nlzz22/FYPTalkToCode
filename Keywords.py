@@ -17,6 +17,7 @@ class Keywords:
         list_keywords.append(Keyword("declare", 2))
         list_keywords.append(Keyword("divide", 2, 0.9))
         list_keywords.append(Keyword("dollar", 2))
+        list_keywords.append(Keyword("dot", 1))
         list_keywords.append(Keyword("double", 2))
         list_keywords.append(Keyword("else", 1))
         list_keywords.append(Keyword("end", 1))
