@@ -537,7 +537,12 @@ class TestWordParserMethods(unittest.TestCase):
         struct = "while #condition #variable i < #variable length #while_start " + \
                  "if #condition #variable i == #value 10 #if_branch_start #assign #variable isDone #with #value 1;; " + \
                  "continue;; #if_branch_end;; #while_end;;"
-        self.wordparser_compare(speech, struct)  
+        self.wordparser_compare(speech, struct)
+
+    def test_word_parser_symbol_as_last_char(self):
+        speech = "call function printf parameter string enter two numbers symbol colon end string end function"
+        struct = "#function printf(#parameter #value \"enter two numbers :\");;"
+        self.wordparser_compare(speech, struct)
 
     # Word Parser - Test partial code
     def test_word_parser_partial_declare_var(self):

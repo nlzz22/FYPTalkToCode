@@ -96,7 +96,10 @@ class WordParser:
         if self.is_number(word): # if is number
             return " #value " + str(w2n.word_to_num(word))
         elif "\"" in word: # if is string
-            return " #value " + word[:-2] + "\""
+            if word[len(word) - 2] == " ": # if space at last character before "
+                return " #value " + word[:-2] + "\"" # remove the space
+            else:
+                return " #value " + word
         elif "'" in word: # if is character
             return " #value " + word
         else:
@@ -261,7 +264,7 @@ class WordParser:
             return " unknown "
 
 
-    def parse_literal(self, tokens):       
+    def parse_literal(self, tokens):        
         if tokens.charlit != "": # character literal
             return "'" + tokens[0] + "'"
         elif tokens.strlit != "": # string literal
@@ -635,7 +638,7 @@ class WordParser:
         variable_name = Combine(OneOrMore(not_all_keywords + Word(alphas) + Optional(space)))
         character_literal = keyword_character + Word( alphas, max=1 )
         string_literal = keyword_string + Combine(OneOrMore(~keyword_end_string + \
-                                                            (symbol_expression + Optional(suppress_space) | \
+                                                            (symbol_expression + ZeroOrMore(suppress_space) | \
                                                              Word(alphas) + Optional(space)))) + keyword_end_string
         literal_name = Combine(OneOrMore(Optional(" ") + self.literal)) | character_literal("charlit") | string_literal("strlit")
         literal_name.setParseAction(self.parse_literal)
