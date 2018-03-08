@@ -58,7 +58,7 @@ class WordCorrector:
             return ""
 
     def premature_correction(self):
-        list_end_constructs = ["if", "declare", "equal", "function", "for", "fall", "switch", "while"]
+        list_end_constructs = ["if", "declare", "equal", "function", "for", "fall", "switch", "while", "string"]
         
         for i in range(0, len(self.words_list)):
             # correct and -> end for end constructs.
