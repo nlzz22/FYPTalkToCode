@@ -104,10 +104,10 @@ class CodingByDictationLogic:
         curr_index = 0
         for i in range(0, len(self.text_history_stack.stack)):
             if curr_index < len(self.accepted_indices) and i == self.accepted_indices[curr_index]:
-                hist_text += self.text_history_stack.stack[i] + "\n"
+                hist_text += self.text_history_stack.stack[i] + "\n\n"
                 curr_index += 1
             else:
-                hist_text += self.text_history_stack.stack[i] + " "   
+                hist_text += self.text_history_stack.stack[i] + "\n"   
         
         uiThread.UpdateHistoryBody(hist_text)
 
