@@ -1182,6 +1182,16 @@ class TestWordCorrectorMethods(unittest.TestCase):
         expected = "call function printf parameter string symbol ampersand"
 
         self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
+
+    def test_word_corrector_correct_and_percent_to_ampersand(self):
+        word = "call function scan f parameter string symbol percent lf symbol percent lf end string " + \
+               "parameter symbol and percent first number parameter symbol and percent second number end function"
+        wc = WordCorrector(word, ["first", "second", "number"])
+        corrected = wc.run_correction()
+        expected = "call function scanf parameter string symbol percent lf symbol percent lf end string " + \
+               "parameter symbol ampersand first number parameter symbol ampersand second number end function"
+
+        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
     
 
     def format_spaces(self, sentence):

@@ -113,7 +113,11 @@ class WordCorrector:
                     is_same_word = True
                     break
 
-                curr_sim = sounds_like_index(curr_wrong_word, keyword, must_match=True)
+                # Common error which is not corrected by algorithm.
+                if curr_wrong_word == "and percent" and keyword == "ampersand":
+                    curr_sim = 1.0
+                else:
+                    curr_sim = sounds_like_index(curr_wrong_word, keyword, must_match=True)
 
                 if curr_sim > max_sim and curr_sim > keyword_min_correction_value:
                     # Example: Don't correct "length with parameter integer" --> "parameter" 

@@ -28,7 +28,7 @@ class SpeechRecognitionModule:
                                  "minus", "minus minus", "times", "divide", "while", "switch", "case", "dot", "end if", \
                                  "end switch", "end declare", "for loop", "end equal", "for loop condition i", "end while", \
                                  "end string", "undo", "default", "break", "and", "or", "symbol", "ampersand", \
-                                 "percent", "dollar", "backslash", "colon", "print f", "scan f", "continue"]
+                                 "percent", "dollar", "backslash", "colon", "print f", "scan f", "continue", "symbol percent lf"]
 
         def print_feedback_one(self, feedback, uiThread):
             uiThread.UpdateFeedbackOne(feedback)
