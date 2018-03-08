@@ -1148,7 +1148,40 @@ class TestWordCorrectorMethods(unittest.TestCase):
         corrected = wc.run_correction()
         expected = "call function printf parameter string hello world end string end function"
 
-        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected)) 
+        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
+
+    def test_word_corrector_do_not_correct_to_symbol_keyword(self):
+        # symbol keyword ampersand is closest to thailand, but it is not correct as this is not a symbol.
+        word = "thailand equal one end equal"
+        wc = WordCorrector(word, [])
+        corrected = wc.run_correction()
+        expected = "ampersand equal one end equal"
+
+        self.assertNotEqual(self.format_spaces(corrected), self.format_spaces(expected)) # assert !=
+
+    def test_word_corrector_correct_symbol_keyword(self):
+        word = "call function print f parameter string symbol thailand symbol ascent end string end function"
+        wc = WordCorrector(word, [])
+        corrected = wc.run_correction()
+        expected = "call function printf parameter string symbol ampersand symbol percent end string end function"
+
+        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
+
+    def test_word_corrector_correct_symbol_without_keyword(self):
+        word = "call function printf parameter string symbol"
+        wc = WordCorrector(word, [])
+        corrected = wc.run_correction()
+        expected = word
+
+        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
+
+    def test_word_corrector_correct_symbol_keyword_partial(self):
+        word = "call function print f parameter string symbol thailand"
+        wc = WordCorrector(word, [])
+        corrected = wc.run_correction()
+        expected = "call function printf parameter string symbol ampersand"
+
+        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
     
 
     def format_spaces(self, sentence):

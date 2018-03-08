@@ -9,7 +9,6 @@ from WordSimilarity import get_most_similar_word, sounds_like_index, get_num_syl
 
 class WordCorrector:
     def __init__(self, words, var_list):
-        self.words_list = self.replace_symbols(words).split(" ")
         self.corrected = ""
         self.space = ""
         self.var_types = ["integer", "long", "float", "double", "boolean", "character", "string", "void"]
@@ -19,6 +18,11 @@ class WordCorrector:
         self.keyword_list = self.kw.get_keywords()
         self.word_syllable_list = self.build_word_syllable_list(self.kw)
         self.correction_list = self.word_syllable_list
+
+        words_without_math_operators = self.replace_symbols(words)
+        words_with_corrected_symbol_word = self.correct_symbol_words( \
+                                    words_without_math_operators, self.max_syllable).strip()
+        self.words_list = words_with_corrected_symbol_word.split(" ")
 
     def replace_symbols(self, words):
         words_without_plus = words.replace("+", "plus")
@@ -56,6 +60,79 @@ class WordCorrector:
             return self.words_list[index].lower()
         else:
             return ""
+
+    def correct_symbol_words(self, words, max_syllable, corrected=""):
+        if "symbol" not in words:
+            return corrected + " " + words
+
+        index = words.index("symbol")
+        if corrected == "":
+            corrected = words[:index] + "symbol "
+        else:
+            corrected += " " + words[:index] + "symbol "
+
+        try:
+            words = words[index + 7:]
+        except:
+            return corrected
+
+        parts = words.strip().split(" ")
+        if len(parts) == 0 or (len(parts) == 1 and parts[0] == ""):
+            return corrected
+
+        part_word = []
+        # part_word[0] consist of one word, part_word[1] consist of 2 words etc.
+        for i in range(0, min(max_syllable, len(parts))):
+            part_word.append(" ".join(parts[0:i+1]))
+
+        # Match wrong word with the correct keyword.
+        max_sim = -1
+        temp_wrong_word_index = -1
+        temp_correct_word = ""
+        
+        is_same_word = False
+        
+        for keyword_pair in self.correction_list:
+            keyword = keyword_pair.get_keyword()
+            syllable = keyword_pair.get_syllable()
+            # some keywords are not so common, or not so easily mispronounced,
+            # they need a min sim index to allow the correction.
+            # Normally, this value is 0 to signify this is not a special case.
+            keyword_min_correction_value = keyword_pair.get_min_correct()
+            num_part_query = min(syllable, len(parts))
+
+            if ((int(keyword_pair.get_symbol_bits()) & 1) == 0): # get LSB from 2-bit item. Can be symbol-word
+                continue
+
+            # A word with j syllable can be matched with 1 to j wrong words.
+            # Higher j is prioritised, thus the use of reversed here.
+            for j in list(reversed(range(0, num_part_query))):
+                curr_wrong_word = part_word[j]
+
+                if curr_wrong_word == keyword:
+                    is_same_word = True
+                    break
+
+                curr_sim = sounds_like_index(curr_wrong_word, keyword, must_match=True)
+
+                if curr_sim > max_sim and curr_sim > keyword_min_correction_value:
+                    # Example: Don't correct "length with parameter integer" --> "parameter" 
+                    if not self.is_part_of(curr_wrong_word, keyword):
+                        max_sim = curr_sim
+                        temp_wrong_word_index = j
+                        temp_correct_word = keyword
+
+            if is_same_word:
+                break
+
+        if max_sim > -1 and not is_same_word: # if there is a high similarity word.
+            corrected += temp_correct_word
+            remaining_wrong_words = parts[temp_wrong_word_index+1: len(parts)]
+            return self.correct_symbol_words(" ".join(remaining_wrong_words), max_syllable, corrected)
+        else: # cannot find any match or is the same word (no need correction)
+            corrected += part_word[0]
+            remaining_wrong_words = parts[1: len(parts)]
+            return self.correct_symbol_words(" ".join(remaining_wrong_words), max_syllable, corrected)  
 
     def premature_correction(self):
         list_end_constructs = ["if", "declare", "equal", "function", "for", "fall", "switch", "while", "string"]
@@ -281,6 +358,9 @@ class WordCorrector:
                 # 'less' or 'greater' can only come after variable/literal/end function
                 continue
 
+            if ((int(keyword_pair.get_symbol_bits()) & 2) == 2): # get MSB from 2-bit item. Must be symbol-word
+                continue
+
             '''
                 End of special cases, start matching.
             '''
@@ -297,7 +377,7 @@ class WordCorrector:
                 if must_match_var_type:
                     curr_sim = sounds_like_index(curr_wrong_word, keyword, must_match=True)
                 else:
-                    curr_sim = sounds_like_index(curr_wrong_word, keyword)          
+                    curr_sim = sounds_like_index(curr_wrong_word, keyword)
 
                 if curr_sim > max_sim and curr_sim > min_match and curr_sim > keyword_min_correction_value:
                     # Example: Don't correct "length with parameter integer" --> "parameter" 
@@ -367,4 +447,3 @@ class WordCorrector:
                     word += separator + parts[i]
                     separator = " "
             return word
-                    
