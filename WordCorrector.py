@@ -29,8 +29,9 @@ class WordCorrector:
         words_without_minus = words_without_plus.replace("-", "minus")
         words_without_times = words_without_minus.replace(" x ", " times ")
         words_without_divide = words_without_times.replace("/", " divide ")
+        words_without_dot = words_without_divide.replace(".", " dot ")
 
-        return words_without_divide
+        return words_without_dot
         
 
     def run_correction(self):

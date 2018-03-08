@@ -1142,6 +1142,14 @@ class TestWordCorrectorMethods(unittest.TestCase):
 
         self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
 
+    def test_word_corrector_symbol_dot(self):
+        word = "call function printf parameter string symbol. end string end function"
+        wc = WordCorrector(word, [])
+        corrected = wc.run_correction()
+        expected = "call function printf parameter string symbol dot end string end function"
+
+        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
+
     def test_word_corrector_end_string(self):
         word = "call function print f parameter string hello world and string end function"
         wc = WordCorrector(word, [])
