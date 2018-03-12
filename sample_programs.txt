@@ -17,7 +17,7 @@ end if
 end for loop 
 return max 
 end function 
-======================
+====================== multiply two Floating Point Numbers  ================
 create function main return type integer begin
 declare double first number
 declare double second number
@@ -28,7 +28,8 @@ call function scan f parameter
 string symbol percent lf symbol percent lf end string 
 parameter symbol ampersand first number parameter symbol ampersand second number end function
 product equal first number times second number
-call function printf parameter string product symbol equal symbol percent symbol dot 2lf end string 
+call function printf parameter 
+string product symbol equal symbol percent symbol dot 2lf end string 
 parameter product end function
 return zero
 end function
