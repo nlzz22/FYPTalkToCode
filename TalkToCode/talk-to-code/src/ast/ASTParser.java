@@ -32,6 +32,7 @@ public class ASTParser implements ASTParserConstants {
       }
       catch (Exception e)
       {
+        System.out.println("Special Reject Sequence @#$%^&*()!");
         System.out.println("Not Supported Syntax Format");
         System.out.println(e.getMessage());
         ASTParser.ReInit(System.in);
