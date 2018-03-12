@@ -17,7 +17,8 @@ def parse_structural_command_to_code(structural_command):
     defaultProgramHeader += defaultProgramEnd
 
     #print "Compiling Java Program from Martin\n"
-    #compile_java('TalkToCode\\talk-to-code\\src\\ast\\*.java')
+    #java_compile_dir = os.path.join('TalkToCode', 'talk-to-code', 'src', 'ast', '*.java')
+    #compile_java(java_compile_dir)
     #print "Finished compiling. Running the Java Program... \n"
 
     java_dir = os.path.join('TalkToCode', 'talk-to-code', 'src') # using os.path.join makes it platform independent.
