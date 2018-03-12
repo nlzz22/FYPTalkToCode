@@ -1134,7 +1134,7 @@ class TestWordCorrectorMethods(unittest.TestCase):
 
         self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
 
-    def test_word_corrector_symbol_minus(self):
+    def test_word_corrector_symbol_times(self):
         word = "declare integer first equal 1 x 2"
         wc = WordCorrector(word, [])
         corrected = wc.run_correction()
