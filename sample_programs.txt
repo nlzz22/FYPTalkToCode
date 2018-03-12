@@ -33,3 +33,23 @@ string product symbol equal symbol percent symbol dot 2lf end string
 parameter product end function
 return zero
 end function
+========================= GCD ==========================
+create function main return type integer begin
+declare integer first
+declare integer second
+call function print f parameter 
+string enter two positive integers symbol colon end string end function
+call function scan f parameter 
+string symbol percent d symbol percent d end string
+parameter symbol ampersand first 
+parameter symbol ampersand second end function
+while first not equal second begin
+begin if first greater than second then
+first minus equal second
+else second minus equal first 
+end if
+end while
+call function print f parameter string gcd symbol equal symbol percent d end string 
+parameter first end function
+return zero
+end function
