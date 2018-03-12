@@ -1142,6 +1142,14 @@ class TestWordCorrectorMethods(unittest.TestCase):
 
         self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
 
+    def test_word_corrector_symbol_capital_x_as_times(self):
+        word = "declare integer first equal 1 X 2"
+        wc = WordCorrector(word, [])
+        corrected = wc.run_correction()
+        expected = "declare integer first equal one times two"
+
+        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
+
     def test_word_corrector_symbol_dot(self):
         word = "call function printf parameter string symbol. end string end function"
         wc = WordCorrector(word, [])
@@ -1198,6 +1206,34 @@ class TestWordCorrectorMethods(unittest.TestCase):
         corrected = wc.run_correction()
         expected = "call function scanf parameter string symbol percent lf symbol percent lf end string " + \
                "parameter symbol ampersand first number parameter symbol ampersand second number end function"
+
+        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
+
+    def test_word_corrector_correct_and_person_to_ampersand(self):
+        word = "call function scan f parameter string symbol percent lf symbol percent lf end string " + \
+               "parameter symbol and person first number parameter symbol and person second number end function"
+        wc = WordCorrector(word, ["first", "second", "number"])
+        corrected = wc.run_correction()
+        expected = "call function scanf parameter string symbol percent lf symbol percent lf end string " + \
+               "parameter symbol ampersand first number parameter symbol ampersand second number end function"
+
+        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
+
+    def test_word_corrector_do_not_correct_symbol_word_in_diff_case(self):
+        word = "call function scan f parameter string symbol percent lf symbol percent lf end string " + \
+               "parameter symbol Ampersand first number parameter symbol and percent second number and function"
+        wc = WordCorrector(word, ["first", "second", "number"])
+        corrected = wc.run_correction()
+        expected = "call function scanf parameter string symbol percent lf symbol percent lf end string " + \
+               "parameter symbol ampersand first number parameter symbol ampersand second number end function"
+
+        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
+
+    def test_word_corrector_do_not_correct_keyword_in_diff_case(self):
+        word = "Call Function Print f parameter String a b c end string end function "
+        wc = WordCorrector(word, [])
+        corrected = wc.run_correction()
+        expected = "Call Function printf parameter String a b c end string end function ".lower()
 
         self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
     

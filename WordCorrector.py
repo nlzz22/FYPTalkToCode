@@ -30,8 +30,9 @@ class WordCorrector:
         words_without_times = words_without_minus.replace(" x ", " times ")
         words_without_divide = words_without_times.replace("/", " divide ")
         words_without_dot = words_without_divide.replace(".", " dot ")
+        final_words = words_without_dot.replace(" X ", " times ")
 
-        return words_without_dot
+        return final_words
         
 
     def run_correction(self):
@@ -108,14 +109,14 @@ class WordCorrector:
             # A word with j syllable can be matched with 1 to j wrong words.
             # Higher j is prioritised, thus the use of reversed here.
             for j in list(reversed(range(0, num_part_query))):
-                curr_wrong_word = part_word[j]
+                curr_wrong_word = part_word[j].lower()
 
                 if curr_wrong_word == keyword:
                     is_same_word = True
                     break
 
                 # Common error which is not corrected by algorithm.
-                if curr_wrong_word == "and percent" and keyword == "ampersand":
+                if (curr_wrong_word == "and percent" or curr_wrong_word == "and person") and keyword == "ampersand":
                     curr_sim = 1.0
                 else:
                     curr_sim = sounds_like_index(curr_wrong_word, keyword, must_match=True)
@@ -373,7 +374,7 @@ class WordCorrector:
             # A word with j syllable can be matched with 1 to j wrong words.
             # Higher j is prioritised, thus the use of reversed here.
             for j in list(reversed(range(0, num_part_query))):
-                curr_wrong_word = part_word[j]
+                curr_wrong_word = part_word[j].lower()
 
                 if curr_wrong_word == keyword:
                     is_same_word = True
