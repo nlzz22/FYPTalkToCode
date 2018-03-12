@@ -8,6 +8,7 @@ import threading
 from threading import Thread
 import time
 import audioop
+from Keywords import Keywords
 
 # import from user-defined class
 from credentials import APICredentials
@@ -21,14 +22,9 @@ class SpeechRecognitionModule:
             self.has_adjusted_for_voice = False
             credential_object = APICredentials()
             self.google_cloud_json = credential_object.get_google_json_file()
-            self.preferred_phrases = ["equal", "if", "then", "else", "end", "declare integer", "integer", "boolean", \
-                                 "declare boolean", "declare string", "declare float", "declare double", "declare character", \
-                                 "string", "float", "double", "character", "size", "index", "create function", \
-                                 "function", "return", "return type", "parameter", "call function", "for", "plus", "plus plus", \
-                                 "minus", "minus minus", "times", "divide", "while", "switch", "case", "dot", "end if", \
-                                 "end switch", "end declare", "for loop", "end equal", "for loop condition i", "end while", \
-                                 "end string", "undo", "default", "break", "and", "or", "symbol", "ampersand", \
-                                 "percent", "dollar", "backslash", "colon", "print f", "scan f", "continue", "symbol percent lf"]
+
+            kw = Keywords()
+            self.preferred_phrases = kw.get_preferred_phrases()
 
         def print_feedback_one(self, feedback, uiThread):
             uiThread.UpdateFeedbackOne(feedback)

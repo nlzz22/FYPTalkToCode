@@ -87,6 +87,18 @@ class Keywords:
 
         return Keyword(word)
 
+    def get_preferred_phrases(self):
+        set_keywords = set(self.get_keywords())
+        phrases_list_to_add = ["declare integer", "declare string", "declare float", "declare double", "declare character", \
+                                 "create function", "return type", "call function", "plus plus", \
+                                 "minus minus", "end if", "end switch", "end declare", "for loop", "end equal", \
+                                 "for loop condition i", "end while", "end string", "backslash", "colon", "print f", "scan f", \
+                                 "symbol percent lf"]
+        for phrase in phrases_list_to_add:
+            set_keywords.add(phrase)
+
+        return list(set_keywords)
+
 
 class Keyword:
     # symbol_bits consist of 2 bits, 1st bit (MSB) for must be a symbol-word, 2nd bit (LSB) for can be a symbol-word
