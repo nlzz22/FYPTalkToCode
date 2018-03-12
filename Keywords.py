@@ -92,13 +92,37 @@ class Keywords:
         phrases_list_to_add = ["declare integer", "declare string", "declare float", "declare double", "declare character", \
                                  "create function", "return type", "call function", "plus plus", \
                                  "minus minus", "end if", "end switch", "end declare", "for loop", "end equal", \
-                                 "for loop condition i", "end while", "end string", "backslash", "colon", "print f", "scan f", \
-                                 "symbol percent lf"]
+                                 "for loop condition i", "end while", "end string", "backslash", "colon", "print f", "scan f"] + \
+                                 self.get_scanf_placeholders() + self.get_printf_rounding_placeholders()
         for phrase in phrases_list_to_add:
             set_keywords.add(phrase)
 
         return list(set_keywords)
 
+    def get_scanf_placeholders(self):
+        list_placeholders_scanf = []
+        SYMBOL_PERCENT = "symbol percent "
+        list_placeholders_scanf.append(SYMBOL_PERCENT + "d") # %d for int
+        list_placeholders_scanf.append(SYMBOL_PERCENT + "f") # %f for float
+        list_placeholders_scanf.append(SYMBOL_PERCENT + "c") # %c for char
+        list_placeholders_scanf.append(SYMBOL_PERCENT + "s") # %d for char strings
+        list_placeholders_scanf.append(SYMBOL_PERCENT + "lf") # %d for double
+
+        return list_placeholders_scanf
+
+    def get_printf_rounding_placeholders(self):
+        list_placeholders_printf = []
+        list_decimal_place = range(1, 10)
+        PERCENT_DOT = "symbol percent symbol dot "
+
+        # for float
+        for num in list_decimal_place:
+            list_placeholders_printf.append(PERCENT_DOT + str(num) + "f") # %.2f (for all the numbers from 1-9)
+        # for double
+        for num in list_decimal_place:
+            list_placeholders_printf.append(PERCENT_DOT + str(num) + "lf") # %.2lf (for all the numbers from 1-9)
+
+        return list_placeholders_printf
 
 class Keyword:
     # symbol_bits consist of 2 bits, 1st bit (MSB) for must be a symbol-word, 2nd bit (LSB) for can be a symbol-word
