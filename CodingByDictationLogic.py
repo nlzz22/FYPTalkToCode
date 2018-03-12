@@ -85,6 +85,7 @@ class CodingByDictationLogic:
         self.accepted_indices = []
         self.current_index = 0
         self.std_funcs = StandardFunctions().get_std_functions()
+        self.error_from_scparser = False
 
         self.logger = Logger()
 
@@ -133,9 +134,18 @@ class CodingByDictationLogic:
             structured_command = ""
         
         code = scParser.parse_structural_command_to_code(structured_command)
-      
-        uiThread.UpdateCodeBody(code)
-        self.code_stack.push(code)
+        
+        if scParser.SPECIAL_REJECT_SEQ in code:
+            # Error found when parsing with sc parser.
+            self.print_feedback_one("Error detected when converting to code, please undo.", uiThread)
+            prev_code = self.code_stack.peek()
+            self.code_stack.push(prev_code)
+            self.error_from_scparser = True
+        else:
+            # Conversion is good with sc parser.
+            uiThread.UpdateCodeBody(code)
+            self.code_stack.push(code)
+            self.error_from_scparser = False
 
     def print_latest_code(self, uiThread):
         code = self.code_stack.peek()
@@ -434,8 +444,10 @@ class CodingByDictationLogic:
                 print ("Time to iterate sentences in structure = " + str(checkpoint4 - checkpoint3))
 
             # Feedback to user
-            if error_message != "": # there is error message
-                if potential_missing != "":
+            if error_message != "" or self.error_from_scparser: # there is error message
+                if self.error_from_scparser:
+                    pass # error message shown at print_code function
+                elif potential_missing != "":
                     self.print_feedback_one("Expected  : " + potential_missing, uiThread)
                 else:
                     if error_message.strip() == "Expected":

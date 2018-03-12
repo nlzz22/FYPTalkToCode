@@ -4,6 +4,8 @@ import os.path,subprocess
 from subprocess import STDOUT,PIPE
 from PlatformChecker import *
 
+SPECIAL_REJECT_SEQ = "Special Reject Sequence @#$%^&*()!"
+
 def parse_structural_command_to_code(structural_command):
     defaultProgramHeader = "#c_program SampleProgram\n"
     defaultProgramHeader += "#include #access stdio h #access_end;;"
