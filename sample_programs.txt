@@ -1,0 +1,34 @@
+======================= Swap Two Variables =========================
+declare integer first equal one
+declare integer second equal two
+declare integer temporary equal first
+first equal second
+second equal temporary
+======================= Find max integer from array ================
+create function find maximum with return type integer 
+with parameter integer array numbers 
+with parameter integer length begin
+declare integer max equal numbers array index zero end declare 
+declare integer i end declare
+for loop condition i equal one condition i less than length condition i plus plus begin
+begin if numbers array index i greater than max then
+max equal numbers array index i end equal
+end if 
+end for loop 
+return max 
+end function 
+======================
+create function main return type integer begin
+declare double first number
+declare double second number
+declare double product
+call function print f parameter 
+string enter two numbers symbol colon end string end function
+call function scan f parameter 
+string symbol percent lf symbol percent lf end string 
+parameter symbol ampersand first number parameter symbol ampersand second number end function
+product equal first number times second number
+call function printf parameter string product symbol equal symbol percent symbol dot 2lf end string 
+parameter product end function
+return zero
+end function
