@@ -105,8 +105,9 @@ class Keywords:
         list_placeholders_scanf.append(SYMBOL_PERCENT + "d") # %d for int
         list_placeholders_scanf.append(SYMBOL_PERCENT + "f") # %f for float
         list_placeholders_scanf.append(SYMBOL_PERCENT + "c") # %c for char
-        list_placeholders_scanf.append(SYMBOL_PERCENT + "s") # %d for char strings
-        list_placeholders_scanf.append(SYMBOL_PERCENT + "lf") # %d for double
+        list_placeholders_scanf.append(SYMBOL_PERCENT + "s") # %s for char strings
+        list_placeholders_scanf.append(SYMBOL_PERCENT + "lf") # %lf for double
+        list_placeholders_scanf.append(SYMBOL_PERCENT + "ld") # %ld for long
 
         return list_placeholders_scanf
 
