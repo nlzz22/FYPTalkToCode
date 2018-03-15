@@ -6,6 +6,8 @@ from pyparsing import * # External parser library
 from Keywords import Keywords
 
 class WordParser:
+    SPECIAL_SPACE_CHAR = "^sp"
+    
     ## This function returns the following: 
     ## ~Keyword("equal") + ~Keyword("end equal") + ~Keyword("array")
     ## if given list @param: all_the_keywords ["equal", "end equal", "array"]
@@ -97,9 +99,10 @@ class WordParser:
             return " #value " + str(w2n.word_to_num(word))
         elif "\"" in word: # if is string
             if word[len(word) - 2] == " ": # if space at last character before "
-                return " #value " + word[:-2] + "\"" # remove the space
+                processed_str = " #value " + word[:-2] + "\"" # remove the space
             else:
-                return " #value " + word
+                processed_str = " #value " + word
+            return processed_str.replace(WordParser.SPECIAL_SPACE_CHAR, " ")
         elif "'" in word: # if is character
             return " #value " + word
         else:
@@ -268,7 +271,7 @@ class WordParser:
             return " unknown "
 
 
-    def parse_literal(self, tokens):        
+    def parse_literal(self, tokens):
         if tokens.charlit != "": # character literal
             return "'" + tokens[0] + "'"
         elif tokens.strlit != "": # string literal
@@ -508,6 +511,9 @@ class WordParser:
         # tokens consist of [ expression ]
         return "return " + tokens[0] + ";;"
 
+    def parse_space(self, tokens):
+        return WordParser.SPECIAL_SPACE_CHAR
+
     def parse_break_statement(self, tokens):
         # no tokens here.
         return "break;;"
@@ -620,6 +626,8 @@ class WordParser:
         keyword_end_switch = Suppress("end switch").setName("\"end switch\"").setFailAction(self.handle_fail_parse)
         space = " "
         suppress_space = Suppress(space)
+        keyword_space = Keyword("space")
+        keyword_space.setParseAction(self.parse_space)
         keyword_symbol = Suppress("symbol")
         symbol_ampersand = Keyword("ampersand")
         symbol_dollar = Keyword("dollar")
@@ -645,7 +653,8 @@ class WordParser:
         variable_name = Combine(OneOrMore(not_all_keywords + Word(alphas) + Optional(space)))
         character_literal = keyword_character + Word( alphas, max=1 )
         string_literal = keyword_string + Combine(OneOrMore(~keyword_end_string + \
-                                                            (symbol_expression + ZeroOrMore(suppress_space) | \
+                                                            ( keyword_space + Optional(suppress_space) | \
+                                                             symbol_expression + ZeroOrMore(suppress_space) | \
                                                              Word(alphanums) + Optional(space)))) + keyword_end_string
         literal_name = Combine(OneOrMore(Optional(" ") + self.literal)) | character_literal("charlit") | string_literal("strlit")
         literal_name.setParseAction(self.parse_literal)
