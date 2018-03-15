@@ -434,6 +434,11 @@ class CodingByDictationLogic:
                     if len(result_structure["text"][i]) < len(str(corrected)):
                         self.text_history_stack.push(result_structure["text"][i])
                     else:
+                        # need to append end equal to avoid bug where prev sentence ends with var name,
+                        # and subsequent sentence is another var assignment (begins with var name)
+                        # It is then hard to decipher which var name belongs to which sentence.
+                        if wordParser.need_to_append_end_equal(str(corrected)):
+                            corrected = str(corrected) + " end equal"
                         self.text_history_stack.push(str(corrected))
                     self.print_code(True, parsed, wordParser, uiThread)
 

@@ -930,6 +930,27 @@ class WordParser:
             raise Exception('Invalid statement.')
 
         return result
+
+    def need_to_append_end_equal(self, sentence):
+        if sentence == "":
+            return False
+
+        if "begin" in sentence or "then" in sentence or "condition" in sentence or "while" in sentence or "for" in sentence \
+           or "string" in sentence:
+            return False
+
+        if "equal" in sentence or "plus" in sentence or "minus" in sentence:
+            result = self.parse_check_variable_assignment(sentence)
+            if result["has_match"]:
+                try:
+                    if sentence.split()[-2:] == "end equal":
+                        return False
+                    else:
+                        return True
+                except:
+                    return False
+        
+        return False
         
  
     def parse(self, sentence, new_instance = True, result_struct = {}):
