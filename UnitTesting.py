@@ -1234,6 +1234,16 @@ class TestWordCorrectorMethods(unittest.TestCase):
 
         self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
 
+    def test_word_corrector_correct_in_person_to_ampersand(self):
+        word = "call function scan f parameter string symbol percent D end string " + \
+               "parameter symbol in person number and function"
+        wc = WordCorrector(word, ["number"])
+        corrected = wc.run_correction()
+        expected = "call function scanf parameter string symbol percent D end string " + \
+               "parameter symbol ampersand number end function"
+
+        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
+
     def test_word_corrector_do_not_correct_symbol_word_in_diff_case(self):
         word = "call function scan f parameter string symbol percent lf symbol percent lf end string " + \
                "parameter symbol Ampersand first number parameter symbol and percent second number and function"

@@ -116,7 +116,8 @@ class WordCorrector:
                     break
 
                 # Common error which is not corrected by algorithm.
-                if (curr_wrong_word == "and percent" or curr_wrong_word == "and person") and keyword == "ampersand":
+                if (curr_wrong_word == "and percent" or curr_wrong_word == "and person" or curr_wrong_word == "in person")\
+                   and keyword == "ampersand":
                     curr_sim = 1.0
                 else:
                     curr_sim = sounds_like_index(curr_wrong_word, keyword, must_match=True)
