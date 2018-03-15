@@ -162,10 +162,16 @@ class WordCorrector:
                     self.words_list[i] = "i"
                 elif "second" in self.variables_list:
                     self.words_list[i] = "second"
-            # correct common error: condition is equal --> condition i equal
-            elif self.get_word(i) == "condition" and self.get_word(i+1) == "is" and self.get_word(i+2) == "equal":
+            # correct common error: condition is --> condition i
+            elif self.get_word(i) == "condition" and self.get_word(i+1) == "is":
                 if "i" in self.variables_list and "is" not in self.variables_list:
                     self.words_list[i+1] = "i"
+            # correct missing iterators
+            elif self.get_word(i) == "condition" and self.get_word(i+1) in ["equal", "greater", "less"]:
+                if "i" in self.variables_list:
+                    self.words_list[i+1] = "i " + self.words_list[i+1]
+                elif "j" in self.variables_list:
+                    self.words_list[i+1] = "j " + self.words_list[i+1]
             # correct begin eve, begin is --> begin if
             elif (self.get_word(i) == "begin" or self.get_word(i) == "end") and \
                  (self.get_word(i+1) == "eve" or self.get_word(i+1) == "is" or self.get_word(i+1) == "east" or self.get_word(i+1) == "this"):
@@ -175,6 +181,10 @@ class WordCorrector:
             elif self.get_word(i) == "reef":
                 if "reef" not in self.variables_list:
                     self.words_list[i] = "with"
+            # correct divide by --> divide
+            elif self.get_word(i) == "divide" and self.get_word(i+1) == "by":
+                if "by" not in self.variables_list:
+                    self.words_list[i+1] = ""
 
     def correct_words(self):
         temp_words = ""

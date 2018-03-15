@@ -408,7 +408,7 @@ class TestWordParserMethods(unittest.TestCase):
     def test_word_parser_for_loop_conditional_lone_variables(self):
         speech = "for loop condition i equal one condition is done and is complete or has no wrong condition i plus plus begin end for loop"
         struct = "for #condition #assign #variable i #with #value 1 #condition #variable isDone && #variable isComplete || #variable hasNoWrong #condition #post #variable i ++ #for_start #for_end;;"
-        self.wordparser_compare(speech, struct)
+        self.wordparser_compare(speech, struct)        
 
     def test_word_parser_var_plus_equal_expr(self):
         speech = "max plus equal max plus one end equal"
@@ -792,6 +792,38 @@ class TestWordCorrectorMethods(unittest.TestCase):
         expected = "for loop condition i equal one condition i less than length condition i plus plus begin \
             if numbers array index i greater than max then max equal numbers array index i end equal \
             end if end for loop return max end function"
+        
+        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
+
+    def test_word_corrector_condition_is(self):
+        word = "for Loop condition is equal two condition is less than equal number divided 2 condition I plus plus begin "
+        wc = WordCorrector(word, ["i", "number"])
+        corrected = wc.run_correction()
+        expected = "for loop condition i equal two condition i less than equal number divide two condition i plus plus begin"
+        
+        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
+
+    def test_word_corrector_condition_miss_iterator(self):
+        word = "for loop condition equal two condition less than equal number condition i plus plus begin "
+        wc = WordCorrector(word, ["i", "number"])
+        corrected = wc.run_correction()
+        expected = "for loop condition i equal two condition i less than equal number condition i plus plus begin "
+        
+        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
+
+    def test_word_corrector_condition_miss_iterator_2(self):
+        word = "for loop condition equal two condition less than equal number condition j plus plus begin "
+        wc = WordCorrector(word, ["j", "number"])
+        corrected = wc.run_correction()
+        expected = "for loop condition j equal two condition j less than equal number condition j plus plus begin "
+        
+        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
+
+    def test_word_corrector_condition_divided_by_correction(self):
+        word = "for loop condition i equal two condition less than equal number divided by 2 condition i plus plus begin "
+        wc = WordCorrector(word, ["i", "number"])
+        corrected = wc.run_correction()
+        expected = "for loop condition i equal two condition i less than equal number divide two condition i plus plus begin "
         
         self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
 
