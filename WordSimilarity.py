@@ -38,6 +38,8 @@ def get_phones_for_word_not_in_dict(word):
         return "M AA D Y UW L OW"
     elif word == "modulus":
         return "M AA D Y AH L AH S"
+    elif word == "corrector":
+        return "K AH R EH K T ER"
     else:
         return word.upper()
     

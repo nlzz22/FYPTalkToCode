@@ -1236,6 +1236,14 @@ class TestWordCorrectorMethods(unittest.TestCase):
         expected = "Call Function printf parameter String a b c end string end function ".lower()
 
         self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
+
+    def test_word_corrector_correct_character_corner_case(self):
+        word = "for Loop condition c equal character a condition see less than equal corrector Z condition plus plus c begin  "
+        wc = WordCorrector(word, ["c"])
+        corrected = wc.run_correction()
+        expected = "for loop condition c equal character a condition c less than equal character z condition plus plus c begin  "
+
+        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
     
 
     def format_spaces(self, sentence):

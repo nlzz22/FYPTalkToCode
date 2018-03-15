@@ -316,6 +316,7 @@ class WordCorrector:
         temp_wrong_word_index = -1
         temp_correct_word = ""
         can_match_var_type = False
+        can_match_char = False
         must_match_var_type = False
 
         prev_word = self.query_latest_added_word()
@@ -326,8 +327,11 @@ class WordCorrector:
             must_match_var_type = True
             can_match_var_type = True
             min_match = 0.50
-        if prev_word == "parameter":
+        elif prev_word == "parameter":
             can_match_var_type = True
+            can_match_char = True
+        elif prev_word == "equal" or prev_word == "than":
+            can_match_char = True
         
         is_same_word = False
         
@@ -346,7 +350,8 @@ class WordCorrector:
 
             if not can_match_var_type and self.is_variable_type(keyword):
                 # if keyword cannot be a variable type, skip this keyword.
-                continue
+                if keyword != "character" or not can_match_char:
+                    continue
 
             if must_match_var_type and not self.is_variable_type(keyword):
                 # if keyword must be a variable type and it is not, skip this keyword.
