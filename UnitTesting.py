@@ -1259,6 +1259,14 @@ class TestWordCorrectorMethods(unittest.TestCase):
         expected = "for loop condition c equal character a condition c less than equal character z condition plus plus c begin  "
 
         self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
+
+    def test_word_corrector_post_declare_integer_wrong_correction(self):
+        word = "declare integer count equals 0"
+        wc = WordCorrector(word, [])
+        corrected = wc.run_correction()
+        expected = "declare integer count equal zero" # previously corrected to "declare integer equal zero"
+
+        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
     
 
     def format_spaces(self, sentence):

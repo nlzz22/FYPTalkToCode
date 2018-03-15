@@ -318,6 +318,7 @@ class WordCorrector:
         can_match_var_type = False
         can_match_char = False
         must_match_var_type = False
+        can_match_keyword = True # else can match variable names.
 
         prev_word = self.query_latest_added_word()
         prev_2_words = self.query_latest_added_word(2)
@@ -332,6 +333,9 @@ class WordCorrector:
             can_match_char = True
         elif prev_word == "equal" or prev_word == "than":
             can_match_char = True
+
+        if self.get_first_word(prev_2_words) == "declare" and prev_word in self.var_types:
+            can_match_keyword = False
         
         is_same_word = False
         
@@ -347,6 +351,10 @@ class WordCorrector:
             '''
                 This part handles some special cases.
             '''
+
+            if not can_match_keyword and keyword in self.keyword_list:
+                # if keyword must be a variable name (not in keyword list)
+                continue
 
             if not can_match_var_type and self.is_variable_type(keyword):
                 # if keyword cannot be a variable type, skip this keyword.
@@ -420,6 +428,13 @@ class WordCorrector:
             return True
         else:
             return False
+
+    def get_first_word(self, words):
+        if words is None or words.strip() == "":
+            return ""
+        else:
+            return words.split(" ")[0]
+        
 
     def is_number(self, word):
         try:
