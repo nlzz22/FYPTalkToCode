@@ -495,6 +495,21 @@ class TestWordParserMethods(unittest.TestCase):
         struct = "#function print(#parameter #value \"enter the value :\\n\");;"
         self.wordparser_compare(speech, struct)
 
+    def test_word_parser_symbol_with_space(self):
+        speech = "call function print with parameter string enter the value symbol colon space symbol dollar end string end function"
+        struct = "#function print(#parameter #value \"enter the value : $\");;"
+        self.wordparser_compare(speech, struct)
+
+    def test_word_parser_symbol_with_space_2(self):
+        speech = "call function print with parameter string enter the value symbol colon space end string end function"
+        struct = "#function print(#parameter #value \"enter the value : \");;"
+        self.wordparser_compare(speech, struct)
+
+    def test_word_parser_printf_percent_c_space(self):
+        speech = "call function printf with parameter string symbol percent c space end string parameter character c end function"
+        struct = "#function printf(#parameter #value \"%c \" #parameter #value 'c');;"
+        self.wordparser_compare(speech, struct)
+
     def test_word_parser_printf(self):
         speech = "call function printf parameter string symbol percent d end string parameter print end function"
         struct = "#function printf(#parameter #value \"%d\" #parameter #variable print);; "
