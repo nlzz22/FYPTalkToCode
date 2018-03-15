@@ -61,3 +61,19 @@ call function print f parameter string symbol percent c end string parameter c e
 end for loop
 return zero
 end function
+===================== Count number of digits in a long number =====================
+declare long number 
+declare integer count equal zero
+call function printf parameter 
+string enter an integer symbol colon space end string end function
+call function scanf parameter 
+string symbol percent l d end string parameter symbol ampersand number end function
+while number not equal 0 begin
+number divide equal ten
+plus plus count
+end while
+call function printf parameter 
+string number of digits symbol colon space symbol percent d end string 
+parameter count end function
+
+	
