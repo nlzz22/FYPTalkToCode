@@ -100,5 +100,24 @@ else
 call function print f parameter 
 string symbol percent d is not a prime number symbol dot end string
 parameter number end function
-    
-
+======================== Check if number is palindrome ====================
+declare integer number
+declare integer reversed number equal zero
+declare integer remainder
+declare integer original number 
+call function printf parameter 
+string enter an integer symbol colon space end string end function
+call function scanf parameter 
+string symbol percent d end string 
+parameter symbol ampersand number end function
+original number equal number
+while number not equal zero begin
+remainder equal number modulo ten
+reversed number equal reversed number times ten plus remainder
+number divide equal ten 
+end while
+begin if original number equal reversed number then 
+call function print f parameter string it is palindrome end string end function
+else
+call function print f parameter string it is not palindrome end string end function
+end if 
