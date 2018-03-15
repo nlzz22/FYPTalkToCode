@@ -53,3 +53,11 @@ call function print f parameter string gcd symbol equal symbol percent d end str
 parameter first end function
 return zero
 end function
+===================== Display English Alphabets from a to z ==========================
+create function main return type integer begin
+declare character c end declare
+for loop condition c equal character a condition c less than equal character z condition plus plus c begin
+call function print f parameter string symbol percent c end string parameter c end function
+end for loop
+return zero
+end function
