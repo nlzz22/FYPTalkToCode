@@ -31,6 +31,7 @@ class WordCorrector:
         words_without_divide = words_without_times.replace("/", " divide ")
         words_without_dot = words_without_divide.replace(".", " dot ")
         final_words = words_without_dot.replace(" X ", " times ")
+        final_words = final_words.replace(" * ", " times ")
 
         return final_words
         

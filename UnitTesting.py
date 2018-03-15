@@ -1197,6 +1197,14 @@ class TestWordCorrectorMethods(unittest.TestCase):
 
         self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
 
+    def test_word_corrector_symbol_star_as_times(self):
+        word = "declare integer first equal 1 * 2"
+        wc = WordCorrector(word, [])
+        corrected = wc.run_correction()
+        expected = "declare integer first equal one times two"
+
+        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
+
     def test_word_corrector_symbol_dot(self):
         word = "call function printf parameter string symbol. end string end function"
         wc = WordCorrector(word, [])
