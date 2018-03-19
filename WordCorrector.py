@@ -192,7 +192,7 @@ class WordCorrector:
         temp_words = ""
         word_to_add = ""
         self.is_correction_done = False
-        to_do_correction = False
+        to_correct_prev_wrong_words = False
 
         self.premature_correction()
 
@@ -228,17 +228,26 @@ class WordCorrector:
                 # Convert numbers to words (e.g. 42 -> forty-two)
                 number_in_word_form = num2words(int(current_word))
                 word_to_add = number_in_word_form
-                to_do_correction = True
+                to_correct_prev_wrong_words = True
             elif (current_word == "string"):
                 # do not correct strings
                 word_to_add = current_word
-                to_do_correction = True
+                to_correct_prev_wrong_words = True
                 is_string_encountered = True
             elif (current_word == "character"):
                 # do not correct characters
                 word_to_add = current_word
-                to_do_correction = True
+                to_correct_prev_wrong_words = True
                 is_char_encountered = True
+            elif (current_word == "if"):
+                # special case: "if" does not follow from a "begin"
+                prev_word = self.query_latest_added_word()
+                if prev_word != "begin" and prev_word != "end":
+                    temp_words += "eve " # because `if` is a keyword
+                    to_correct_prev_wrong_words = False
+                else:
+                    word_to_add = current_word
+                    to_correct_prev_wrong_words = True
             elif (current_word in self.variables_list or current_word in self.keyword_list or current_word in w2n.american_number_system):
                 # do not correct any variables or keywords (including numbers)
 
@@ -249,13 +258,13 @@ class WordCorrector:
                 elif current_word == "then" and (prev_word == "greater" or prev_word == "less"):
                     current_word = "than"                    
                 word_to_add = current_word
-                to_do_correction = True
+                to_correct_prev_wrong_words = True
             else:
                 # wrong words to perform correction
                 temp_words += current_word + " "
-                to_do_correction = False
+                to_correct_prev_wrong_words = False
                 
-            if to_do_correction:
+            if to_correct_prev_wrong_words:
                 self.is_correction_done = self.perform_correction(temp_words, self.correction_list, self.max_syllable)
                 self.add_word_to_corrected(word_to_add)
                 word_to_add = ""
@@ -357,7 +366,7 @@ class WordCorrector:
         if prev_word == "index":
             min_match = 0.50
             can_match_keyword = False # variable name or literal must follow.
-        
+
         is_same_word = False
         
         for keyword_pair in keyword_list_pair:

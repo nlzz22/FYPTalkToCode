@@ -1349,6 +1349,14 @@ class TestWordCorrectorMethods(unittest.TestCase):
         expected = "begin if numbers array index zero greater than max then"
 
         self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
+
+    def test_word_corrector_correct_wrong_if(self):
+        word = "if equal two end equal"
+        wc = WordCorrector(word, ["leave"])
+        corrected = wc.run_correction()
+        expected = "leave equal two end equal"
+
+        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
     
 
 
