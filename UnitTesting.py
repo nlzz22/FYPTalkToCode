@@ -1317,7 +1317,15 @@ class TestWordCorrectorMethods(unittest.TestCase):
         expected = "declare integer count equal zero" # previously corrected to "declare integer equal zero"
 
         self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
-    
+
+    def test_word_corrector_rhyme_1_correction(self):
+        word = "begin if numbers array index high greater than max then"
+        wc = WordCorrector(word, ["numbers", "i", "max"])
+        corrected = wc.run_correction()
+        expected = "begin if numbers array index i greater than max then"
+
+        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
+
 
     def format_spaces(self, sentence):
         return UtilityClass().format_spaces(sentence)
