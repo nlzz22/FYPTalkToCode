@@ -445,6 +445,11 @@ class TestWordParserMethods(unittest.TestCase):
         struct = "for #condition #assign #array numbersTree #indexes #variable i #index_end += #variable max #condition #variable i < #variable length #condition #post #variable i ++ #for_start #for_end;;"
         self.wordparser_compare(speech, struct)
 
+    def test_word_parser_for_loop_with_end_equal(self):
+        speech = "for loop condition i equal one end equal condition i less than length condition i plus plus end equal begin end for loop"
+        struct = "for #condition #assign #variable i #with #value 1 #condition #variable i < #variable length #condition #post #variable i ++ #for_start #for_end;;"
+        self.wordparser_compare(speech, struct)
+
     def test_word_parser_postfix_assignment(self):
         speech = "max plus plus end equal"
         struct = "#post #variable max ++;;"

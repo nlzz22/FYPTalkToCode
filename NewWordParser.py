@@ -775,10 +775,11 @@ class WordParser:
         declare_array_statement.setParseAction(self.parse_declare_arr_statement)
 
         for_loop_statement = for_loop + \
-                             keyword_condition + assignment_expression + \
+                             keyword_condition + assignment_expression + keyword_end_equal + \
                              keyword_condition + conditional_expression + \
-                             keyword_condition + assignment_expression + keyword_begin + \
-                             ZeroOrMore(statement) + keyword_end_for_loop
+                             keyword_condition + assignment_expression + keyword_end_equal + \
+                             keyword_begin + ZeroOrMore(statement) + keyword_end_for_loop # all end equal must be optional, suppress
+
         for_loop_statement.setParseAction(self.parse_for_loop_statement)
 
         while_loop_statement = keyword_while + conditional_expression + \
