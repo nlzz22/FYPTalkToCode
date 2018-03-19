@@ -30,6 +30,9 @@ class CodingByDictRecognition(Thread):
     def undo(self):
         self.programLogic.undo()
 
+    def clear(self):
+        self.programLogic.clear()
+
     def startRecording(self):
         self.programLogic.unlock_voice(self)
 
@@ -157,10 +160,12 @@ class CodeByDictUI(wx.Frame):
 
         # Create the buttons
         self.buttonUndo = wx.Button(self, -1, "Undo")
+        self.buttonClear = wx.Button(self, -1, "Clear")
         self.buttonExport = wx.Button(self, -1, "Export")
         self.buttonCheatsheet = wx.Button(self, -1, "Cheatsheet")
 
         self.Bind(wx.EVT_BUTTON, self.OnUndo, self.buttonUndo)
+        self.Bind(wx.EVT_BUTTON, self.OnClear, self.buttonClear)
         self.Bind(wx.EVT_BUTTON, self.OnExport, self.buttonExport)
         self.Bind(wx.EVT_BUTTON, self.OnCheatsheet, self.buttonCheatsheet)   
 
@@ -168,6 +173,8 @@ class CodeByDictUI(wx.Frame):
         self.buttonSizer = wx.BoxSizer(wx.HORIZONTAL)
         self.buttonSizer.AddSpacer(CodeByDictUI.SPACE_SIDE_OF_BUTTONS)
         self.buttonSizer.Add(self.buttonUndo, 1, wx.EXPAND)
+        self.buttonSizer.AddSpacer(CodeByDictUI.SPACE_BETWEEN_BUTTONS)
+        self.buttonSizer.Add(self.buttonClear, 1, wx.EXPAND)
         self.buttonSizer.AddSpacer(CodeByDictUI.SPACE_BETWEEN_BUTTONS)
         self.buttonSizer.Add(self.buttonExport, 1, wx.EXPAND)
         self.buttonSizer.AddSpacer(CodeByDictUI.SPACE_BETWEEN_BUTTONS)
@@ -332,6 +339,9 @@ class CodeByDictUI(wx.Frame):
 
     def OnUndo(self, event):
         self.recognition.undo()
+
+    def OnClear(self, event):
+        self.recognition.clear()
         
     def OnExport(self, event):
         # Save away the edited text

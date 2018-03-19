@@ -111,7 +111,10 @@ class CodingByDictationLogic:
                 curr_index += 1
             else:
                 hist_text += self.text_history_stack.stack[i] + "\n"
-        last = self.text_history_stack.stack[len_text_hist_stack - 1]
+        if len_text_hist_stack > 0:
+            last = self.text_history_stack.stack[len_text_hist_stack - 1]
+        else:
+            last = ""
         
         uiThread.UpdateHistoryBody(hist_text, last)
 
@@ -232,6 +235,18 @@ class CodingByDictationLogic:
             self.print_feedback_four("Your undo is registered for " + str(undo_text), self.uiThread)
         else:
             self.print_feedback_four("There is nothing to undo.", self.uiThread)
+
+    def clear(self):
+        self.current_index = 0
+        self.variables_stack = Stack()
+        self.text_history_stack = Stack()
+        self.code_stack = Stack()
+        self.accepted_indices = []
+        self.current_index = 0
+
+        self.print_history_text(self.uiThread)
+        self.print_latest_code(self.uiThread)
+        self.print_feedback_four("You have cleared everything. ", self.uiThread)
 
     def lock_voice(self, uiThread):
         self.voice_lock.acquire()
@@ -380,6 +395,9 @@ class CodingByDictationLogic:
             if num_undo > 0:
                 for i in range(num_undo):
                     self.undo(True)
+                continue
+            elif "clear" in corrected:
+                self.clear()
                 continue
 
             if "not recording" in corrected or "start recording" in read_words:

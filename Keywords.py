@@ -11,6 +11,7 @@ class Keywords:
         list_keywords.append(Keyword("begin", 2))
         list_keywords.append(Keyword("call", 1))
         list_keywords.append(Keyword("character", 3))
+        list_keywords.append(Keyword("clear", 1, 0.9))
         list_keywords.append(Keyword("colon", 2, symbol_bits=3)) # 11 in binary.
         list_keywords.append(Keyword("condition", 3))
         list_keywords.append(Keyword("create", 2))
