@@ -7,16 +7,13 @@ from PlatformChecker import *
 SPECIAL_REJECT_SEQ = "Special Reject Sequence @#$%^&*()!"
 
 def parse_structural_command_to_code(structural_command):
-    defaultProgramHeader = "#c_program SampleProgram\n"
-    defaultProgramHeader += "#include #access stdio h #access_end;;"
+    programCode = ["#c_program SampleProgram", "#include #access stdio h #access_end;;"]
 
     defaultProgramEnd = " #program_end"
-
-    # Get Hello World Program for testing
-    #defaultProgramHeader += get_sample_hello_world_program_in_structured_command()
     
-    defaultProgramHeader += structural_command
-    defaultProgramHeader += defaultProgramEnd
+    programCode.append(structural_command)
+    programCode.append(defaultProgramEnd)
+    programCode = "\n".join(programCode)
 
     #print "Compiling Java Program from Martin\n"
     #java_compile_dir = os.path.join('TalkToCode', 'talk-to-code', 'src', 'ast', '*.java')
@@ -24,7 +21,7 @@ def parse_structural_command_to_code(structural_command):
     #print "Finished compiling. Running the Java Program... \n"
 
     java_dir = os.path.join('TalkToCode', 'talk-to-code', 'src') # using os.path.join makes it platform independent.
-    output = execute_java(java_dir, 'ast/ASTParser', defaultProgramHeader)
+    output = execute_java(java_dir, 'ast/ASTParser', programCode)
 
     return output
 
@@ -59,16 +56,6 @@ def execute_java(java_dir, java_file, stdin):
     os.chdir(current_dir)
 
     return stdout
-
-def get_sample_hello_world_program_in_structured_command():
-    program_code = "#function_declare main int \n"
-    program_code += "#function_start \n"
-    program_code += "#function printf(#parameter #value \"Hello World!\\n\");; \n"
-    program_code += "return #value 0;; \n"
-    program_code += "#function_end;; \n"
-    program_code += "#program_end\n"
-
-    return program_code
 
 if __name__ == "__main__":
     while True:
