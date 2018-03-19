@@ -40,6 +40,10 @@ def get_phones_for_word_not_in_dict(word):
         return "M AA D Y AH L AH S"
     elif word == "corrector":
         return "K AH R EH K T ER"
+    elif word == "printf":
+        return "P R IH1 N T EH1 F"
+    elif word == "scanf":
+        return "S K AE1 N EH1 F"
     else:
         return word.upper()
     

@@ -1326,6 +1326,14 @@ class TestWordCorrectorMethods(unittest.TestCase):
 
         self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
 
+    def test_word_corrector_printf_sim_correction(self):
+        word = "call function princess parameter stream hello world end string end function"
+        wc = WordCorrector(word, [])
+        corrected = wc.run_correction()
+        expected = "call function printf parameter string hello world end string end function"
+
+        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
+
 
     def format_spaces(self, sentence):
         return UtilityClass().format_spaces(sentence)
