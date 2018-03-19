@@ -96,26 +96,26 @@ class WordParser:
             return ""
         
         if self.is_number(word): # if is number
-            return " #value " + str(w2n.word_to_num(word))
+            return " #value {}".format(str(w2n.word_to_num(word)))
         elif "\"" in word: # if is string
             if word[len(word) - 2] == " ": # if space at last character before "
-                processed_str = " #value " + word[:-2] + "\"" # remove the space
+                processed_str = " #value {}\"".format(word[:-2]) # remove the space
             else:
-                processed_str = " #value " + word
+                processed_str = " #value {}".format(word)
             return processed_str.replace(WordParser.SPECIAL_SPACE_CHAR, " ")
         elif "'" in word: # if is character
-            return " #value " + word
+            return " #value {}".format(word)
         else:
             try:
                 # if word is already in number form
                 float(word)
 
-                return " #value " + str(word)
+                return " #value {}".format(str(word))
             except ValueError:
                 if special_syntax_if_var == None:
-                    return " #variable " + self.build_var_name(word)
+                    return " #variable {}".format(self.build_var_name(word))
                 else:
-                    return " " + special_syntax_if_var + " " + self.build_var_name(word)
+                    return " {} {}".format(special_syntax_if_var, self.build_var_name(word))
                 
 
     def parse_var_arr_or_literal(self, toks):
@@ -126,8 +126,8 @@ class WordParser:
             tokens = self.array_index_phrase.parseString(word)
 
             # array
-            return "#array " + " " + self.build_var_name(tokens[0]) + " #indexes " + \
-                   self.process_variable_or_literal(tokens[1]) + " #index_end"
+            return "#array  {} #indexes {} #index_end".format(self.build_var_name(tokens[0]), \
+                                                              self.process_variable_or_literal(tokens[1]))
         except ParseException: # no match: not an array
             return self.process_variable_or_literal(word)
 
@@ -140,12 +140,12 @@ class WordParser:
         var_name = self.build_var_name(toks[0])
         size = toks[1]
 
-        return "#variable " + var_name + " #indexes " + self.process_variable_or_literal(size) + " #index_end"
+        return "#variable {} #indexes {} #index_end".format(var_name, self.process_variable_or_literal(size))
 
 
     ## This is for setting parse action to output array tags
     def update_array_tags(self, tokens):
-        return " #array " + tokens.varname + " #index " + tokens.index
+        return " #array {} #index {}".format(tokens.varname, tokens.index)
 
 
     ## This is for setting parse action to output parameter tags
@@ -162,14 +162,14 @@ class WordParser:
             # Add to variables list.
             self.add_variable_by_word(variable_name)
 
-            return " #parameter_a #dimension 1 " + var_type + " #array " + variable_name
+            return " #parameter_a #dimension 1 {} #array {}".format(var_type, variable_name)
         except ParseException: # no match: not an array, but a variable
             variable_name = self.build_var_name(var_or_array)
 
             # Add to variables list.
             self.add_variable_by_word(variable_name)
             
-            return " #parameter " + var_type + variable_name
+            return " #parameter {}{}".format(var_type, variable_name)
 
 
     def update_comparison_ops(self, tokens):        
@@ -273,9 +273,9 @@ class WordParser:
 
     def parse_literal(self, tokens):
         if tokens.charlit != "": # character literal
-            return "'" + tokens[0] + "'"
+            return "'{}'".format(tokens[0])
         elif tokens.strlit != "": # string literal
-            return "\"" + tokens[0] + "\""
+            return "\"{}\"".format(tokens[0])
         else: # normal literal (number / floating pt number)
             return tokens
         
@@ -286,80 +286,81 @@ class WordParser:
 
     def parse_simple_assign_expression(self, tokens):
         # tokens consist of [ var_or_arr, assignment_operator, expression ]
-        return "#assign " + self.parse_var_arr_or_literal_word(tokens[0]) + " " + tokens[1] + " " + tokens[2]
+        return "#assign {} {} {}".format(self.parse_var_arr_or_literal_word(tokens[0]), tokens[1], tokens[2])
 
 
     def parse_postfix_expression(self, tokens):
         # tokens consist of [ var_or_arr, unary_operator ]
-        return "#post " + self.parse_var_arr_or_literal_word(tokens[0]) + " " + tokens[1]
+        return "#post {} {}".format(self.parse_var_arr_or_literal_word(tokens[0]), tokens[1])
 
 
     def parse_prefix_expression(self, tokens):
         # tokens consist of [ unary_operator, var_or_arr ]
-        return tokens[0] + " " + self.parse_var_arr_or_literal_word(tokens[1])
+        return "{} {}".format(tokens[0], self.parse_var_arr_or_literal_word(tokens[1]))
 
 
     def parse_assignment_statement(self, tokens):
         # tokens consist of [ assignment_expression ]
-        parsed_stmt = tokens[0] + ";; "
+        parsed_stmt = "{};; ".format(tokens[0])
         
         return parsed_stmt
 
 
     def parse_if_statement(self, tokens):
         # tokens consist of [ conditional_expression, statements (multiple) ]
-        parsed_stmt = "if #condition " + tokens[0] + " #if_branch_start "
+        parsed_stmt = "if #condition {} #if_branch_start ".format(tokens[0])
+        cond_stmt = []
 
         for i in range(1, len(tokens)):
-            parsed_stmt += tokens[i] + " "
+            cond_stmt.append(tokens[i])
+        mid_stmt = " ".join(cond_stmt)
 
-        parsed_stmt += "#if_branch_end;;"
-            
-        return parsed_stmt
+        return "{} {} #if_branch_end;;".format(parsed_stmt, mid_stmt)
 
 
     def parse_if_else_statement(self, tokens):
         # tokens consist of [ conditional_expression, statements (multiple) ]
         # statements are split into ifclause statements and elseclause statements
-        parsed_stmt = "if #condition " + tokens[0] + " #if_branch_start "
+        first_stmt = "if #condition {} #if_branch_start ".format(tokens[0])
+        if_list = []
+        else_list = []
 
         for i in range(0, len(tokens.ifclause)):
-            parsed_stmt += tokens.ifclause[i] + " "
+            if_list.append(tokens.ifclause[i])
 
-        parsed_stmt += "#if_branch_end #else_branch_start "
+        mid_stmt = " #if_branch_end #else_branch_start "
 
         for j in range(0, len(tokens.elseclause)):
-            parsed_stmt += tokens.elseclause[j] + " "
+            else_list.append(tokens.elseclause[j])
 
-        parsed_stmt += "#else_branch_end;;"
+        if_stmt = " ".join(if_list)
+        else_stmt = " ".join(else_list)
             
-        return parsed_stmt
+        return "{} {} {} {} #else_branch_end;;".format(first_stmt, if_stmt, mid_stmt, else_stmt)
 
 
     def parse_for_loop_statement(self, tokens):
         # tokens consist of [ assignment_expression, conditional_expression, assignment_expression,
         # statements (multiple)]
-        parsed_stmt = "for #condition " + tokens[0] + " #condition " + tokens[1] + \
-                      " #condition " + tokens[2] + " #for_start "
+        parsed_stmt = "for #condition {} #condition {} #condition {} #for_start ".format( \
+            tokens[0], tokens[1], tokens[2])
 
+        body_list = []
         for i in range(3, len(tokens)):
-            parsed_stmt += tokens[i] + " "
+            body_list.append(tokens[i])
 
-        parsed_stmt += "#for_end;;"
-
-        return parsed_stmt
+        return "{} {} #for_end;;".format(parsed_stmt, " ".join(body_list))
 
 
     def parse_while_loop_statement(self, tokens):
         # tokens consist of [ conditional_expression, statements (multiple) ]
-        parsed_stmt = "while #condition " + tokens[0] + " #while_start "
+        parsed_stmt = "while #condition {} #while_start ".format(tokens[0])
 
+        body_list = []
         for i in range(1, len(tokens)):
-            parsed_stmt += tokens[i] + " "
+            body_list.append(tokens[i])
 
-        parsed_stmt += " #while_end;;"
-
-        return parsed_stmt
+        return "{} {} #while_end;;".format(parsed_stmt, " ".join(body_list))
 
 
     def parse_function_declaration(self, tokens):
@@ -369,79 +370,72 @@ class WordParser:
 
         # add function name to variables list.
         self.add_variable_by_word(function_name)
-        
-        parsed_stmt = "#function_declare " + function_name + " " + tokens[1]
-        
+
+        param_list = []
         for i in range(0, len(tokens.params)):
-            parsed_stmt += tokens.params[i]
-            
-        parsed_stmt += " #function_start "
+            param_list.append(tokens.params[i])
+        param_stmt = "".join(param_list)
 
+        body_list = []
         for j in range(0, len(tokens.stmts)):
-            parsed_stmt += tokens.stmts[j] + " "
+            body_list.append(tokens.stmts[j])
+        body_stmt = " ".join(body_list)
 
-        parsed_stmt += "#function_end;;"
+        parsed_stmt = "#function_declare {} {} {} #function_start {} #function_end;;".format( \
+            function_name, tokens[1], param_stmt, body_stmt)
 
         return parsed_stmt
 
 
     def parse_function_call_statement(self, tokens):
         # tokens consist of [ var_name, parameter_statements (multiple)]
-        parsed_stmt = "#function " + self.build_var_name(tokens[0]) + "("
-        separator = ""
-
+        param_list = []
         for i in range(1, len(tokens)):
-            parsed_stmt += separator + "#parameter " + tokens[i]
-            separator = " "
-
-        parsed_stmt += ");;"
-
-        return parsed_stmt
+            param_list.append("#parameter")
+            param_list.append(tokens[i])
+        param_stmt = " ".join(param_list)
+        
+        return "#function {}({});;".format(self.build_var_name(tokens[0]), param_stmt)
+        
 
     def parse_case_stmt(self, tokens):
         # tokens consist of [ literal_name, statements (multiple)]
-        parsed_stmt = " case " + self.process_variable_or_literal(tokens[0]) + " #case_start "
-
+        stmt_list = []
         for i in range(1, len(tokens)):
-            parsed_stmt += tokens[i] + " "
+            stmt_list.append(tokens[i])
+        stmt = " ".join(stmt_list)
 
-        parsed_stmt += " #case_end"
-
-        return parsed_stmt
+        return " case {} #case_start {} #case_end".format(self.process_variable_or_literal(tokens[0]), stmt)
 
     def parse_default_stmt(self, tokens):
         # tokens consist of [ statements (multiple)]
-        parsed_stmt = " default #case_start "
-
+        stmt_list = []
         for i in range(0, len(tokens)):
-            parsed_stmt += tokens[i] + " "
+            stmt_list.append(tokens[i])
+        stmt = " ".join(stmt_list)
 
-        parsed_stmt += " #case_end"
-
-        return parsed_stmt
+        return " default #case_start {} #case_end".format(stmt)
 
 
     def parse_switch_statement(self, tokens):
         # tokens consist of [ conditional_expression, case/default stmts (multiple) ]
-        parsed_stmt = " switch #condition " + tokens[0]
-
+        stmt_list = []
         for i in range(1, len(tokens)):
-            parsed_stmt += " " + tokens[i]
+            stmt_list.append(tokens[i])
+        stmt = " ".join(stmt_list)
 
-        parsed_stmt += ";;"
-
-        return parsed_stmt
+        return " switch #condition {} {};;".format(tokens[0], stmt)
 
 
     def parse_logical_and_cond_expr(self, tokens):
         # tokens consist of [ conditional_expression ]
-        parsed_stmt = " && " + tokens[0]
+        parsed_stmt = " && {}".format(tokens[0])
         return parsed_stmt
 
 
     def parse_logical_or_cond_expr(self, tokens):
         # tokens consist of [ conditional_expression ]
-        parsed_stmt = " || " + tokens[0]
+        parsed_stmt = " || {}".format(tokens[0])
         return parsed_stmt
 
 
@@ -485,10 +479,10 @@ class WordParser:
 
     def parse_declare_var_statement(self, tokens):
         # tokens consist of [ variable_type, variable_name, optional (expression) ]
-        parsed_stmt = "#create " + tokens[0] + " " + tokens[1]
         if len(tokens) == 3:
-            parsed_stmt += " " + tokens[2]
-        parsed_stmt += " #dec_end;;"
+            parsed_stmt = "#create {} {} {} #dec_end;;".format(tokens[0], tokens[1], tokens[2])
+        else:
+            parsed_stmt = "#create {} {} #dec_end;;".format(tokens[0], tokens[1])
 
         # add to variables list.
         self.add_variable_by_word(tokens[1])
@@ -505,11 +499,11 @@ class WordParser:
             word = inner_list[0]
             self.add_variable_by_word(word)
         
-        return "#create " + tokens[0] + " #array " + tokens[1] + " #dec_end;;"
+        return "#create {} #array {} #dec_end;;".format(tokens[0], tokens[1])
 
     def parse_return_statement(self, tokens):
         # tokens consist of [ expression ]
-        return "return " + tokens[0] + ";;"
+        return "return {};;".format(tokens[0])
 
     def parse_space(self, tokens):
         return WordParser.SPECIAL_SPACE_CHAR
@@ -528,7 +522,7 @@ class WordParser:
 
     def handle_fail_parse(self, string, loc, expr, err):
         if self.error_message != "":
-            self.error_message += " or " + str(expr)
+            self.error_message += " or {}".format(str(expr))
         else:
             self.error_message = str(expr)
 
@@ -544,7 +538,7 @@ class WordParser:
 
         error_message = " or ".join(parts_without_duplicate)
         
-        return "Expected " + error_message
+        return "Expected {}".format(error_message)
 
 
     def get_variables(self):
@@ -903,7 +897,7 @@ class WordParser:
             start_word = words[0]
         else:
             first_word = words[0]
-            start_word = words[0] + " " + words[1]
+            start_word = "{} {}".format(words[0], words[1])
             
         # Check selection statements
         if start_word == "begin if" or first_word == "switch":
