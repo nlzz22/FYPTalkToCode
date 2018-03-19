@@ -21,7 +21,6 @@ class HotwordRecognition(Thread):
 
     def run(self):
         self.speechReader = SpeechReader()
-        self.ui.ShowVisualizer(False)
         self.speechReader.wait_for_hotword(self.ui) # blocks till hotword found.
 
         self.ui.startRecording()

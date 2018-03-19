@@ -114,8 +114,6 @@ class SpeechRecognitionModule:
                 recording_thread.start()
                 recording_thread2.start()
 
-                uiThread.ShowVisualizer(False)
-
                 self.print_feedback_two("Waiting for hotword `start recording` before we resume recording...", uiThread)
                 self.print_speak_now("SAY 'start recording'", uiThread)
                 self.print_feedback_one("", uiThread)
@@ -191,9 +189,7 @@ class SpeechRecognitionModule:
                 with self.mic as source:
                         audio = None
                         try:
-                                uiThread.ShowVisualizer(True)
                                 audio = self.recognizer.listen(source, timeout=timeout, phrase_time_limit=phrase_time_limit)
-                                uiThread.ShowVisualizer(False)
                         except WaitTimeoutError:
                                 audio = None
                         return audio

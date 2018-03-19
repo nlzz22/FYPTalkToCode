@@ -62,9 +62,11 @@ class CodingByDictRecognition(Thread):
 
     def OnRecordingMode(self):
         wx.CallAfter(self.ui.OnRecordingMode)
+        self.ShowVisualizer(True)
 
     def OffRecordingMode(self):
         wx.CallAfter(self.ui.OffRecordingMode)
+        self.ShowVisualizer(False)
 
     def PassSoundEnergyValues(self, value):
         wx.CallAfter(self.ui.PassSoundEnergyValue, value)
@@ -193,7 +195,7 @@ class CodeByDictUI(wx.Frame):
         self.vertPeak.SetRangeValue(800, 3500, 8000)
         self.timer = wx.Timer(self)
         self.Bind(wx.EVT_TIMER, self.OnTimer)
-        self.ShowVisualizer(False)
+        self.ShowVisualizer(True)
         wx.CallLater(500, self.visualizer_start)
 
         # Recording Bar sizer
