@@ -366,34 +366,40 @@ class CodeByDictUI(wx.Frame):
         dlg.Destroy()
     
     def OnCheatsheet(self, event):
-        divider = "\n==========================================================\n"
-        cheatsheetContents = "Structured Language\n\n" + \
-            "Declare variable : \ndeclare <variable type> <variable name> end declare\n" + \
-            "Example  : declare integer first end declare\n" + \
-            "Extension  : declare integer first equal three end declare" + divider + \
-            "Variable assignment : \n<variable name> equal <literal> end equal\n" + \
-            "Example  : first equal ten end equal" + divider + \
-            "If-then-else : \n begin if <statements> then <statements> Optional(else <statements>) end if\n" + \
-            "Example (if-then) : begin if i less than one then i plus plus end if\n" + \
-            "Example (else)  : begin if i less than one then i plus plus else i minus minus end if" + divider + \
-            "Function declaration :\n create function <function name> return type <variable type> " + \
-            "<0 or more: parameter <variable type> <variable name>> begin <statements> end function\n" + \
-            "Example  : create function hit return type void parameter float damage begin life minus minus end function\n" + \
-            "Example 2  : create function main return type void begin declare integer first end declare end function" + \
-            divider + \
-            "Function call : \n call function <function name> <0 or more: parameter <variable name>> end function \n" + \
-            "Example  : call function search parameter lower parameter higher   end function" + divider + \
-            "While loop : \n while <variable name> begin <statements> end while \n" + \
-            "Example  : while    is cold  begin  heat plus plus end while" + divider + \
-            "For loop : \n " + \
-            "for loop condition <variable name> equal <literal> " + \
-            "condition <variable name> <comparison operator> <literal> condition <variable name> <operator> begin " + \
-            "<statements> end for loop " + \
-            "Example  : for loop condition i equal one condition i less than length condition i plus plus begin " + \
-            " j plus plus end for loop\n\n" + \
-            "To be continued..."
+        divider = "=========================================================="
+        cheatsheetContents = ["Structured Language\n", \
+                              "Declare variable : ", \
+                              "declare <variable type> <variable name> end declare", \
+                              "Example  : declare integer first end declare", \
+                              "Extension  : declare integer first equal three end declare", divider, \
+                              "Variable assignment : ", \
+                              "<variable name> equal <literal> end equal", \
+                              "Example  : first equal ten end equal", divider, \
+                              "If-then-else : ", \
+                              "begin if <statements> then <statements> Optional(else <statements>) end if", \
+                              "Example (if-then) : begin if i less than one then i plus plus end if", \
+                              "Example (else)  : begin if i less than one then i plus plus else i minus minus end if", \
+                              divider, "Function declaration :", \
+                              "create function <function name> return type <variable type> " + \
+                              "<0 or more: parameter <variable type> <variable name>> begin <statements> end function", \
+                              "Example  : create function hit return type void parameter float damage begin life minus minus end function", \
+                              "Example 2  : create function main return type void begin declare integer first end declare end function", \
+                              divider, "Function call : ", \
+                              "call function <function name> <0 or more: parameter <variable name>> end function ", \
+                              "Example  : call function search parameter lower parameter higher   end function",divider, \
+                              "While loop : ", \
+                              "while <variable name> begin <statements> end while ", \
+                              "Example  : while    is cold  begin  heat plus plus end while", divider, \
+                              "For loop :  " , \
+                              "for loop condition <variable name> equal <literal> " + \
+                              "condition <variable name> <comparison operator> <literal> condition <variable name> <operator> begin " + \
+                              "<statements> end for loop ", \
+                              "Example  : for loop condition i equal one condition i less than length condition i plus plus begin " + \
+                              " j plus plus end for loop\n", \
+                              "To be continued..."
+                              ]
         
-        cheatsheet = wx.MessageDialog(self, cheatsheetContents, "Cheatsheet")
+        cheatsheet = wx.MessageDialog(self, "\n".join(cheatsheetContents), "Cheatsheet")
         cheatsheet.ShowModal()
         cheatsheet.Destroy()
 
