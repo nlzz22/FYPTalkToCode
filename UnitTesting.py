@@ -1334,6 +1334,23 @@ class TestWordCorrectorMethods(unittest.TestCase):
 
         self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
 
+    def test_word_corrector_index_i_correct(self):
+        word = "begin if numbers array index is greater than max then"
+        wc = WordCorrector(word, ["numbers", "i", "max"])
+        corrected = wc.run_correction()
+        expected = "begin if numbers array index i greater than max then"
+
+        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
+
+    def test_word_corrector_index_number_no_correct(self):
+        word = "begin if numbers array index 0 greater than max then"
+        wc = WordCorrector(word, ["numbers", "i", "max"])
+        corrected = wc.run_correction()
+        expected = "begin if numbers array index zero greater than max then"
+
+        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
+    
+
 
     def format_spaces(self, sentence):
         return UtilityClass().format_spaces(sentence)

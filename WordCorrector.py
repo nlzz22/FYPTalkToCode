@@ -12,7 +12,8 @@ class WordCorrector:
         self.corrected = ""
         self.space = ""
         self.var_types = ["integer", "long", "float", "double", "boolean", "character", "string", "void"]
-        self.variables_list = var_list + StandardFunctions().get_std_functions()
+        self.variables_list = var_list
+        self.std_functions = StandardFunctions().get_std_functions()
         self.kw = Keywords()
         self.max_syllable = self.kw.get_max_num_syllable()
         self.keyword_list = self.kw.get_keywords()
@@ -292,6 +293,9 @@ class WordCorrector:
 
     def build_word_syllable_list(self, keywords_library):
         temp_list = keywords_library.get_keywords_with_syllable()
+        for std_funcs in self.std_functions:
+            temp_list.append(KeywordObj(std_funcs))
+        
         for variable in self.variables_list:
             temp_list.append(KeywordObj(variable))
             
@@ -331,6 +335,7 @@ class WordCorrector:
         can_match_char = False
         must_match_var_type = False
         can_match_keyword = True # else can match variable names.
+        need_to_correct = True
 
         prev_word = self.query_latest_added_word()
         prev_2_words = self.query_latest_added_word(2)
@@ -347,11 +352,17 @@ class WordCorrector:
             can_match_char = True
 
         if self.get_first_word(prev_2_words) == "declare" and prev_word in self.var_types:
-            can_match_keyword = False
+            need_to_correct = False
+
+        if prev_word == "index":
+            min_match = 0.50
+            can_match_keyword = False # variable name or literal must follow.
         
         is_same_word = False
         
         for keyword_pair in keyword_list_pair:
+            if not need_to_correct: break
+            
             keyword = keyword_pair.get_keyword()
             syllable = keyword_pair.get_syllable()
             # some keywords are not so common, or not so easily mispronounced,
@@ -364,7 +375,7 @@ class WordCorrector:
                 This part handles some special cases.
             '''
 
-            if not can_match_keyword and keyword in self.keyword_list:
+            if not can_match_keyword and (keyword in self.keyword_list or keyword in self.std_functions):
                 # if keyword must be a variable name (not in keyword list)
                 continue
 
