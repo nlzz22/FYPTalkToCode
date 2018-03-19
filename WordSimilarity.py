@@ -79,6 +79,8 @@ def get_sim_index_pronouncing(str_compare_function, word1, word2, to_print=False
         print "phone sim : " + str(phone_sim)
         print "rhyme sim : " + str(rhyme_sim)
 
+    if rhyme_sim == 1 or phone_sim == 1:
+        return 1.0
     if rhyme_sim < MIN_WEIGHT_PRONOUNCING or phone_sim < MIN_WEIGHT_PRONOUNCING:
         return 0
     return max(phone_sim, rhyme_sim)    
