@@ -16,6 +16,7 @@ class CustomColor:
     WHITE = (255,255,255)
     RED = (255, 10, 10)
     GREEN = (0, 100, 0)
+    YELLOW = wx.YELLOW
 
 class CodingByDictRecognition(Thread):
     def __init__(self, ui):
@@ -53,8 +54,8 @@ class CodingByDictRecognition(Thread):
     def UpdateCodeBody(self, feedback):
         wx.CallAfter(self.ui.UpdateCodeBody, feedback)
 
-    def UpdateHistoryBody(self, feedback):
-        wx.CallAfter(self.ui.UpdateHistoryBody, feedback)
+    def UpdateHistoryBody(self, feedback, last_line):
+        wx.CallAfter(self.ui.UpdateHistoryBody, feedback, last_line)
 
     def OnRecordingMode(self):
         wx.CallAfter(self.ui.OnRecordingMode)
@@ -112,7 +113,7 @@ class CodeByDictUI(wx.Frame):
         self.bodyCode.SetBackgroundColour(CustomColor.LIGHT_GRAY)
         self.SetFont(self.bodyCode, CodeByDictUI.FONT_SIZE_CODE, CodeByDictUI.FONT_FAMILY_CODE)
 
-        self.bodyHistory = wx.TextCtrl(self, style=wx.TE_READONLY | wx.TE_MULTILINE)
+        self.bodyHistory = wx.TextCtrl(self, style=wx.TE_READONLY | wx.TE_MULTILINE | wx.TE_RICH)
         self.bodyHistory.AppendText("There is no history.")
         self.bodyHistory.SetBackgroundColour(CustomColor.LIGHT_GRAY)
 
@@ -316,10 +317,14 @@ class CodeByDictUI(wx.Frame):
         self.bodyCode.SetValue(formatted_code)
         self.RefreshSizer()
 
-    def UpdateHistoryBody(self, hist):
-        if hist.strip() == "":
+    def UpdateHistoryBody(self, hist, last_line):
+        if hist.strip() == "" and last_line == "":
             hist = "There is no history."
+            last = ""
         self.bodyHistory.SetValue(hist)
+        # make last line have background yellow color.
+        self.bodyHistory.SetDefaultStyle(wx.TextAttr(wx.NullColour, CustomColor.YELLOW))
+        self.bodyHistory.AppendText(last_line)
         self.RefreshSizer()
 
     def RefreshSizer(self):

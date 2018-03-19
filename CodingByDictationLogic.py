@@ -103,14 +103,17 @@ class CodingByDictationLogic:
     def print_history_text(self, uiThread):
         hist_text = ""
         curr_index = 0
-        for i in range(0, len(self.text_history_stack.stack)):
+        last = ""
+        len_text_hist_stack = len(self.text_history_stack.stack)
+        for i in range(0, len_text_hist_stack - 1):
             if curr_index < len(self.accepted_indices) and i == self.accepted_indices[curr_index]:
                 hist_text += self.text_history_stack.stack[i] + "\n\n"
                 curr_index += 1
             else:
-                hist_text += self.text_history_stack.stack[i] + "\n"   
+                hist_text += self.text_history_stack.stack[i] + "\n"
+        last = self.text_history_stack.stack[len_text_hist_stack - 1]
         
-        uiThread.UpdateHistoryBody(hist_text)
+        uiThread.UpdateHistoryBody(hist_text, last)
 
     def print_code(self, to_add_corrected, parsed_sc, wordParser, uiThread):
         accepted_text_list = []
