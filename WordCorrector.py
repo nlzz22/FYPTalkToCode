@@ -8,7 +8,7 @@ from StandardFunctions import StandardFunctions
 from WordSimilarity import get_most_similar_word, sounds_like_index, get_num_syllable
 
 class WordCorrector:
-    def __init__(self, words, var_list):
+    def __init__(self, words, var_list, create_func_complete=True):
         self.corrected = ""
         self.space = ""
         self.var_types = ["integer", "long", "float", "double", "boolean", "character", "string", "void"]
@@ -24,6 +24,7 @@ class WordCorrector:
         words_with_corrected_symbol_word = self.correct_symbol_words( \
                                     words_without_math_operators, self.max_syllable).strip()
         self.words_list = words_with_corrected_symbol_word.split(" ")
+        self.create_func_complete = create_func_complete
 
     def replace_symbols(self, words):
         words_without_plus = words.replace("+", "plus")
@@ -188,6 +189,13 @@ class WordCorrector:
                 if "by" not in self.variables_list:
                     self.words_list[i+1] = ""
 
+    def get_create_func_correction_list(self):
+        required_list = self.var_types + ["function", "with", "return", "type", "parameter", "begin"]
+        create_func_correction_list = self.build_custom_word_syllable_list(required_list)
+        
+        self.correction_list = create_func_correction_list
+        
+
     def correct_words(self):
         temp_words = ""
         word_to_add = ""
@@ -197,7 +205,9 @@ class WordCorrector:
         self.premature_correction()
 
         # handle special cases first.
-        if self.has_next_word():
+        if not self.create_func_complete:
+            self.get_create_func_correction_list()
+        elif self.has_next_word():
             if self.query_next_word() == "declare":
                 # declaring variables does not trigger normal correction
                 self.get_next_word()
@@ -213,10 +223,7 @@ class WordCorrector:
                 self.get_next_word()
                 self.add_word_to_corrected("create function")
                 
-                required_list = self.var_types + ["function", "with", "return", "type", "parameter", "begin"]
-                create_func_correction_list = self.build_custom_word_syllable_list(required_list)
-                
-                self.correction_list = create_func_correction_list
+                self.get_create_func_correction_list()
         
         # perform the correction        
         while (self.has_next_word()):

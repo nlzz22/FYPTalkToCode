@@ -976,6 +976,7 @@ class WordParser:
             result_struct["text"] = [] # raw text (only those parse-able) without correction
             result_struct["expected"] = "" # expected "end declare" for example.
             result_struct["potential_missing"] = "" # one missing construct like "end for loop" for example.
+            result_struct["func_dec_complete"] = [] # tell if function declaration statement is complete, or partial.
 
         if result["has_match"]:
             result_struct["sentence_status"].append(True)
@@ -984,7 +985,11 @@ class WordParser:
 
             parsed_text, rest_text = self.split_parsed_and_rest(sentence, self.rest_of_line)
             result_struct["text"].append(parsed_text)
-
+            if "func_dec_complete" in result.keys():
+                result_struct["func_dec_complete"].append(result["func_dec_complete"])
+            else:
+                result_struct["func_dec_complete"].append(True)
+            
             if str(rest_text).strip() != "":
                 result_struct = self.parse(rest_text, new_instance = False, result_struct = result_struct)
             
@@ -998,6 +1003,10 @@ class WordParser:
             result_struct["parsed"].append(temp_result["parsed"])
             result_struct["text"].append(sentence)
             result_struct["expected"] = temp_result["expected"]
+            if "func_dec_complete" in result.keys():
+                result_struct["func_dec_complete"].append(result["func_dec_complete"])
+            else:
+                result_struct["func_dec_complete"].append(True)
 
             if "potential_missing" in temp_result.keys():
                 result_struct["potential_missing"] = temp_result["potential_missing"]
@@ -1095,9 +1104,14 @@ class WordParser:
             list_parsed = self.function_declaration.parseString(sentence)
             
             return_struct["has_match"] = True
-            return_struct["struct_cmd"] = list_parsed[0]            
+            return_struct["struct_cmd"] = list_parsed[0]
+            return_struct["func_dec_complete"] = True 
         except ParseException:
             return_struct["has_match"] = False
+            if "begin" in sentence:
+                return_struct["func_dec_complete"] = True
+            else:
+                return_struct["func_dec_complete"] = False
 
         return return_struct
 

@@ -86,6 +86,7 @@ class CodingByDictationLogic:
         self.current_index = 0
         self.std_funcs = StandardFunctions().get_std_functions()
         self.error_from_scparser = False
+        self.create_func_complete = Stack()
 
         self.logger = Logger()
 
@@ -223,6 +224,7 @@ class CodingByDictationLogic:
             self.variables_stack.pop()
             undo_text = self.text_history_stack.pop()
             self.code_stack.pop()
+            self.create_func_complete.pop()
 
             if len(self.accepted_indices) > 0:
                 last_accepted_index = self.accepted_indices[len(self.accepted_indices) - 1]
@@ -243,6 +245,7 @@ class CodingByDictationLogic:
         self.code_stack = Stack()
         self.accepted_indices = []
         self.current_index = 0
+        self.create_func_complete = Stack()
 
         self.print_history_text(self.uiThread)
         self.print_latest_code(self.uiThread)
@@ -383,7 +386,7 @@ class CodingByDictationLogic:
                 start_time = time.time()
 
             # text to processed_text
-            wordCorrector = WordCorrector(read_words, variables_list)
+            wordCorrector = WordCorrector(read_words, variables_list, self.create_func_complete.peek())
             corrected = wordCorrector.run_correction()
 
             if self.to_show_time:
@@ -434,6 +437,7 @@ class CodingByDictationLogic:
                     parsed = result_structure["parsed"][i]
 
                     self.variables_stack.push(variable_current)
+                    self.create_func_complete.push(result_structure["func_dec_complete"][i])
 
                     if len(result_structure["text"][i]) < len(str(corrected)):
                         self.text_history_stack.push(result_structure["text"][i])
@@ -451,6 +455,7 @@ class CodingByDictationLogic:
                     parsed = result_structure["parsed"][i]
                     
                     self.variables_stack.push(variable_current)
+                    self.create_func_complete.push(result_structure["func_dec_complete"][i])
                     
                     if len(result_structure["text"][i]) < len(str(corrected)):
                         self.text_history_stack.push(result_structure["text"][i])
