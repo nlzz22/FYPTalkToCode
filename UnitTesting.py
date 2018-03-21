@@ -565,7 +565,7 @@ class TestWordParserMethods(unittest.TestCase):
         self.wordparser_compare(speech, struct)
 
     def test_word_parser_symbol_equal_dot_with_alphanum_in_string(self):
-        speech = "call function printf parameter string product symbol equal symbol percent symbol dot 2lf end string"
+        speech = "call function printf parameter string product symbol equal symbol percent symbol dot 2lf end string end function"
         struct = "#function printf(#parameter #value \"product =%.2lf\");;"
         self.wordparser_compare(speech, struct)
 
