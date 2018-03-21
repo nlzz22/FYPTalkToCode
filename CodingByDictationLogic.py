@@ -317,6 +317,7 @@ class CodingByDictationLogic:
         speechReader = SpeechReader()
         wordParser = newWordParser()
         fileReader = TextFileReader(self.text_filename)
+        wordCorrector = WordCorrector("", []) # declaring first can speed up subsequent calculations.
 
         if self.read_from == CodingByDictationLogic.READ_FROM_SPEECH:
             # Repeatedly records voice on another thread.
