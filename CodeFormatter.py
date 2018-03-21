@@ -34,20 +34,20 @@ class CodeFormatter:
             # Other os's command
             proc = subprocess.Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=STDOUT)
             
-        formatted_code, err = proc.communicate(code + "\n")
+        formatted_code, err = proc.communicate("{}\n".format(code))
 
         return formatted_code
 
     def process_code(self, code):
-        result = ""
+        result = []
         parts = code.split("\n")
         parts = parts[:-2] # Remove additional output from uncrustify which is not part of the program
 
         for part in parts:
             if part.strip() == "":
                 continue
-            result += part + "\n"
-        return result
+            result.append(part)
+        return "\n".join(result)
             
 
 if __name__ == "__main__":
