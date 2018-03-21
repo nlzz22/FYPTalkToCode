@@ -309,10 +309,8 @@ class WordParser:
     def parse_if_statement(self, tokens):
         # tokens consist of [ conditional_expression, statements (multiple) ]
         parsed_stmt = "if #condition {} #if_branch_start ".format(tokens[0])
-        cond_stmt = []
 
-        for i in range(1, len(tokens)):
-            cond_stmt.append(tokens[i])
+        cond_stmt = [tokens[i] for i in range(1, len(tokens))]
         mid_stmt = " ".join(cond_stmt)
 
         return "{} {} #if_branch_end;;".format(parsed_stmt, mid_stmt)
@@ -322,16 +320,13 @@ class WordParser:
         # tokens consist of [ conditional_expression, statements (multiple) ]
         # statements are split into ifclause statements and elseclause statements
         first_stmt = "if #condition {} #if_branch_start ".format(tokens[0])
-        if_list = []
         else_list = []
 
-        for i in range(0, len(tokens.ifclause)):
-            if_list.append(tokens.ifclause[i])
+        if_list = [tokens.ifclause[i] for i in range(0, len(tokens.ifclause))]
 
         mid_stmt = " #if_branch_end #else_branch_start "
 
-        for j in range(0, len(tokens.elseclause)):
-            else_list.append(tokens.elseclause[j])
+        else_list = [tokens.elseclause[j] for j in range(0, len(tokens.elseclause))]
 
         if_stmt = " ".join(if_list)
         else_stmt = " ".join(else_list)
@@ -345,9 +340,7 @@ class WordParser:
         parsed_stmt = "for #condition {} #condition {} #condition {} #for_start ".format( \
             tokens[0], tokens[1], tokens[2])
 
-        body_list = []
-        for i in range(3, len(tokens)):
-            body_list.append(tokens[i])
+        body_list = [tokens[i] for i in range(3, len(tokens))]
 
         return "{} {} #for_end;;".format(parsed_stmt, " ".join(body_list))
 
@@ -356,9 +349,7 @@ class WordParser:
         # tokens consist of [ conditional_expression, statements (multiple) ]
         parsed_stmt = "while #condition {} #while_start ".format(tokens[0])
 
-        body_list = []
-        for i in range(1, len(tokens)):
-            body_list.append(tokens[i])
+        body_list = [tokens[i] for i in range(1, len(tokens))]
 
         return "{} {} #while_end;;".format(parsed_stmt, " ".join(body_list))
 
@@ -371,14 +362,10 @@ class WordParser:
         # add function name to variables list.
         self.add_variable_by_word(function_name)
 
-        param_list = []
-        for i in range(0, len(tokens.params)):
-            param_list.append(tokens.params[i])
+        param_list = [tokens.params[i] for i in range(0, len(tokens.params))]
         param_stmt = "".join(param_list)
 
-        body_list = []
-        for j in range(0, len(tokens.stmts)):
-            body_list.append(tokens.stmts[j])
+        body_list = [tokens.stmts[j] for j in range(0, len(tokens.stmts))]
         body_stmt = " ".join(body_list)
 
         parsed_stmt = "#function_declare {} {} {} #function_start {} #function_end;;".format( \
@@ -400,18 +387,14 @@ class WordParser:
 
     def parse_case_stmt(self, tokens):
         # tokens consist of [ literal_name, statements (multiple)]
-        stmt_list = []
-        for i in range(1, len(tokens)):
-            stmt_list.append(tokens[i])
+        stmt_list = [tokens[i] for i in range(1, len(tokens))]
         stmt = " ".join(stmt_list)
 
         return " case {} #case_start {} #case_end".format(self.process_variable_or_literal(tokens[0]), stmt)
 
     def parse_default_stmt(self, tokens):
         # tokens consist of [ statements (multiple)]
-        stmt_list = []
-        for i in range(0, len(tokens)):
-            stmt_list.append(tokens[i])
+        stmt_list = [tokens[i] for i in range(0, len(tokens))]
         stmt = " ".join(stmt_list)
 
         return " default #case_start {} #case_end".format(stmt)
@@ -419,9 +402,7 @@ class WordParser:
 
     def parse_switch_statement(self, tokens):
         # tokens consist of [ conditional_expression, case/default stmts (multiple) ]
-        stmt_list = []
-        for i in range(1, len(tokens)):
-            stmt_list.append(tokens[i])
+        stmt_list = [tokens[i] for i in range(1, len(tokens))]
         stmt = " ".join(stmt_list)
 
         return " switch #condition {} {};;".format(tokens[0], stmt)
@@ -530,10 +511,7 @@ class WordParser:
         parts = self.error_message.split(" or ")
         parts = [part.strip() for part in parts]
         
-        parts_without_duplicate = set()
-        for part in parts:
-            parts_without_duplicate.add(part)
-        
+        parts_without_duplicate = {part for part in parts} # set comprehension
         parts_without_duplicate = list(parts_without_duplicate)
 
         error_message = " or ".join(parts_without_duplicate)
@@ -542,9 +520,7 @@ class WordParser:
 
 
     def get_variables(self):
-        var_list = set()
-        for variable in self.variables:
-            var_list.add(variable)
+        var_list = {variable for variable in self.variables} #set
         var_list = list(var_list)
 
         return var_list
@@ -866,9 +842,7 @@ class WordParser:
                 error = error.replace("Expected", "")
                 
                 parts = error.split(" or ")
-                new_list = []
-                for part in parts:
-                    new_list.append(part)
+                new_list = [part for part in parts]
 
                 for attempt in new_list:
                     word = attempt.replace("\"", "")
