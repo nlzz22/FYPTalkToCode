@@ -190,26 +190,19 @@ class CodingByDictationLogic:
         return " ".join(struct_command_list)
 
     def build_var_list_from_stack(self, stackClass):
-        temp_set = set()
-        for curr_var_list in stackClass.stack:
-            for variable in curr_var_list:
-                temp_set.add(variable)
+        temp_set = {variable for curr_var_list in stackClass.stack for variable in curr_var_list }
+        temp_set2 = {std_func for std_func in self.std_funcs} 
 
-        # add standard function calls
-        for std_func in self.std_funcs:
-            temp_set.add(std_func)  
-
-        return list(temp_set)
+        return list(temp_set.union(temp_set2))
 
     def build_string_from_stack(self, stackClass, accepted_indices):
-        joined_string = []
         if len(accepted_indices) == 0:
             last_accepted_index = -1
         else:
             last_accepted_index = accepted_indices[len(accepted_indices) - 1]
 
-        for i in range(last_accepted_index + 1, len(stackClass.stack)):
-            joined_string.append(stackClass.stack[i])
+        joined_string = [stackClass.stack[i] for i in range(last_accepted_index + 1, len(stackClass.stack))]
+
         return " ".join(joined_string)
 
     # This function prints all variables in the stack, for debug purposes only.
@@ -398,8 +391,7 @@ class CodingByDictationLogic:
             num_undo = corrected.strip().count("undo")
 
             if num_undo > 0:
-                for i in range(num_undo):
-                    self.undo(True)
+                [self.undo(True) for i in range(num_undo)]
                 continue
             elif "clear" in corrected:
                 self.clear()

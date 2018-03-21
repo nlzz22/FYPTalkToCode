@@ -95,10 +95,9 @@ class Keywords:
                                  "minus minus", "end if", "end switch", "end declare", "for loop", "end equal", \
                                  "for loop condition i", "end while", "end string", "backslash", "colon", "print f", "scan f"] + \
                                  self.get_scanf_placeholders() + self.get_printf_rounding_placeholders()
-        for phrase in phrases_list_to_add:
-            set_keywords.add(phrase)
+        temp_set = {phrase for phrase in phrases_list_to_add}
 
-        return list(set_keywords)
+        return list(set_keywords.union(temp_set))
 
     def get_scanf_placeholders(self):
         list_placeholders_scanf = []
@@ -114,18 +113,15 @@ class Keywords:
         return list_placeholders_scanf
 
     def get_printf_rounding_placeholders(self):
-        list_placeholders_printf = []
         list_decimal_place = range(1, 10)
         PERCENT_DOT = "symbol percent symbol dot "
 
-        # for float
-        for num in list_decimal_place:
-            list_placeholders_printf.append("{}{}f".format(PERCENT_DOT, str(num))) # %.2f (for all the numbers from 1-9)
-        # for double
-        for num in list_decimal_place:
-            list_placeholders_printf.append("{}{}lf".format(PERCENT_DOT, str(num))) # %.2lf (for all the numbers from 1-9)
+        # for float:  %.2f (for all the numbers from 1-9)
+        list_placeholders_printf = ["{}{}f".format(PERCENT_DOT, str(num)) for num in list_decimal_place]
+        # for double: %.2lf (for all the numbers from 1-9)
+        temp_list = ["{}{}lf".format(PERCENT_DOT, str(num)) for num in list_decimal_place]
 
-        return list_placeholders_printf
+        return list_placeholders_printf + temp_list
 
 class Keyword:
     # symbol_bits consist of 2 bits, 1st bit (MSB) for must be a symbol-word, 2nd bit (LSB) for can be a symbol-word
@@ -151,4 +147,3 @@ class Keyword:
 
     def get_symbol_bits(self):
         return self.symbol_bits
-

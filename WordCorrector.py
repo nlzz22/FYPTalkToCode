@@ -68,13 +68,13 @@ class WordCorrector:
 
     def correct_symbol_words(self, words, max_syllable, corrected=""):
         if "symbol" not in words:
-            return corrected + " " + words
+            return "{} {}".format(corrected, words)
 
         index = words.index("symbol")
         if corrected == "":
-            corrected = words[:index] + "symbol "
+            corrected = "{}symbol ".format(words[:index])
         else:
-            corrected += " " + words[:index] + "symbol "
+            corrected = "{} {}symbol ".format(corrected, words[:index])
 
         try:
             words = words[index + 7:]
@@ -85,10 +85,8 @@ class WordCorrector:
         if len(parts) == 0 or (len(parts) == 1 and parts[0] == ""):
             return corrected
 
-        part_word = []
         # part_word[0] consist of one word, part_word[1] consist of 2 words etc.
-        for i in range(0, min(max_syllable, len(parts))):
-            part_word.append(" ".join(parts[0:i+1]))
+        part_word = [" ".join(parts[0:i+1]) for i in range(0, min(max_syllable, len(parts)))]
 
         # Match wrong word with the correct keyword.
         max_sim = -1
@@ -197,7 +195,7 @@ class WordCorrector:
         
 
     def correct_words(self):
-        temp_words = ""
+        temp_words = []
         word_to_add = ""
         self.is_correction_done = False
         to_correct_prev_wrong_words = False
@@ -250,7 +248,7 @@ class WordCorrector:
                 # special case: "if" does not follow from a "begin"
                 prev_word = self.query_latest_added_word()
                 if prev_word != "begin" and prev_word != "end":
-                    temp_words += "eve " # because `if` is a keyword
+                    temp_words.append("eve") # because `if` is a keyword
                     to_correct_prev_wrong_words = False
                 else:
                     word_to_add = current_word
@@ -268,14 +266,14 @@ class WordCorrector:
                 to_correct_prev_wrong_words = True
             else:
                 # wrong words to perform correction
-                temp_words += current_word + " "
+                temp_words.append(current_word)
                 to_correct_prev_wrong_words = False
                 
             if to_correct_prev_wrong_words:
-                self.is_correction_done = self.perform_correction(temp_words, self.correction_list, self.max_syllable)
+                self.is_correction_done = self.perform_correction(" ".join(temp_words), self.correction_list, self.max_syllable)
                 self.add_word_to_corrected(word_to_add)
                 word_to_add = ""
-                temp_words = ""
+                temp_words = []
 
             if is_string_encountered:
                 is_string_encountered = False
@@ -302,27 +300,21 @@ class WordCorrector:
                 self.add_word_to_corrected(" ".join(self.words_list))
                 return self.corrected
 
-        self.perform_correction(temp_words, self.correction_list, self.max_syllable)
+        self.perform_correction(" ".join(temp_words), self.correction_list, self.max_syllable)
         self.add_word_to_corrected(word_to_add)
 
         return self.corrected
 
     def build_word_syllable_list(self, keywords_library):
         temp_list = keywords_library.get_keywords_with_syllable()
-        for std_funcs in self.std_functions:
-            temp_list.append(KeywordObj(std_funcs))
-        
-        for variable in self.variables_list:
-            temp_list.append(KeywordObj(variable))
+        temp_list2 = [KeywordObj(std_funcs) for std_funcs in self.std_functions]
+        temp_list3 = [KeywordObj(variable) for variable in self.variables_list]
             
-        return list(reversed(temp_list)) # this prioritises variables to keywords
+        return list(reversed(temp_list + temp_list2 + temp_list3)) # this prioritises variables to keywords
 
 
     def build_custom_word_syllable_list(self, list_word_to_add):
-        temp_list = []
-        
-        for word in list_word_to_add:
-            temp_list.append(self.kw.get_keyword_object(word))
+        temp_list = [self.kw.get_keyword_object(word) for word in list_word_to_add]
 
         return temp_list
    
@@ -338,10 +330,8 @@ class WordCorrector:
         if len(parts) == 0 or (len(parts) == 1 and parts[0] == ""):
             return False
 
-        part_word = []
         # part_word[0] consist of one word, part_word[1] consist of 2 words etc.
-        for i in range(0, min(max_syllable, len(parts))):
-            part_word.append(" ".join(parts[0:i+1]))
+        part_word = [" ".join(parts[0:i+1]) for i in range(0, min(max_syllable, len(parts)))]
 
         # Match wrong word with the correct keyword.
         max_sim = -1
@@ -459,7 +449,7 @@ class WordCorrector:
 
     def add_word_to_corrected(self, word):
         if word is not None and word.strip() != "":
-            self.corrected += self.space + word
+            self.corrected = "{}{}{}".format(self.corrected, self.space, word) 
             self.space = " "
 
     def is_part_of(self, wrong_words, keyword):
@@ -503,12 +493,10 @@ class WordCorrector:
             return self.words_list[0].lower()
 
     def query_latest_added_word(self, num_words=1):
-        word = ""
-        separator = ""
+        word = []
         if (self.corrected != ""):
             parts = self.corrected.split(" ")
             for i in range(len(parts) - num_words, len(parts)):
                 if i >= 0 and i < len(parts):
-                    word += separator + parts[i]
-                    separator = " "
-            return word
+                    word.append(parts[i])
+            return " ".join(word)
