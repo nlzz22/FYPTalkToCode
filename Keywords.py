@@ -103,12 +103,13 @@ class Keywords:
     def get_scanf_placeholders(self):
         list_placeholders_scanf = []
         SYMBOL_PERCENT = "symbol percent "
-        list_placeholders_scanf.append(SYMBOL_PERCENT + "d") # %d for int
-        list_placeholders_scanf.append(SYMBOL_PERCENT + "f") # %f for float
-        list_placeholders_scanf.append(SYMBOL_PERCENT + "c") # %c for char
-        list_placeholders_scanf.append(SYMBOL_PERCENT + "s") # %s for char strings
-        list_placeholders_scanf.append(SYMBOL_PERCENT + "lf") # %lf for double
-        list_placeholders_scanf.append(SYMBOL_PERCENT + "ld") # %ld for long
+        
+        list_placeholders_scanf.append("{}d".format(SYMBOL_PERCENT)) # %d for int
+        list_placeholders_scanf.append("{}f".format(SYMBOL_PERCENT)) # %f for float
+        list_placeholders_scanf.append("{}c".format(SYMBOL_PERCENT)) # %c for char
+        list_placeholders_scanf.append("{}s".format(SYMBOL_PERCENT)) # %s for char strings
+        list_placeholders_scanf.append("{}lf".format(SYMBOL_PERCENT)) # %lf for double
+        list_placeholders_scanf.append("{}ld".format(SYMBOL_PERCENT)) # %ld for long
 
         return list_placeholders_scanf
 
@@ -119,10 +120,10 @@ class Keywords:
 
         # for float
         for num in list_decimal_place:
-            list_placeholders_printf.append(PERCENT_DOT + str(num) + "f") # %.2f (for all the numbers from 1-9)
+            list_placeholders_printf.append("{}{}f".format(PERCENT_DOT, str(num))) # %.2f (for all the numbers from 1-9)
         # for double
         for num in list_decimal_place:
-            list_placeholders_printf.append(PERCENT_DOT + str(num) + "lf") # %.2lf (for all the numbers from 1-9)
+            list_placeholders_printf.append("{}{}lf".format(PERCENT_DOT, str(num))) # %.2lf (for all the numbers from 1-9)
 
         return list_placeholders_printf
 
