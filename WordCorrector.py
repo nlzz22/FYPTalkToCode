@@ -8,7 +8,7 @@ from StandardFunctions import StandardFunctions
 from WordSimilarity import get_most_similar_word, sounds_like_index, get_num_syllable
 
 class WordCorrector:
-    def __init__(self, words, var_list, create_func_complete=True):
+    def __init__(self, words, var_list, create_func_complete=True, open_string=False):
         self.corrected = ""
         self.space = ""
         self.var_types = ["integer", "long", "float", "double", "boolean", "character", "string", "void"]
@@ -25,6 +25,7 @@ class WordCorrector:
                                     words_without_math_operators, self.max_syllable).strip()
         self.words_list = words_with_corrected_symbol_word.split(" ")
         self.create_func_complete = create_func_complete
+        self.open_string = open_string
 
     def replace_symbols(self, words):
         words_without_plus = words.replace("+", "plus")
@@ -228,8 +229,13 @@ class WordCorrector:
             is_string_encountered = False
             is_char_encountered = False
             current_word = self.get_next_word()
-            
-            if (self.is_number(current_word)):
+
+            if self.open_string:
+                self.reinsert_word(current_word)
+                is_string_encountered = True
+                to_correct_prev_wrong_words = False
+                word_to_add = ""
+            elif (self.is_number(current_word)):
                 # Convert numbers to words (e.g. 42 -> forty-two)
                 number_in_word_form = num2words(int(current_word))
                 word_to_add = number_in_word_form
@@ -277,6 +283,7 @@ class WordCorrector:
 
             if is_string_encountered:
                 is_string_encountered = False
+
                 words_yet_to_add = " ".join(self.words_list)
                 index_end_string = -1
                 try:

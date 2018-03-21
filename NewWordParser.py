@@ -806,7 +806,7 @@ class WordParser:
         self.function_declaration.setParseAction(self.parse_rest_of_line)
 
     # This function attempts to parse repeatedly with corrections applied wherever possible.
-    def parse_with_correction(self, sentence, is_initial_run = True, counter = 0):
+    def parse_with_correction(self, sentence, is_initial_run = True, counter = 0, prev_added=""):
         result_struct = {}
 
         result_struct["parsed"] = ""
@@ -841,13 +841,17 @@ class WordParser:
             else:
                 error = error.replace("Expected", "")
                 
-                parts = error.split(" or ")
-                new_list = [part for part in parts]
-
+                parts = error.split(" or ") 
+                new_list = [part.strip() for part in parts]
+                if prev_added == "end function":
+                    try:
+                        new_list.remove("\"end string\"") # do not allow "end function end string" order.
+                    except:
+                        pass # no "end string" in list.
                 for attempt in new_list:
                     word = attempt.replace("\"", "")
 
-                    attempt_res = self.parse_with_correction(sentence + " " + word, False, counter + 1)
+                    attempt_res = self.parse_with_correction(sentence + " " + word, False, counter + 1, word)
                     if attempt_res["parsed"] != "":
                         result_struct["parsed"] = attempt_res["parsed"]
                         result_struct["potential_missing"] = word
@@ -946,6 +950,7 @@ class WordParser:
             result_struct["expected"] = "" # expected "end declare" for example.
             result_struct["potential_missing"] = "" # one missing construct like "end for loop" for example.
             result_struct["func_dec_complete"] = [] # tell if function declaration statement is complete, or partial.
+            result_struct["open_string"] = [] # tell if sentence has string construct and end string has not occurred yet.
 
         if result["has_match"]:
             result_struct["sentence_status"].append(True)
@@ -958,6 +963,8 @@ class WordParser:
                 result_struct["func_dec_complete"].append(result["func_dec_complete"])
             else:
                 result_struct["func_dec_complete"].append(True)
+
+            result_struct["open_string"].append(False)
             
             if str(rest_text).strip() != "":
                 result_struct = self.parse(rest_text, new_instance = False, result_struct = result_struct)
@@ -981,6 +988,20 @@ class WordParser:
                 result_struct["potential_missing"] = temp_result["potential_missing"]
             else:
                 result_struct["potential_missing"] = ""
+
+            if "string" in sentence:
+                if "end string" in sentence:
+                    num_string = sentence.count("string")
+                    num_end_string = sentence.count("end string")
+                    num_string -= num_end_string # double counting.
+                    if num_string == num_end_string:
+                       result_struct["open_string"].append(False)
+                    else:
+                        result_struct["open_string"].append(True)
+                else:
+                   result_struct["open_string"].append(True)
+            else:
+                result_struct["open_string"].append(False)
 
             return result_struct
 

@@ -86,6 +86,7 @@ class CodingByDictationLogic:
         self.std_funcs = StandardFunctions().get_std_functions()
         self.error_from_scparser = False
         self.create_func_complete = Stack()
+        self.open_string = Stack()
 
         self.logger = Logger()
 
@@ -219,6 +220,7 @@ class CodingByDictationLogic:
             undo_text = self.text_history_stack.pop()
             self.code_stack.pop()
             self.create_func_complete.pop()
+            self.open_string.pop()
 
             if len(self.accepted_indices) > 0:
                 last_accepted_index = self.accepted_indices[len(self.accepted_indices) - 1]
@@ -240,6 +242,7 @@ class CodingByDictationLogic:
         self.accepted_indices = []
         self.current_index = 0
         self.create_func_complete = Stack()
+        self.open_string = Stack()
 
         self.print_history_text(self.uiThread)
         self.print_latest_code(self.uiThread)
@@ -381,7 +384,7 @@ class CodingByDictationLogic:
                 start_time = time.time()
 
             # text to processed_text
-            wordCorrector = WordCorrector(read_words, variables_list, self.create_func_complete.peek())
+            wordCorrector = WordCorrector(read_words, variables_list, self.create_func_complete.peek(), self.open_string.peek())
             corrected = wordCorrector.run_correction()
 
             if self.to_show_time:
@@ -433,6 +436,7 @@ class CodingByDictationLogic:
 
                     self.variables_stack.push(variable_current)
                     self.create_func_complete.push(result_structure["func_dec_complete"][i])
+                    self.open_string.push(result_structure["open_string"][i])
 
                     if len(result_structure["text"][i]) < len(str(corrected)):
                         self.text_history_stack.push(result_structure["text"][i])
@@ -451,6 +455,7 @@ class CodingByDictationLogic:
                     
                     self.variables_stack.push(variable_current)
                     self.create_func_complete.push(result_structure["func_dec_complete"][i])
+                    self.open_string.push(result_structure["open_string"][i])
                     
                     if len(result_structure["text"][i]) < len(str(corrected)):
                         self.text_history_stack.push(result_structure["text"][i])
