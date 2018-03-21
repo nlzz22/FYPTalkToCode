@@ -843,9 +843,9 @@ class WordParser:
                 
                 parts = error.split(" or ") 
                 new_list = [part.strip() for part in parts]
-                if prev_added == "end function":
+                if prev_added != "end string" and prev_added != "":
                     try:
-                        new_list.remove("\"end string\"") # do not allow "end function end string" order.
+                        new_list.remove("\"end string\"") # do not allow any end constructs before "end string".
                     except:
                         pass # no "end string" in list.
                 for attempt in new_list:
