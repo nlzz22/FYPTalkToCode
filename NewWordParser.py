@@ -502,14 +502,10 @@ class WordParser:
         return tokens[0]
 
     def handle_fail_parse(self, string, loc, expr, err):
-        if self.error_message != "":
-            self.error_message += " or {}".format(str(expr))
-        else:
-            self.error_message = str(expr)
+        self.missing_constructs.add(str(expr))
 
     def get_error_message(self):
-        parts = self.error_message.split(" or ")
-        parts = [part.strip() for part in parts]
+        parts = [part.strip() for part in self.missing_constructs]
         
         parts_without_duplicate = {part for part in parts} # set comprehension
         parts_without_duplicate = list(parts_without_duplicate)
@@ -528,7 +524,7 @@ class WordParser:
         
         
     def __init__(self):
-        self.error_message = ""
+        self.missing_constructs = set()
         self.variables = []
         
         # Define all keywords here
@@ -806,58 +802,58 @@ class WordParser:
         self.function_declaration.setParseAction(self.parse_rest_of_line)
 
     # This function attempts to parse repeatedly with corrections applied wherever possible.
-    def parse_with_correction(self, sentence, is_initial_run = True, counter = 0, prev_added=""):
+    def parse_with_correction(self, sentence):
         result_struct = {}
-
+        result_struct["expected"] = self.get_error_message()
+        result_struct["variables"] = self.get_variables()
+        missing = list(self.missing_constructs)
+        missing = [word.replace("\"", "").replace("end", "").replace("for loop", "for").strip() for word in missing]
         result_struct["parsed"] = ""
 
-        if counter > 5:
-            return result_struct
-
-        try:
-            temp_res = self.match_construct(sentence)
-            if temp_res["has_match"]:
-                result = temp_res["struct_cmd"]
-            else:
-                result = ""
-        except:
-            if is_initial_run:
-                result_struct["expected"] = self.get_error_message()
-                result_struct["variables"] = self.get_variables()
-            result_struct["parsed"] = ""
-
-            return result_struct
+        if len(missing) > 0:
+            construct_stack = Stack()
+            skip = False
             
-        if result == "": # error message
-            if is_initial_run:
-                # record first expected message only
-                result_struct["expected"] = self.get_error_message()
-                result_struct["variables"] = self.get_variables()
+            words = sentence.split()
+            for i in range(len(words)):
+                if skip:
+                    skip = False
+                    continue
+                curr_word = words[i]
+                if i + 1 >= len(words):
+                    next_word = ""
+                else:
+                    next_word = words[i+1]
 
-            error = self.get_error_message()
-            
-            if error == "":
-                result_struct["parsed"] = "" # cannot finish parsing
-            else:
-                error = error.replace("Expected", "")
-                
-                parts = error.split(" or ") 
-                new_list = [part.strip() for part in parts]
-                if prev_added != "end string" and prev_added != "":
-                    try:
-                        new_list.remove("\"end string\"") # do not allow any end constructs before "end string".
-                    except:
-                        pass # no "end string" in list.
-                for attempt in new_list:
-                    word = attempt.replace("\"", "")
-
-                    attempt_res = self.parse_with_correction(sentence + " " + word, False, counter + 1, word)
-                    if attempt_res["parsed"] != "":
-                        result_struct["parsed"] = attempt_res["parsed"]
-                        result_struct["potential_missing"] = word
+                if curr_word in missing:
+                    construct_stack.push(curr_word)
+                elif curr_word == "end":
+                    if next_word in missing:
+                        if construct_stack.peek() == next_word:
+                            construct_stack.pop()
+                            skip = True
+                        else: # not matching start and close constructs
+                            break
+                    else:
                         break
-        else: # parsed properly
-            result_struct["parsed"] = result
+
+            corrected_list = [sentence]
+            first_to_add = ""
+            while construct_stack.peek() is not None:
+                current_to_add = construct_stack.pop()
+
+                if current_to_add == "for":
+                    current_to_add = "for loop"
+                if first_to_add == "":
+                    first_to_add = current_to_add
+                corrected_list.append("end {}".format(current_to_add))
+            corrected_line = " ".join(corrected_list)
+
+            result_aft_correction = self.match_construct(corrected_line)
+
+            if result_aft_correction["has_match"]: # can parse
+                result_struct["parsed"] = result_aft_correction["struct_cmd"]
+                result_struct["potential_missing"] = "end {}".format(first_to_add)
 
         return result_struct
 
@@ -936,7 +932,7 @@ class WordParser:
         # potential_missing: one missing construct like "end for loop" for example. Single element.
 
         sentence = str(sentence).lower().strip()
-        self.error_message = ""
+        self.missing_constructs = set()
         self.rest_of_line = ""
         self.variables = []
 

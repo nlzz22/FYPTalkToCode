@@ -750,7 +750,7 @@ class TestWordParserMethods(unittest.TestCase):
 
     def wordparser_compare_correction(self, raw_text, expected):
         wordParser = WordParser()
-        parsed = self.trim_all_spaces(wordParser.parse_with_correction(raw_text)["parsed"])
+        parsed = self.trim_all_spaces(wordParser.parse(raw_text)["parsed"][0])
         expected = self.trim_all_spaces(expected)        
         self.assertEqual(parsed, expected)
 

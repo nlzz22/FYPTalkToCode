@@ -231,10 +231,18 @@ class WordCorrector:
             current_word = self.get_next_word()
 
             if self.open_string:
-                self.reinsert_word(current_word)
-                is_string_encountered = True
-                to_correct_prev_wrong_words = False
-                word_to_add = ""
+                if current_word == "end" and self.query_next_word() == "string":
+                    self.get_next_word() # get the string word.
+                    words_yet_to_add = " ".join(self.words_list)
+                    self.open_string = False
+
+                    self.add_word_to_corrected("end string")
+                    self.words_list = words_yet_to_add.split(" ")
+                else:
+                    self.reinsert_word(current_word)
+                    is_string_encountered = True
+                    to_correct_prev_wrong_words = False
+                    word_to_add = ""
             elif (self.is_number(current_word)):
                 # Convert numbers to words (e.g. 42 -> forty-two)
                 number_in_word_form = num2words(int(current_word))
@@ -295,6 +303,7 @@ class WordCorrector:
                     self.add_word_to_corrected(words_yet_to_add)
                     break
                 else: # end string found
+                    self.open_string = False
                     self.add_word_to_corrected(words_yet_to_add[0: index_end_string + 10])
                     self.words_list = words_yet_to_add[index_end_string + 10:].split(" ")
             elif is_char_encountered:
