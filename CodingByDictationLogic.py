@@ -101,41 +101,43 @@ class CodingByDictationLogic:
         self.soundEnergyReader.start()
 
     def print_history_text(self, uiThread):
-        hist_text = ""
+        hist_text = []
         curr_index = 0
         last = ""
         len_text_hist_stack = len(self.text_history_stack.stack)
         for i in range(0, len_text_hist_stack - 1):
             if curr_index < len(self.accepted_indices) and i == self.accepted_indices[curr_index]:
-                hist_text += self.text_history_stack.stack[i] + "\n\n"
+                hist_text.append("{}\n".format(self.text_history_stack.stack[i]))
                 curr_index += 1
             else:
-                hist_text += self.text_history_stack.stack[i] + "\n"
+                hist_text.append(self.text_history_stack.stack[i])
         if len_text_hist_stack > 0:
             last = self.text_history_stack.stack[len_text_hist_stack - 1]
         else:
             last = ""
+
+        hist_text.append("") # so that it will append "\n" to last line.
         
-        uiThread.UpdateHistoryBody(hist_text, last)
+        uiThread.UpdateHistoryBody("\n".join(hist_text), last)
 
     def print_code(self, to_add_corrected, parsed_sc, wordParser, uiThread):
         accepted_text_list = []
-        curr_text = ""
+        curr_text = []
         curr_index = 0
         for i in range(0, len(self.text_history_stack.stack)):
             if curr_index < len(self.accepted_indices) and i == self.accepted_indices[curr_index]:
-                curr_text += self.text_history_stack.stack[i] + " "
+                curr_text.append("{} ".format(self.text_history_stack.stack[i]))
                 curr_index += 1
-                accepted_text_list.append(curr_text)
-                curr_text = ""
+                accepted_text_list.append(" ".join(curr_text))
+                curr_text = []
             else:
-                curr_text += self.text_history_stack.stack[i] + " "
+                curr_text.append(self.text_history_stack.stack[i])
 
         structured_command = ""
         try:
             structured_command = self.get_struct_command_from_text_list(wordParser, accepted_text_list)
             if to_add_corrected:
-                structured_command += " " + parsed_sc
+                structured_command = "{} {}".format(structured_command, parsed_sc)
         except:
             structured_command = ""
         
@@ -200,15 +202,15 @@ class CodingByDictationLogic:
         return list(temp_set)
 
     def build_string_from_stack(self, stackClass, accepted_indices):
-        joined_string = ""
+        joined_string = []
         if len(accepted_indices) == 0:
             last_accepted_index = -1
         else:
             last_accepted_index = accepted_indices[len(accepted_indices) - 1]
 
         for i in range(last_accepted_index + 1, len(stackClass.stack)):
-            joined_string += stackClass.stack[i] + " "
-        return joined_string
+            joined_string.append(stackClass.stack[i])
+        return " ".join(joined_string)
 
     # This function prints all variables in the stack, for debug purposes only.
     def print_all_var(self):
@@ -378,7 +380,7 @@ class CodingByDictationLogic:
             if self.read_from == CodingByDictationLogic.READ_FROM_SPEECH:
                 self.audio_count_semaphore.acquire()
                 self.audio_count -= 1
-                self.print_feedback_three("Audio waiting for processing : " + str(self.audio_count), uiThread)
+                self.print_feedback_three("Audio waiting for processing : {}".format(str(self.audio_count)), uiThread)
                 self.audio_count_semaphore.release()
 
             if self.to_show_time:
@@ -390,7 +392,7 @@ class CodingByDictationLogic:
 
             if self.to_show_time:
                 checkpoint1 = time.time()
-                print ("Time to word correction = " + str(checkpoint1 - start_time))
+                print ("Time to word correction = {}".format(str(checkpoint1 - start_time)))
 
             num_undo = corrected.strip().count("undo")
 
@@ -406,7 +408,8 @@ class CodingByDictationLogic:
                 continue
 
             # processed_text to structured_command / code and display to user.
-            text_to_parse = self.build_string_from_stack(self.text_history_stack, self.accepted_indices) + " " + str(corrected)
+            text_to_parse = "{} {}".format( \
+                self.build_string_from_stack(self.text_history_stack, self.accepted_indices), str(corrected))
 
             error_message = ""
             potential_missing = ""
@@ -415,20 +418,20 @@ class CodingByDictationLogic:
             try:
                 temp_parse_struct = wordParser.parse(text_to_parse, True)
             except Exception as ex:
-                self.print_feedback_four("Unable to understand : " + str(corrected), uiThread)
+                self.print_feedback_four("Unable to understand : {}".format(str(corrected)), uiThread)
                 self.lock_voice(uiThread)
                 continue
 
             if self.to_show_time:
                 checkpoint2 = time.time()
-                print ("Time to parse word = " + str(checkpoint2 - checkpoint1))
+                print ("Time to parse word = {}".format(str(checkpoint2 - checkpoint1)))
 
             # Deep copy object over, else it will be overwritten (this is some weird bug.)
             result_structure = copy.deepcopy(temp_parse_struct)
 
             if self.to_show_time:
                 checkpoint3 = time.time()
-                print ("Time to deep copy structure = " + str(checkpoint3- checkpoint2))
+                print ("Time to deep copy structure = {}".format(str(checkpoint3- checkpoint2)))
 
             for i in range(0, len(result_structure["sentence_status"])):                
                 if result_structure["sentence_status"][i]: # sentence can be parsed.
@@ -463,7 +466,7 @@ class CodingByDictationLogic:
                         # and subsequent sentence is another var assignment (begins with var name)
                         # It is then hard to decipher which var name belongs to which sentence.
                         if wordParser.need_to_append_end_equal(str(corrected)):
-                            corrected = str(corrected) + " end equal"
+                            corrected = "{} end equal".format(str(corrected))
                         self.text_history_stack.push(str(corrected))
                     self.print_code(True, parsed, wordParser, uiThread)
 
@@ -471,41 +474,41 @@ class CodingByDictationLogic:
 
             if self.to_show_time:
                 checkpoint4 = time.time()
-                print ("Time to iterate sentences in structure = " + str(checkpoint4 - checkpoint3))
+                print ("Time to iterate sentences in structure = {}".format(str(checkpoint4 - checkpoint3)))
 
             # Feedback to user
             if error_message != "" or self.error_from_scparser: # there is error message
                 if self.error_from_scparser:
                     pass # error message shown at print_code function
                 elif potential_missing != "":
-                    self.print_feedback_one("Expected  : " + potential_missing, uiThread)
+                    self.print_feedback_one("Expected  : {}".format(potential_missing), uiThread)
                 else:
                     if error_message.strip() == "Expected":
                         self.print_feedback_one("Incomplete statement.", uiThread)
                     else:
-                        self.print_feedback_one("Error     : " + error_message, uiThread)
+                        self.print_feedback_one("Error     : {}".format(error_message), uiThread)
             else:
                 self.print_feedback_one(" ", uiThread)
 
             if self.to_show_time:
                 checkpoint5 = time.time()
-                print ("Time to parse word = " + str(checkpoint5 - checkpoint4))
+                print ("Time to parse word = {}".format(str(checkpoint5 - checkpoint4)))
 
             # printlines for debug
-            print "Audio read by Speech Recognizer : " + read_words
-            print "Processed text after correction : " + corrected
-            self.logger.log(read_words + " --> " + corrected)
+            print "Audio read by Speech Recognizer : {}".format(read_words)
+            print "Processed text after correction : {}".format(corrected)
+            self.logger.log("{} --> {}".format(read_words, corrected))
 
             if self.to_show_time:
                 checkpoint6 = time.time()
-                print ("Time to print console and log = " + str(checkpoint6 - checkpoint5))
+                print ("Time to print console and log = {}".format(str(checkpoint6 - checkpoint5)))
 
-            self.print_feedback_four("Read: " + corrected, uiThread)
+            self.print_feedback_four("Read: {}".format(corrected), uiThread)
             
             self.print_history_text(uiThread)
             # self.print_all_var() # for debug only.
 
             if self.to_show_time:
                 checkpoint7 = time.time()
-                print ("Time to update UI = " + str(checkpoint7 - checkpoint6))
+                print ("Time to update UI = {}".format(str(checkpoint7 - checkpoint6)))
 
