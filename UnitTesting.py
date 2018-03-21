@@ -600,6 +600,25 @@ class TestWordParserMethods(unittest.TestCase):
         struct = "if #condition #variable i < #value 1 #if_branch_start if #condition #variable i < #value 2 #if_branch_start #if_branch_end;; #if_branch_end;;"
         self.wordparser_compare_correction(speech, struct)
 
+    def test_word_parser_fail_parse_end_function_end_string_end_function(self):
+        speech = "call function scanf parameter string"
+        struct = ""
+        self.wordparser_compare_correction(speech, struct)
+
+    def test_word_parser_partial_string(self):
+        speech = "call function scanf parameter string hello world"
+        struct = "#function scanf(#parameter #value \"hello world\");;"
+        self.wordparser_compare_correction(speech, struct)
+
+    def test_word_parser_partial_multiple_constructs(self):
+        speech = "for loop condition i equal one condition i less than length condition i plus plus begin " + \
+                 "begin if i less than max then " + \
+                 "call function a parameter string hello end string parameter string why is this"
+        struct = "for #condition #assign #variable i #with #value 1 #condition #variable i < #variable length #condition #post #variable i ++ #for_start " + \
+                 "if #condition #variable i < #variable max #if_branch_start " + \
+                 "#function a(#parameter #value \"hello\" #parameter #value \"why is this\");; #if_branch_end;; #for_end;;"
+        self.wordparser_compare_correction(speech, struct)
+
     # Test Word Parser added variables
     def test_word_parser_added_variables_func_declare(self):
         speech = "create function find the tree with return type void with parameter integer wei he with parameter integer because begin end function"
