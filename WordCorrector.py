@@ -187,6 +187,10 @@ class WordCorrector:
             elif self.get_word(i) == "divide" and self.get_word(i+1) == "by":
                 if "by" not in self.variables_list:
                     self.words_list[i+1] = ""
+            # correct NY Lo --> end while
+            elif self.get_word(i) == "ny" and self.get_word(i+1) == "lo":
+                self.words_list[i] = "end"
+                self.words_list[i+1] = "while"
 
     def get_create_func_correction_list(self):
         required_list = self.var_types + ["function", "with", "return", "type", "parameter", "begin"]
