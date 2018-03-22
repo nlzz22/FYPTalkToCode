@@ -303,9 +303,8 @@ class WordCorrector:
                     self.add_word_to_corrected(words_yet_to_add)
                     break
                 else: # end string found
-                    self.open_string = False
                     self.add_word_to_corrected(words_yet_to_add[0: index_end_string + 10])
-                    self.words_list = words_yet_to_add[index_end_string + 10:].split(" ")
+                    self.words_list = words_yet_to_add[index_end_string + 10:].strip().split(" ")
             elif is_char_encountered:
                 is_char_encountered = False
                 next_word = self.get_next_word()
