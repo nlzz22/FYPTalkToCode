@@ -728,6 +728,68 @@ class TestWordParserMethods(unittest.TestCase):
         expected_sent_status = [True, True, True]
         self.wordparser_compare_parts(speech, expected_parsed, expected_text, expected_sent_status)
 
+    # Test individual methods in word parser.
+
+    def test_word_parser_need_to_append_end_equal(self):
+        speech = "first equal one"
+        
+        wp = WordParser()
+        self.assertTrue(wp.need_to_append_end_equal(speech))
+
+    def test_word_parser_dont_append_end_equal_because_already_exists(self):
+        speech = "first equal one end equal"
+        
+        wp = WordParser()
+        self.assertFalse(wp.need_to_append_end_equal(speech))
+
+    def test_word_parser_need_to_append_end_equal_plus_plus(self):
+        speech = "first plus plus"
+        
+        wp = WordParser()
+        self.assertTrue(wp.need_to_append_end_equal(speech))
+
+    def test_word_parser_need_to_append_end_equal_minus_equal(self):
+        speech = "first minus equal one"
+        
+        wp = WordParser()
+        self.assertTrue(wp.need_to_append_end_equal(speech))
+
+    def test_word_parser_dont_append_end_equal_because_conditional_if(self):
+        speech = "begin if i equal two"
+        
+        wp = WordParser()
+        self.assertFalse(wp.need_to_append_end_equal(speech))
+
+    def test_word_parser_dont_append_end_equal_because_conditional_if2(self):
+        speech = "begin if i equal two then"
+        
+        wp = WordParser()
+        self.assertFalse(wp.need_to_append_end_equal(speech))
+
+    def test_word_parser_dont_append_end_equal_because_conditional_while(self):
+        speech = "while i equal two"
+        
+        wp = WordParser()
+        self.assertFalse(wp.need_to_append_end_equal(speech))
+
+    def test_word_parser_dont_append_end_equal_because_conditional_for(self):
+        speech = "for loop condition i equal two"
+        
+        wp = WordParser()
+        self.assertFalse(wp.need_to_append_end_equal(speech))
+
+    def test_word_parser_dont_append_end_declare_because_already_exists(self):
+        speech = "declare integer flying equal two end declare"
+        
+        wp = WordParser()
+        self.assertFalse(wp.need_to_append_end_declare(speech))
+
+    def test_word_parser_need_to_append_end_declare(self):
+        speech = "declare integer flying equal two"
+        
+        wp = WordParser()
+        self.assertTrue(wp.need_to_append_end_declare(speech))
+
     # Utility functions below.
 
     def wordparser_compare_parts(self, raw_text, expected_parsed, expected_text, expected_sent_status):

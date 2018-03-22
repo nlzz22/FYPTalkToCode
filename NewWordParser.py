@@ -915,7 +915,7 @@ class WordParser:
             result = self.parse_check_variable_assignment(sentence)
             if result["has_match"]:
                 try:
-                    if sentence.split()[-2:] == "end equal":
+                    if " ".join(sentence.split()[-2:]) == "end equal":
                         return False
                     else:
                         return True
@@ -933,7 +933,7 @@ class WordParser:
             result = self.parse_check_declaration_statement(sentence)
             if result["has_match"]:
                 try:
-                    if sentence.split()[-2:] == "end declare":
+                    if " ".join(sentence.split()[-2:]) == "end declare":
                         return False
                     else:
                         return True
