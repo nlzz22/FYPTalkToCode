@@ -100,6 +100,7 @@ else
 call function print f parameter 
 string symbol percent d is not a prime number symbol dot end string
 parameter number end function
+end if
 ======================== Check if number is palindrome ====================
 declare integer number
 declare integer reversed number equal zero
