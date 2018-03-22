@@ -923,6 +923,24 @@ class WordParser:
                     return False
         
         return False
+
+
+    def need_to_append_end_declare(self, sentence):
+        if sentence == "":
+            return False
+
+        if "declare" in sentence:
+            result = self.parse_check_declaration_statement(sentence)
+            if result["has_match"]:
+                try:
+                    if sentence.split()[-2:] == "end declare":
+                        return False
+                    else:
+                        return True
+                except:
+                    return False
+        
+        return False
         
  
     def parse(self, sentence, new_instance = True, result_struct = {}):

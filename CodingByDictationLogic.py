@@ -465,6 +465,9 @@ class CodingByDictationLogic:
                         # It is then hard to decipher which var name belongs to which sentence.
                         if wordParser.need_to_append_end_equal(str(corrected)):
                             corrected = "{} end equal".format(str(corrected))
+                        # the same problem for end declare here.
+                        elif wordParser.need_to_append_end_declare(str(corrected)):
+                            corrected = "{} end declare".format(str(corrected))
                         self.text_history_stack.push(str(corrected))
                     self.print_code(True, parsed, wordParser, uiThread)
 
