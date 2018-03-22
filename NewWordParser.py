@@ -820,6 +820,7 @@ class WordParser:
                     skip = False
                     continue
                 curr_word = words[i]
+
                 if i + 1 >= len(words):
                     next_word = ""
                 else:
@@ -832,13 +833,15 @@ class WordParser:
                         if construct_stack.peek() == next_word:
                             construct_stack.pop()
                             skip = True
-                        else: # not matching start and close constructs
-                            break
+                        else: # not matching start and close constructs: the construct might be properly closed.
+                            skip = True
                     else:
-                        break
+                        skip = True
 
             corrected_list = [sentence]
+ 
             first_to_add = ""
+
             while construct_stack.peek() is not None:
                 current_to_add = construct_stack.pop()
 

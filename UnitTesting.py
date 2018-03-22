@@ -619,6 +619,19 @@ class TestWordParserMethods(unittest.TestCase):
                  "#function a(#parameter #value \"hello\" #parameter #value \"why is this\");; #if_branch_end;; #for_end;;"
         self.wordparser_compare_correction(speech, struct)
 
+    def test_word_parser_partial_find_max(self):
+        speech = "create function find maximum with return type integer with parameter integer array numbers " + \
+                 "with parameter integer length begin declare integer max equal numbers array index zero end declare " + \
+                 "declare integer i end declare " + \
+                 "for loop condition i equal one condition i less than length condition i plus plus begin"
+        struct = "#function_declare findMaximum int #parameter_a #dimension 1 int #array numbers " + \
+                 "#parameter int length #function_start " + \
+                "#create int #variable max #array numbers #indexes  #value 0 #index_end #dec_end;; " + \
+                "#create int #variable i #dec_end;; " + \
+                "for #condition #assign #variable i #with #value 1 #condition #variable i < #variable length #condition #post #variable i ++ #for_start " + \
+                "#for_end;; #function_end;;"
+        self.wordparser_compare_correction(speech, struct)
+
     # Test Word Parser added variables
     def test_word_parser_added_variables_func_declare(self):
         speech = "create function find the tree with return type void with parameter integer wei he with parameter integer because begin end function"
