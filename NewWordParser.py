@@ -337,10 +337,33 @@ class WordParser:
     def parse_for_loop_statement(self, tokens):
         # tokens consist of [ assignment_expression, conditional_expression, assignment_expression,
         # statements (multiple)]
-        parsed_stmt = "for #condition {} #condition {} #condition {} #for_start ".format( \
-            tokens[0], tokens[1], tokens[2])
+        count = 0
 
-        body_list = [tokens[i] for i in range(3, len(tokens))]
+        # Initialization Expression
+        if tokens.init == "":
+            initialization_expr = ""
+        else:
+            initialization_expr = tokens.init[0][0]
+            count += 1
+            
+        # Conditional Expression
+        if tokens.cond == "":
+            conditional_expr = ""
+        else:
+            conditional_expr = tokens.cond[0]
+            count += 1
+
+        # Increment Expression
+        if tokens.incr == "":
+            increment_expr = ""
+        else:
+            increment_expr = tokens.incr[0][0]
+            count += 1
+        
+        parsed_stmt = "for #condition {} #condition {} #condition {} #for_start ".format( \
+            initialization_expr, conditional_expr, increment_expr)
+
+        body_list = [tokens[i] for i in range(count, len(tokens))]
 
         return "{} {} #for_end;;".format(parsed_stmt, " ".join(body_list))
 
@@ -741,9 +764,11 @@ class WordParser:
         declare_array_statement.setParseAction(self.parse_declare_arr_statement)
 
         for_loop_statement = for_loop + \
-                             keyword_condition + assignment_expression + keyword_end_equal + \
-                             keyword_condition + conditional_expression + \
-                             keyword_condition + assignment_expression + keyword_end_equal + \
+                             keyword_condition + Optional( \
+                                 (assignment_expression + keyword_end_equal).setResultsName("init", True)) + \
+                             keyword_condition + Optional((conditional_expression).setResultsName("cond", True)) + \
+                             keyword_condition + Optional( \
+                                 (assignment_expression + keyword_end_equal).setResultsName("incr", True)) + \
                              keyword_begin + ZeroOrMore(statement) + keyword_end_for_loop # all end equal must be optional, suppress
 
         for_loop_statement.setParseAction(self.parse_for_loop_statement)

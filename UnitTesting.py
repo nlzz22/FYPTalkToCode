@@ -569,6 +569,31 @@ class TestWordParserMethods(unittest.TestCase):
         struct = "#function printf(#parameter #value \"product =%.2lf\");;"
         self.wordparser_compare(speech, struct)
 
+    def test_word_parser_for_loop_missing_first_cond(self):
+        speech = "for loop condition condition i less than length condition i plus plus begin end for loop"
+        struct = "for #condition #condition #variable i < #variable length #condition #post #variable i ++ #for_start #for_end;;"
+        self.wordparser_compare(speech, struct)
+
+    def test_word_parser_for_loop_missing_second_cond(self):
+        speech = "for loop condition i equal zero condition condition i plus plus begin end for loop"
+        struct = "for #condition #assign #variable i #with #value 0 #condition #condition #post #variable i ++ #for_start #for_end;;"
+        self.wordparser_compare(speech, struct)
+
+    def test_word_parser_for_loop_missing_third_cond(self):
+        speech = "for loop condition i equal zero condition i less than length condition begin end for loop"
+        struct = "for #condition #assign #variable i #with #value 0 #condition #variable i < #variable length #condition #for_start #for_end;;"
+        self.wordparser_compare(speech, struct)
+
+    def test_word_parser_for_loop_missing_all_cond(self):
+        speech = "for loop condition condition condition begin end for loop"
+        struct = "for #condition #condition #condition #for_start #for_end;;"
+        self.wordparser_compare(speech, struct)
+
+    def test_word_parser_for_loop_missing_two_cond(self):
+        speech = "for loop condition condition condition i plus plus begin end for loop"
+        struct = "for #condition #condition #condition #post #variable i ++ #for_start #for_end;;"
+        self.wordparser_compare(speech, struct)
+
     # Word Parser - Test partial code
     def test_word_parser_partial_declare_var(self):
         speech = "declare integer abc "
