@@ -46,7 +46,7 @@ class SpeechRecognitionModule:
 
         def persistent_listen(self, timeout=None, phrase_time_limit=None):
                 r = sr.Recognizer()
-                r.energy_threshold = 1000
+                r.energy_threshold = 700
                 m = sr.Microphone()
 
                 while not self.is_hotword_found:
