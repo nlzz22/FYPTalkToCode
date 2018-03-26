@@ -383,6 +383,11 @@ class CodingByDictationLogic:
             if self.to_show_time:
                 start_time = time.time()
 
+            read_words = read_words.replace("start recording", "").replace("stop recording", "")
+            if read_words.strip() == "":
+                self.print_feedback_four("Continue speaking ... ", uiThread)
+                continue
+
             # text to processed_text
             wordCorrector = WordCorrector(read_words, variables_list, self.create_func_complete.peek(), self.open_string.peek())
             corrected = wordCorrector.run_correction()
@@ -398,9 +403,6 @@ class CodingByDictationLogic:
                 continue
             elif "clear" in corrected:
                 self.clear()
-                continue
-
-            if "not recording" in corrected or "start recording" in read_words:
                 continue
 
             # processed_text to structured_command / code and display to user.
