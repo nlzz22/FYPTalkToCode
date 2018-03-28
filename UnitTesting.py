@@ -1343,6 +1343,38 @@ class TestWordCorrectorMethods(unittest.TestCase):
 
         self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
 
+    def test_word_corrector_symbol_dot2(self):
+        word = "call function printf parameter string symbol . end string end function"
+        wc = WordCorrector(word, [])
+        corrected = wc.run_correction()
+        expected = "call function printf parameter string symbol dot end string end function"
+
+        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
+
+    def test_word_corrector_dot_correct_to_point(self):
+        word = "declare float sum equal 0.0"
+        wc = WordCorrector(word, [])
+        corrected = wc.run_correction()
+        expected = "declare float sum equal zero"
+
+        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
+
+    def test_word_corrector_dot_correct_to_point2(self):
+        word = "declare float sum equal 1.34"
+        wc = WordCorrector(word, [])
+        corrected = wc.run_correction()
+        expected = "declare float sum equal one point three four"
+
+        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
+
+    def test_word_corrector_dot_correct_to_point3(self):
+        word = "declare float sum equal 0.16"
+        wc = WordCorrector(word, [])
+        corrected = wc.run_correction()
+        expected = "declare float sum equal zero point one six"
+
+        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
+
     def test_word_corrector_end_string(self):
         word = "call function print f parameter string hello world and string end function"
         wc = WordCorrector(word, [])

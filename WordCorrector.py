@@ -20,6 +20,7 @@ class WordCorrector:
         self.word_syllable_list = self.build_word_syllable_list(self.kw)
         self.correction_list = self.word_syllable_list
         self.regex_alpha_or_numeric = re.compile(r'([A-Za-z]+)(-?((\d+\.\d+)|\d+))') # match alphabet then number
+        self.regex_symbol_dot = re.compile(r'symbol\s?\.') # match symbol . or symbol.
 
         words_without_math_operators = self.replace_symbols(words)
         words_with_corrected_symbol_word = self.correct_symbol_words( \
@@ -34,7 +35,7 @@ class WordCorrector:
         words_without_minus = words_without_plus.replace("-", " minus ")
         words_without_times = words_without_minus.replace(" x ", " times ")
         words_without_divide = words_without_times.replace("/", " divide ")
-        words_without_dot = words_without_divide.replace(".", " dot ")
+        words_without_dot = re.sub(self.regex_symbol_dot, " symbol dot ", words_without_divide)
         final_words = words_without_dot.replace(" X ", " times ")
         final_words = final_words.replace(" * ", " times ")
 
@@ -293,7 +294,7 @@ class WordCorrector:
                     word_to_add = ""
             elif (self.is_number(current_word)):
                 # Convert numbers to words (e.g. 42 -> forty-two)
-                number_in_word_form = num2words(int(current_word))
+                number_in_word_form = num2words(float(current_word))
                 word_to_add = number_in_word_form
                 to_correct_prev_wrong_words = True
             elif (current_word == "string"):
@@ -530,7 +531,7 @@ class WordCorrector:
 
     def is_number(self, word):
         try:
-            int(word)
+            float(word)
             return True
         except ValueError:
             return False
