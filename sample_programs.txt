@@ -144,3 +144,44 @@ string sum symbol equal space symbol percent d end string
 parameter call function add numbers parameter number end function end function
 return zero
 end function
+===================== Calculate average using arrays ======================
+declare integer number elements
+declare integer i
+declare float array number size one hundred
+declare float summation equal zero
+declare float average
+call function printf parameter 
+string enter the numbers of elements symbol colon space end string end function
+call function scanf parameter
+string symbol percent d end string
+parameter symbol ampersand number elements
+end function
+while number elements greater than one hundred 
+or number elements less than equal zero begin
+call function print f parameter 
+string enter the number again symbol colon space end string
+end function
+call function scanf parameter
+string symbol percent d end string 
+parameter symbol ampersand number elements 
+end function
+end while 
+for loop condition i equal zero
+condition i less than number elements
+condition plus plus i begin
+call function printf parameter 
+string symbol percent d symbol dot
+space enter number symbol colon space 
+end string 
+parameter i plus one end function
+call function scanf parameter
+string symbol percent f end string 
+parameter symbol ampersand number array index i 
+end function
+summation plus equal number array index i
+end for loop
+average equal summation divide number elements
+call function print f parameter
+string average symbol equal space 
+symbol percent symbol dot 2f end string
+parameter average end function
