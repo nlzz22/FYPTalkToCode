@@ -38,7 +38,7 @@ class WordCorrector:
         words_without_minus = words_without_plus.replace("-", " minus ")
         words_without_times = words_without_minus.replace(" x ", " times ")
         words_without_divide = words_without_times.replace("/", " divide ")
-        words_without_dot = re.sub(self.regex_symbol_dot, " symbol dot ", words_without_divide)
+        words_without_dot = re.sub(self.regex_symbol_dot, "symbol dot ", words_without_divide)
         final_words = words_without_dot.replace(" X ", " times ")
         final_words = final_words.replace(" * ", " times ")
 
