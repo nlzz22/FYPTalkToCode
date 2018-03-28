@@ -1504,6 +1504,15 @@ class TestWordCorrectorMethods(unittest.TestCase):
 
         self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
 
+    def test_word_corrector_percent_dot_2f(self):
+        word = "call function printf parameter string average symbol equal space symbol percent symbol dot " + \
+               "2f end string parameter average end function"
+        wc = WordCorrector(word, ["average"])
+        corrected = wc.run_correction()
+        expected = word
+
+        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
+
     def format_spaces(self, sentence):
         return UtilityClass().format_spaces(sentence)
 

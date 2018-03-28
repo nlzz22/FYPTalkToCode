@@ -19,7 +19,7 @@ class WordCorrector:
         self.keyword_list = self.kw.get_keywords()
         self.word_syllable_list = self.build_word_syllable_list(self.kw)
         self.correction_list = self.word_syllable_list
-        self.regex_alpha_or_numeric = re.compile(r'[A-Za-z]+|-?\d+\.\d+|\d+')
+        self.regex_alpha_or_numeric = re.compile(r'([A-Za-z]+)(-?((\d+\.\d+)|\d+))') # match alphabet then number
 
         words_without_math_operators = self.replace_symbols(words)
         words_with_corrected_symbol_word = self.correct_symbol_words( \
@@ -43,10 +43,16 @@ class WordCorrector:
     def separate_numbers_from_words(self, word_list):
         temp_list = []
         for word in word_list:
-            sep_alpha_num_list = re.findall(self.regex_alpha_or_numeric, word)
-            temp_list += sep_alpha_num_list
+            regex_match = re.match(self.regex_alpha_or_numeric, word)
+            if regex_match is not None:
+                alpha_part = regex_match.group(1)
+                num_part = regex_match.group(2)
+                temp_list.append(alpha_part)
+                temp_list.append(num_part)
+            else: # no match
+                temp_list.append(word)
 
-        return temp_list        
+        return temp_list
 
     def run_correction(self):
         return self.run_correct_words_multiple("")
