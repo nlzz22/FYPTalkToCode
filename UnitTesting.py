@@ -707,6 +707,12 @@ class TestWordParserMethods(unittest.TestCase):
         
         self.wordparser_compare_added_variables(speech, expected)
 
+    def test_word_parser_added_variables_partial_func_declare(self):
+        speech = "create function find the tree with return type void with parameter integer wei he with parameter integer because begin"
+        expected = ["find", "the", "tree", "wei", "he", "because"]
+
+        self.wordparser_compare_added_variables(speech, expected)
+
     # Test Word Parser - multiple parts
 
     def test_word_parser_partial(self):

@@ -882,6 +882,7 @@ class WordParser:
             if result_aft_correction["has_match"]: # can parse
                 result_struct["parsed"] = result_aft_correction["struct_cmd"]
                 result_struct["potential_missing"] = "end {}".format(first_to_add)
+                result_struct["variables"] = self.get_variables()
 
         return result_struct
 
