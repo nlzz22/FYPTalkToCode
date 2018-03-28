@@ -122,3 +122,25 @@ call function print f parameter string it is palindrome end string end function
 else
 call function print f parameter string it is not palindrome end string end function
 end if 
+======================= Sum of natural numbers using Recursion ===============
+
+create function add numbers return type integer parameter integer number begin
+begin if number not equal zero then
+return number plus call function add numbers parameter number minus one end function 
+else
+return number
+end if 
+end function
+
+create function main return type integer begin
+declare integer number
+call function printf parameter 
+string enter a positive integer symbol colon space end string end function
+call function scanf parameter 
+string symbol percent d end string 
+parameter symbol ampersand number end function
+call function printf parameter 
+string sum symbol equal space symbol percent d end string
+parameter call function add numbers parameter number end function end function
+return zero
+end function
