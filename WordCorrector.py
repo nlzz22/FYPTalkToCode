@@ -27,7 +27,10 @@ class WordCorrector:
                                     words_without_math_operators, self.max_syllable).strip()
         word_list = words_with_corrected_symbol_word.split(" ")
         self.words_list = self.separate_numbers_from_words(word_list)
-        self.create_func_complete = create_func_complete
+        if create_func_complete is None:
+            self.create_func_complete = True
+        else:
+            self.create_func_complete = create_func_complete
         self.open_string = open_string
 
     def replace_symbols(self, words):
