@@ -44,6 +44,8 @@ def get_phones_for_word_not_in_dict(word):
         return "P R IH1 N T EH1 F"
     elif word == "scanf":
         return "S K AE1 N EH1 F"
+    elif word == "prenav":
+        return "P R IY1 N AE1 V"
     else:
         return word.upper()
     
