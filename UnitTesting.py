@@ -1487,8 +1487,22 @@ class TestWordCorrectorMethods(unittest.TestCase):
         expected = "leave equal two end equal"
 
         self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
-    
 
+    def test_word_corrector_minus_1_separation(self):
+        word = "return number plus call function add numbers perimeter number -1 and function"
+        wc = WordCorrector(word, ["number", "add", "numbers"])
+        corrected = wc.run_correction()
+        expected = "return number plus call function add numbers parameter number minus one end function"
+
+        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
+
+    def test_word_corrector_minus_1_separation_2(self):
+        word = "return number plus call function add numbers perimeter number minus1 and function"
+        wc = WordCorrector(word, ["number", "add", "numbers"])
+        corrected = wc.run_correction()
+        expected = "return number plus call function add numbers parameter number minus one end function"
+
+        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
 
     def format_spaces(self, sentence):
         return UtilityClass().format_spaces(sentence)

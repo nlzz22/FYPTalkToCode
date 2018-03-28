@@ -1,5 +1,5 @@
 #!/usr/bin/env python2
-
+import re
 from num2words import num2words
 from word2number import w2n
 import hashlib
@@ -19,17 +19,19 @@ class WordCorrector:
         self.keyword_list = self.kw.get_keywords()
         self.word_syllable_list = self.build_word_syllable_list(self.kw)
         self.correction_list = self.word_syllable_list
+        self.regex_alpha_or_numeric = re.compile(r'[A-Za-z]+|-?\d+\.\d+|\d+')
 
         words_without_math_operators = self.replace_symbols(words)
         words_with_corrected_symbol_word = self.correct_symbol_words( \
                                     words_without_math_operators, self.max_syllable).strip()
-        self.words_list = words_with_corrected_symbol_word.split(" ")
+        word_list = words_with_corrected_symbol_word.split(" ")
+        self.words_list = self.separate_numbers_from_words(word_list)
         self.create_func_complete = create_func_complete
         self.open_string = open_string
 
     def replace_symbols(self, words):
-        words_without_plus = words.replace("+", "plus")
-        words_without_minus = words_without_plus.replace("-", "minus")
+        words_without_plus = words.replace("+", " plus ")
+        words_without_minus = words_without_plus.replace("-", " minus ")
         words_without_times = words_without_minus.replace(" x ", " times ")
         words_without_divide = words_without_times.replace("/", " divide ")
         words_without_dot = words_without_divide.replace(".", " dot ")
@@ -37,7 +39,14 @@ class WordCorrector:
         final_words = final_words.replace(" * ", " times ")
 
         return final_words
-        
+
+    def separate_numbers_from_words(self, word_list):
+        temp_list = []
+        for word in word_list:
+            sep_alpha_num_list = re.findall(self.regex_alpha_or_numeric, word)
+            temp_list += sep_alpha_num_list
+
+        return temp_list        
 
     def run_correction(self):
         return self.run_correct_words_multiple("")
