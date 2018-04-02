@@ -371,6 +371,7 @@ class CodingByDictationLogic:
                 
             if read_words is None:
                 # could not understand audio / user stop speaking.
+                self.print_feedback_four("Could not understand audio.", uiThread)
                 self.lock_voice(uiThread)
                 continue
 
@@ -416,9 +417,9 @@ class CodingByDictationLogic:
             try:
                 temp_parse_struct = wordParser.parse(text_to_parse, True)
             except Exception as ex:
-                print "[Unable] Audio read by Speech Recognizer : {}".format(read_words)
-                print "[Unable] Processed text after correction : {}".format(corrected)
-                self.print_feedback_four("Unable to understand : {}".format(str(corrected)), uiThread)
+                print "[Parse Fail] Audio read by Speech Recognizer : {}".format(read_words)
+                print "[Parse Fail] Processed text after correction : {}".format(corrected)
+                self.print_feedback_four("Not parseable : {}".format(str(corrected)), uiThread)
                 self.lock_voice(uiThread)
                 continue
 
