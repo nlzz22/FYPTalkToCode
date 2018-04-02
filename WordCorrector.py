@@ -167,29 +167,31 @@ class WordCorrector:
         
         for i in range(0, len(self.words_list)):
             # correct and -> end for end constructs.
-            # Reason: "and declare" makes more sense as an English phrase as compared to "end declare" for example,
-            #           and that this correction could not be done by part 2 of the module as "and" itself is a keyword,
-            #           which is an acceptable word.
+            # Reason: For example, "and declare" makes more sense as an English phrase as compared to "end declare".
+            # "And" is normally used as a function word to indicate the connection of items, whereas "End declare"
+            # is normally used as a programming construct and not as English phrase. This correction also could not
+            # be done by part 2 of the module as "and" itself is a keyword, which is an acceptable word.
             # Classification: Specific to English Language
             if self.get_word(i) == "and" and self.get_word(i+1) in list_end_constructs:
                 self.words_list[i] = "end"
             # correct standard functions print f and scan f
-            # Reason: "printf" is a function name and makes no sense in English. For english, "print f" is a more proper
-            #           phrase.
+            # Reason:  "printf" and "scanf" are function names and they make no sense in English.
+            # For English, "print f" is a more proper phrase which means to produce the letter "f" in a mechanical process
+            # called printing.
             # Classification: Specific to English Language
             elif (self.get_word(i) == "print" or self.get_word(i) == "scan") and self.get_word(i+1) == "f":
                 self.words_list[i] += "f"
                 self.words_list[i+1] = ""
             # correct equal to -> equal two if "to" is not a variable
-            # Reason: "equal to" is a proper English phrase as opposed to "equal two" which sounds like improper English
-            #           with a missing preposition "to". ("equal to two")
+            # Reason: "equal to" is a proper English phrase as opposed to "equal two" which sounds like improper
+            # English with a missing preposition "to". ("equal to two") 
             # Classification: Specific to English Language
             elif self.get_word(i) == "equal" and self.get_word(i+1) == "to":
                 if "to" not in self.variables_list:
                     self.words_list[i+1] = "two"
             # correct ii if needed
             # Reason: Sometimes, Google Cloud Speech will be too smart and read `second` as `II` which is the Roman
-            #           numeral for 2.
+            # numeral for 2.
             # Classification: Specific to Google Cloud Engine
             elif self.get_word(i) == "ii":
                 if "i" in self.variables_list:
@@ -198,14 +200,15 @@ class WordCorrector:
                     self.words_list[i] = "second"
             # correct common error: condition is --> condition i
             # Reason: "condition i" is more of a programming construct, whereas "condition is" is a proper English phrase.
-            #           Moreover, "i" tends to be a pronoun and is not used as a pronoun in this instance.
+            # Moreover, "i" tends to be a pronoun and is not used as a pronoun in this instance, thus it tends
+            # to get misread as "condition is" instead.
             # Classification: Specific to English Language
             elif self.get_word(i) == "condition" and self.get_word(i+1) == "is":
                 if "i" in self.variables_list and "is" not in self.variables_list:
                     self.words_list[i+1] = "i"
             # correct missing iterators
             # Reason: Google Cloud Speech can sometimes mistake single alphabet iterators as noise and totally omit them from
-            #           recognition.
+            # recognition.
             # Classification: Specific to Google Cloud Engine
             elif self.get_word(i) == "condition" and self.get_word(i+1) in ["equal", "greater", "less"]:
                 if "i" in self.variables_list:
@@ -213,28 +216,30 @@ class WordCorrector:
                 elif "j" in self.variables_list:
                     self.words_list[i+1] = "j " + self.words_list[i+1]
             # correct begin eve, begin is --> begin if
-            # Reason: All these words make no sense in English, but they can sound quite similar. 
+            # Reason: All these words make no sense in English (Examples: begin eve, end eve), but they ("eve", "if", "is")
+            # can sound quite similar. Thus, we need to correct them into our proper structured language constructs. 
             # Classification: Specific to English Language
             elif (self.get_word(i) == "begin" or self.get_word(i) == "end") and \
                  (self.get_word(i+1) == "eve" or self.get_word(i+1) == "is" or self.get_word(i+1) == "east" or self.get_word(i+1) == "this"):
                 if self.words_list[i+1] not in self.variables_list:
                     self.words_list[i+1] = "if"
             # correct reef --> with
-            # Reason: "with" and "reef" sound similar and it is often misrecognised as "reef" 
+            # Reason: "with" and "reef" sound similar and it is often misrecognised as "reef" by Google Cloud Engine
             # Classification: can be both English Language or Google Cloud Engine
             elif self.get_word(i) == "reef":
                 if "reef" not in self.variables_list:
                     self.words_list[i] = "with"
             # correct divide by --> divide
-            # Reason: Google Cloud will try to be smart and mistakenly thought that there is a missing "by"
-            #           after the word "divide" as it is quite common to say "divide by" in English
+            # Reason: Google Cloud will try to be smart and mistakenly thought that there is a missing "by" after the
+            # word "divide" as it is quite common to say "divide by" in English as a math operator. 
             # Classification: Specific to Google Cloud Engine
             elif self.get_word(i) == "divide" and self.get_word(i+1) == "by":
                 if "by" not in self.variables_list:
                     self.words_list[i+1] = ""
             # correct NY Lo --> end while
-            # Reason: Google Cloud will sometimes misinterpret "end while" as "NY Lo". This could be due to
-            #           how the recognition engine is being trained with American datasets.
+            # Reason: Google Cloud will sometimes misinterpret "end while" as "NY Lo".
+            # This could be due to how the recognition engine is being trained with American datasets.
+            # In the American context, "NY Lo" can refer to the NYLO Hotels or the New York Lottery.
             # Classification: Specific to Google Cloud Engine
             elif self.get_word(i) == "ny" and self.get_word(i+1) == "lo":
                 self.words_list[i] = "end"
