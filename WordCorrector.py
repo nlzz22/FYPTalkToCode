@@ -186,9 +186,11 @@ class WordCorrector:
             # Reason: "equal to" is a proper English phrase as opposed to "equal two" which sounds like improper
             # English with a missing preposition "to". ("equal to two") 
             # Classification: Specific to English Language
-            elif self.get_word(i) == "equal" and self.get_word(i+1) == "to":
-                if "to" not in self.variables_list:
+            elif self.get_word(i) == "equal" and self.get_word(i+1) == "to" and "to" not in self.variables_list:
+                if self.get_word(i+2) == "" or self.get_word(i+2) == "end":
                     self.words_list[i+1] = "two"
+                else:
+                    self.words_list[i+1] = ""    
             # correct ii if needed
             # Reason: Sometimes, Google Cloud Speech will be too smart and read `second` as `II` which is the Roman
             # numeral for 2.

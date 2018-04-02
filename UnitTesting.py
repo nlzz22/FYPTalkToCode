@@ -1031,6 +1031,22 @@ class TestWordCorrectorMethods(unittest.TestCase):
         
         self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
 
+    def test_word_corrector_correct_equal_to_three_point_two(self):
+        word = "declare float money equal to three point two end declare"
+        wc = WordCorrector(word, [])
+        corrected = wc.run_correction()
+        expected = "declare float money equal three point two end declare"
+        
+        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
+
+    def test_word_corrector_correct_equal_to_three_point_two_2(self):
+        word = "declare float money equal to three point two"
+        wc = WordCorrector(word, [])
+        corrected = wc.run_correction()
+        expected = "declare float money equal three point two"
+        
+        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
+
     def test_word_corrector_bug_declare_var_to(self):
         word = "declare integer to end declare"
         wc = WordCorrector(word, [])
