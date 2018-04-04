@@ -191,6 +191,16 @@ class TestWordParserMethods(unittest.TestCase):
         struct = "return #variable i + #value 2;;"
         self.wordparser_compare(speech, struct)
 
+    def test_word_parser_return_none(self):
+        speech = "return"
+        struct = "return;;"
+        self.wordparser_compare(speech, struct)
+
+    def test_word_parser_big_code_with_return_none(self):
+        speech = "begin if i less than one then return else i equal one end if"
+        struct = "if #condition #variable i < #value 1 #if_branch_start return;; #if_branch_end #else_branch_start #assign #variable i #with #value 1;; #else_branch_end;;"
+        self.wordparser_compare(speech, struct)
+    
     def test_word_parser_create_function(self):
         speech = "create function find maximum with return type integer with parameter integer array numbers " + \
                  "with parameter integer length begin end function"

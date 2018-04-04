@@ -506,8 +506,11 @@ class WordParser:
         return "#create {} #array {} #dec_end;;".format(tokens[0], tokens[1])
 
     def parse_return_statement(self, tokens):
-        # tokens consist of [ expression ]
-        return "return {};;".format(tokens[0])
+        # tokens consist of [ Optional(expression) ]
+        if len(tokens) == 0:
+            return "return;; "
+        else:
+            return "return {};;".format(tokens[0])
 
     def parse_space(self, tokens):
         return WordParser.SPECIAL_SPACE_CHAR
@@ -777,7 +780,7 @@ class WordParser:
                                keyword_begin + ZeroOrMore(statement) + keyword_end_while
         while_loop_statement.setParseAction(self.parse_while_loop_statement)
 
-        return_statement = keyword_return + expression
+        return_statement = keyword_return + Optional(expression)
         return_statement.setParseAction(self.parse_return_statement)
 
         break_statement = keyword_break
