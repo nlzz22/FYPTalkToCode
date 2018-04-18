@@ -1571,6 +1571,22 @@ class TestWordCorrectorMethods(unittest.TestCase):
 
         self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
 
+    def test_word_corrector_n_equal(self):
+        word = "first equal second n equal"
+        wc = WordCorrector(word, ["first", "second"])
+        corrected = wc.run_correction()
+        expected = "first equal second end equal"
+
+        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
+
+    def test_word_corrector_n_equal_dont_correct(self):
+        word = "second n equal two end equal"
+        wc = WordCorrector(word, ["n", "second"])
+        corrected = wc.run_correction()
+        expected = word
+
+        self.assertEqual(self.format_spaces(corrected), self.format_spaces(expected))
+
     def format_spaces(self, sentence):
         return UtilityClass().format_spaces(sentence)
 

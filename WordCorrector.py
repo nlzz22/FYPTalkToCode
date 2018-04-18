@@ -172,7 +172,8 @@ class WordCorrector:
             # is normally used as a programming construct and not as English phrase. This correction also could not
             # be done by part 2 of the module as "and" itself is a keyword, which is an acceptable word.
             # Classification: Specific to English Language
-            if self.get_word(i) == "and" and self.get_word(i+1) in list_end_constructs:
+            if (self.get_word(i) == "and" or (self.get_word(i) == "n") and "n" not in self.variables_list) \
+               and self.get_word(i+1) in list_end_constructs:
                 self.words_list[i] = "end"
             # correct standard functions print f and scan f
             # Reason:  "printf" and "scanf" are function names and they make no sense in English.
